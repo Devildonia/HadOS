@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — the Windows 95 chrome is gone
+
+- **HadOS is now the system's own interface**, replacing the Windows 95 theme entirely. Dark
+  surfaces, the blue of the HadOS mark, rounded geometry, acrylic blur, soft elevation, Sora on
+  titles and labels. It covers windows, title bars and their buttons, the taskbar, the Start menu
+  and submenus, dialogs, in-app menu bars and dropdowns, buttons, inputs and scrollbars.
+  `theme-win95.css` is deleted and `theme-base.css`'s defaults are HadOS's, so even a failed
+  theme load lands on a coherent look instead of Win95 grey.
+- **The Start button wears the HadOS mark** (`pwa_icon_512.png`). It was an inline SVG of four
+  coloured squares — Microsoft's logo, in Microsoft's colours — in the classic theme, and the
+  Windows 11 start glyph in the modern one.
+- An install saved on `win95` is **migrated to `hados`** on boot, and a stale `theme-win95` class
+  is stripped from the body. The theme toggle now swaps `hados` ⇄ `modern`.
+
+### Fixed
+
+- **The taskbar ignored its theme.** `DesktopManager.init()` defaulted the taskbar colour to Win95
+  grey and pinned it as an inline custom property on `<body>` — which beats any stylesheet — and
+  saved it, so every install ended up overriding its own theme with a colour nobody chose. Init
+  now only honours a real user choice, and drops the old auto-written default.
+- `#taskbar`, `.win95-window.maximized` and `#start-menu` hardcoded the 32px Win95 taskbar height,
+  silently ignoring `--taskbar-height`. The modern theme had been asking for 48px and getting 32px.
+- `style.css` redeclared the Win95 palette in `:root` and, loading last, quietly won over
+  `theme-base.css`.
+- The splash screen and `<body>` drew their black from `--os-text-color`, which worked only
+  because Win95's text happened to be black. On a light-text theme the splash would have turned
+  white; both now state black outright.
+- In-app menus and the pet's toolbar label hardcoded Win95 greys and black text. Measured against
+  the new surfaces, the Notepad dropdowns sat at a **1.54:1** contrast ratio and the pet label at
+  **1.35:1**; menu labels on the accent blue came to 2.94:1 and now use the deeper blue for 5:1.
+
 ### Added
 
 - **The POST screen reports the real machine.** A new `HardwareProbe` reads what the browser is

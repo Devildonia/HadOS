@@ -265,13 +265,20 @@ const ShaderWallpaper: IShaderWallpaper = (() => {
         frameCount = 0; // Reset frame count on shader swap
 
         const tm: any = Services.get('ThemeManager');
-        const currentTheme = forceTheme || (tm ? tm.currentTheme : 'win95');
+        const currentTheme = forceTheme || (tm ? tm.currentTheme : 'hados');
 
-        if (currentTheme === 'modern') {
-            passes.push(new RenderPass(gl, SHADER_MODERN, false));
-        } else {
-            passes.push(new RenderPass(gl, SHADER_WIN95, false));
-        }
+        // Explicit map, not an if/else: the old fallback branch drew SHADER_WIN95 —
+        // the waving Windows flag — so any unrecognised theme, including 'hados',
+        // would have painted Microsoft's logo across the HadOS desktop.
+        // TODO: SHADER_MODERN is an interim for 'hados'; its blues happen to suit
+        // the palette, but the system deserves a wallpaper of its own.
+        const shaders: Record<string, string> = {
+            hados: SHADER_MODERN,
+            modern: SHADER_MODERN,
+            win95: SHADER_WIN95,
+        };
+
+        passes.push(new RenderPass(gl, shaders[currentTheme] ?? SHADER_MODERN, false));
     }
 
     function resizeCanvas(): void {

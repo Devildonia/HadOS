@@ -1,60 +1,80 @@
-/* ===== CSS VARIABLES (Base Theme Definition) ===== */
+/* ===== CSS VARIABLES (Base Theme Definition) =====
+ *
+ * The defaults are HadOS's own. A theme file (theme-hados.css, theme-modern.css)
+ * overrides these under its body class; anything that fails to load still lands on
+ * a coherent HadOS look rather than on Windows 95 grey.
+ */
 :root {
+    /* Brand palette, sampled from the HadOS mark. */
+    --hados-blue-deep: #0b5ed7;
+    --hados-blue: #3b9bf0;
+    --hados-blue-light: #7fd2ff;
+    --hados-bg: #0b0e13;
+    --hados-surface: #161b22;
+    --hados-elevated: #1c2431;
+    --hados-line: rgba(127, 210, 255, 0.14);
+    --hados-line-strong: rgba(127, 210, 255, 0.26);
+    --accent-color: var(--hados-blue);
+
     /* Fonts */
-    --os-font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
-    --os-font-size: 11px;
-    --os-font-weight-bold: bold;
-    
+    --os-font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, Inter, sans-serif;
+    --os-font-display: 'Sora', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+    --os-font-size: 13px;
+    --os-font-weight-bold: 600;
+
     /* Global Backgrounds */
-    --os-bg-color: #008080;
-    --os-text-color: #000000;
-    --os-text-color-inverted: #ffffff;
-    
+    --os-bg-color: var(--hados-bg);
+    --os-text-color: #e6edf7;
+    --os-text-muted: #93a4bd;
+    --os-text-color-inverted: #0b0e13;
+
     /* Taskbar */
-    --taskbar-bg: #c0c0c0;
-    --taskbar-height: 32px;
-    --taskbar-border-top: 2px solid var(--border-light);
-    --taskbar-shadow: 0 -1px 0 0 var(--border-dark) inset;
-    
+    --taskbar-bg: rgba(11, 14, 19, 0.72);
+    --taskbar-height: 48px;
+    --taskbar-border-top: 1px solid var(--hados-line);
+    --taskbar-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+
     /* Start Menu */
-    --start-menu-bg: var(--taskbar-bg);
-    --start-menu-border: 2px solid;
-    --start-menu-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
-    --start-menu-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-    --start-sidebar-bg: linear-gradient(180deg, var(--win-blue), var(--win-lightblue));
-    
+    --start-menu-bg: rgba(16, 20, 27, 0.85);
+    --start-menu-border: 1px solid;
+    --start-menu-border-color: var(--hados-line-strong);
+    --start-menu-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    --start-sidebar-bg: linear-gradient(180deg, var(--hados-blue-deep), var(--hados-blue));
+
     /* Windows */
-    --window-bg: var(--win-gray);
-    --window-content-bg: white;
-    --window-border: 2px solid;
-    --window-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
-    --window-border-radius: 0px;
-    --window-shadow: 1px 1px 0 0 var(--border-dark) inset, -1px -1px 0 0 var(--border-dark) inset, 2px 2px 4px 0 rgba(0, 0, 0, 0.4);
-    
+    --window-bg: var(--hados-surface);
+    --window-content-bg: #10141b;
+    --window-border: 1px solid;
+    --window-border-color: var(--hados-line-strong);
+    --window-border-radius: 10px;
+    --window-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+
     /* Window Header */
-    --window-header-bg: linear-gradient(90deg, var(--win-blue), var(--win-lightblue));
-    --window-header-color: white;
-    --window-header-height: 24px;
-    
+    --window-header-bg: linear-gradient(180deg, #1b2330, #141a24);
+    --window-header-color: #e6edf7;
+    --window-header-height: 38px;
+
     /* Dialogs */
-    --dialog-bg: var(--win-gray);
-    --dialog-border: 2px solid;
-    --dialog-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
-    --dialog-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+    --dialog-bg: var(--hados-surface);
+    --dialog-border: 1px solid;
+    --dialog-border-color: var(--hados-line-strong);
+    --dialog-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
 
     /* Controls (Buttons, inputs) */
-    --control-bg: var(--win-gray);
-    --control-border: 2px solid;
-    --control-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
-    --control-shadow: 1px 1px 0 0 var(--border-dark) inset;
-    --control-active-border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest);
-    --control-active-shadow: none;
-    
-    /* Legacy variables mapping (keep for backwards comp during transition) */
-    --win-gray: #c0c0c0;
-    --win-blue: #000080;
-    --win-lightblue: #1084d0;
-    --border-light: #ffffff;
-    --border-dark: #808080;
-    --border-darkest: #000000;
+    --control-bg: var(--hados-elevated);
+    --control-border: 1px solid;
+    --control-border-color: var(--hados-line);
+    --control-shadow: none;
+    --control-active-border-color: var(--accent-color);
+    --control-active-shadow: 0 0 0 2px rgba(59, 155, 240, 0.35);
+
+    /* Legacy Windows 95 variables. Still referenced by rules that predate the
+       token system; remapped onto HadOS surfaces so nothing renders chiselled grey.
+       Remove once every rule reads a semantic token. */
+    --win-gray: var(--hados-surface);
+    --win-blue: var(--hados-blue-deep);
+    --win-lightblue: var(--hados-blue);
+    --border-light: rgba(255, 255, 255, 0.06);
+    --border-dark: var(--hados-line);
+    --border-darkest: rgba(0, 0, 0, 0.55);
 }

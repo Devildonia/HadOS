@@ -34,8 +34,20 @@ describe('ThemeManager', () => {
 
     describe('Constructor & Init', () => {
         it('should load default theme if localStorage is empty', () => {
-            expect(themeManager.currentTheme).toBe('win95');
-            expect(document.body.classList.contains('theme-win95')).toBe(true);
+            expect(themeManager.currentTheme).toBe('hados');
+            expect(document.body.classList.contains('theme-hados')).toBe(true);
+        });
+
+        it('should migrate an install still saved on the retired win95 theme', () => {
+            localStorage.setItem('os-theme', 'win95');
+
+            const manager = new ThemeManager();
+
+            expect(manager.currentTheme).toBe('hados');
+            expect(document.body.classList.contains('theme-hados')).toBe(true);
+            expect(document.body.classList.contains('theme-win95')).toBe(false);
+            // Rewritten, so the migration happens once rather than on every boot.
+            expect(localStorage.getItem('os-theme')).toBe('hados');
         });
 
         it('should load theme from localStorage if present', () => {
@@ -47,24 +59,39 @@ describe('ThemeManager', () => {
     });
 
     describe('applyTheme', () => {
-        it('should fallback to win95 if themeName is invalid', () => {
+        it('should fallback to hados if themeName is invalid', () => {
             themeManager.applyTheme('non-existent-theme');
-            expect(themeManager.currentTheme).toBe('win95');
-            expect(document.body.classList.contains('theme-win95')).toBe(true);
+            expect(themeManager.currentTheme).toBe('hados');
+            expect(document.body.classList.contains('theme-hados')).toBe(true);
             expect(document.body.classList.contains('theme-modern')).toBe(false);
+        });
+
+        it('should treat the retired win95 theme as invalid', () => {
+            themeManager.applyTheme('win95');
+            expect(themeManager.currentTheme).toBe('hados');
+            expect(document.body.classList.contains('theme-win95')).toBe(false);
+        });
+
+        it('should strip a leftover win95 class from an older session', () => {
+            document.body.classList.add('theme-win95');
+
+            themeManager.applyTheme('hados');
+
+            expect(document.body.classList.contains('theme-win95')).toBe(false);
+            expect(document.body.classList.contains('theme-hados')).toBe(true);
         });
 
         it('should swap body CSS classes and persist to localStorage', () => {
             themeManager.applyTheme('modern');
             expect(document.body.classList.contains('theme-modern')).toBe(true);
-            expect(document.body.classList.contains('theme-win95')).toBe(false);
+            expect(document.body.classList.contains('theme-hados')).toBe(false);
             expect(localStorage.getItem('os-theme')).toBe('modern');
 
             // Swap back
-            themeManager.applyTheme('win95');
-            expect(document.body.classList.contains('theme-win95')).toBe(true);
+            themeManager.applyTheme('hados');
+            expect(document.body.classList.contains('theme-hados')).toBe(true);
             expect(document.body.classList.contains('theme-modern')).toBe(false);
-            expect(localStorage.getItem('os-theme')).toBe('win95');
+            expect(localStorage.getItem('os-theme')).toBe('hados');
         });
 
         it('should call ShaderWallpaper.setFragmentShader', () => {

@@ -57,7 +57,7 @@ describe('Global Event Listeners', () => {
         mockAudioInstance = { play: vi.fn() };
         Services.register('AudioManager', mockAudioInstance);
 
-        mockThemeManager = { currentTheme: 'win95', applyTheme: vi.fn() };
+        mockThemeManager = { currentTheme: 'hados', applyTheme: vi.fn() };
         Services.register('ThemeManager', mockThemeManager);
 
         // Run the setup routine
@@ -114,12 +114,12 @@ describe('Global Event Listeners', () => {
         const themeBtn = document.getElementById('theme-toggle');
 
         themeBtn.click();
-        expect(mockThemeManager.applyTheme).toHaveBeenCalledWith('modern'); // Swaps from win95 to modern
+        expect(mockThemeManager.applyTheme).toHaveBeenCalledWith('modern'); // Swaps from hados to modern
         expect(window.playBlip).toHaveBeenCalledWith(600);
 
         mockThemeManager.currentTheme = 'modern';
         themeBtn.click();
-        expect(mockThemeManager.applyTheme).toHaveBeenCalledWith('win95'); // Swaps back
+        expect(mockThemeManager.applyTheme).toHaveBeenCalledWith('hados'); // Swaps back
     });
 
     it('should handle Display Properties Tabs switching', () => {

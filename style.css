@@ -9,16 +9,13 @@
  * Full responsive design with authentic Win95 aesthetics
  */
 
-/* ===== CSS VARIABLES ===== */
+/* ===== CSS VARIABLES =====
+ * The palette lives in css/themes/theme-base.css and the theme files. This block
+ * used to redeclare the Windows 95 greys here and — being loaded last — silently
+ * won over theme-base. Only --bg-color survives, because nothing else defines it.
+ */
 :root {
-    --bg-color: #008080;
-    --win-gray: #c0c0c0;
-    --win-blue: #000080;
-    --win-lightblue: #1084d0;
-    --border-light: #ffffff;
-    --border-dark: #808080;
-    --border-darkest: #000000;
-    --taskbar-bg: #c0c0c0;
+    --bg-color: var(--hados-bg, #0b0e13);
 }
 
 /* ===== BASE STYLES ===== */
@@ -34,10 +31,11 @@ html {
     padding: 0;
     height: 100%;
     width: 100%;
-    font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
-    background-color: var(--os-text-color);
+    font-family: var(--os-font-family);
+    /* Black behind everything: the BIOS and splash paint over it at boot. */
+    background-color: #000000;
     overflow: hidden;
-    font-size: 11px;
+    font-size: var(--os-font-size);
 }
 
 
@@ -147,7 +145,9 @@ html {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--os-text-color);
+    /* Explicitly black. This used to read --os-text-color, which happened to be
+       black only because the Win95 theme's text was black. */
+    background-color: #000000;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -512,10 +512,9 @@ html {
     left: 0 !important;
     transform: none !important;
     width: 100% !important;
-    height: calc(100% - 32px) !important;
-    /* v1.0.7: Fixed for 32px taskbar */
+    height: calc(100% - var(--taskbar-height)) !important;
     max-width: 100% !important;
-    max-height: calc(100% - 32px) !important;
+    max-height: calc(100% - var(--taskbar-height)) !important;
     border: none !important;
     box-shadow: none !important;
     /* v1.0.7.5: Fix background colors when maximized */
@@ -789,7 +788,9 @@ button:disabled {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 32px;
+    /* Was hardcoded 32px, which pinned every theme to the Win95 bar height and
+       silently ignored --taskbar-height. */
+    height: var(--taskbar-height);
     background: var(--taskbar-bg);
     border-top: var(--taskbar-border-top);
     display: flex;
@@ -870,7 +871,7 @@ button:disabled {
 /* ===== START MENU ===== */
 #start-menu {
     position: fixed;
-    bottom: 32px;
+    bottom: var(--taskbar-height);
     left: 0;
     width: 220px;
     background: var(--start-menu-bg);

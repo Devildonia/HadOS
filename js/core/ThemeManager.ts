@@ -1,6 +1,10 @@
 import { Services } from './ServiceContainer';
 import { i18n } from '../services/i18n';
 
+/** The Windows 95 theme HadOS replaced. Anyone still on it is moved to 'hados'. */
+const LEGACY_THEME = 'win95';
+const DEFAULT_THEME = 'hados';
+
 export class ThemeManager {
     public currentTheme: string;
     public themes: string[];
@@ -9,9 +13,23 @@ export class ThemeManager {
 
     private boundLanguageChanged = () => this.swapIcons(this.currentTheme);
 
+    /**
+     * Reads the saved theme, adopting installs from before the rename: 'win95' no
+     * longer exists, and left alone it would fall through to the default on every
+     * boot without ever being rewritten.
+     */
+    private static readStoredTheme(): string {
+        const stored = localStorage.getItem('os-theme');
+        if (stored === LEGACY_THEME || stored === null) {
+            localStorage.setItem('os-theme', DEFAULT_THEME);
+            return DEFAULT_THEME;
+        }
+        return stored;
+    }
+
     constructor() {
-        this.currentTheme = localStorage.getItem('os-theme') || 'win95';
-        this.themes = ['win95', 'modern'];
+        this.themes = ['hados', 'modern'];
+        this.currentTheme = ThemeManager.readStoredTheme();
         this.initialized = false;
         this.onDomReady = null;
 
@@ -46,11 +64,13 @@ export class ThemeManager {
 
     applyTheme(themeName: string): void {
         if (!this.themes.includes(themeName)) {
-            themeName = 'win95'; // fallback
+            themeName = DEFAULT_THEME; // fallback
         }
 
-        // Remove all previous theme classes
+        // Remove all previous theme classes, including the retired Win95 one that
+        // may still be on the body from a session started before the rename.
         this.themes.forEach(t => document.body.classList.remove(`theme-${t}`));
+        document.body.classList.remove(`theme-${LEGACY_THEME}`);
 
         // Add new theme class
         document.body.classList.add(`theme-${themeName}`);
@@ -91,12 +111,13 @@ export class ThemeManager {
     }
 
     swapIcons(theme: string): void {
-        // SVG for Win95 start icon
-        const win95StartSvg = `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="10" height="10" fill="#F65314" /><rect x="13" y="1" width="10" height="10" fill="#7CBB00" /><rect x="1" y="13" width="10" height="10" fill="#00A1F1" /><rect x="13" y="13" width="10" height="10" fill="#FFBB00" /></svg>`;
+        // The start button wears the HadOS mark. It replaced an inline SVG of four
+        // coloured squares — Microsoft's logo, in Microsoft's colours.
+        const hadosStartIcon = `<img src="assets/icons/pwa_icon_512.png" alt="" width="24" height="24">`;
 
         // Icon definitions for both themes
         const icons = {
-            win95: {
+            hados: {
                 // Desktop Icons
                 'icon-mycomputer': '🖥️',
                 'icon-recyclebin': '🗑️',
@@ -111,7 +132,7 @@ export class ThemeManager {
                 'icon-taskmanager': '<img src="assets/icons/task_manager.webp" alt="Task Manager" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-pluginmanager': '🧩',
                 // Start Menu Items
-                'start-menu-btn-icon': win95StartSvg,
+                'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '📝 ' + i18n.t('app.notepad'),
                 'menu-icon-paint': '🎨 ' + i18n.t('app.paint'),
                 'menu-icon-explorer': '📂 ' + i18n.t('app.explorer'),
@@ -137,7 +158,7 @@ export class ThemeManager {
                 'icon-taskmanager': '<img src="assets/themes/winui/task_manager.webp" alt="Task Manager" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-pluginmanager': '<span style="font-size: 38px; display: block; text-align: center;">🧩</span>',
                 // Start Menu Items
-                'start-menu-btn-icon': '<img src="assets/themes/winui/start.webp" style="width:28px; height:28px; object-fit:contain;">',
+                'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/themes/winui/notepad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
                 'menu-icon-paint': '<img src="assets/themes/winui/paint.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.paint'),
                 'menu-icon-explorer': '<img src="assets/themes/winui/file_explorer.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.explorer'),
@@ -150,7 +171,7 @@ export class ThemeManager {
             }
         } as Record<string, Record<string, string>>;
 
-        const themeIcons = icons[theme] || icons['win95'] || {};
+        const themeIcons = icons[theme] || icons[DEFAULT_THEME] || {};
 
         for (const [id, content] of Object.entries(themeIcons)) {
             const iconEl = document.getElementById(id);

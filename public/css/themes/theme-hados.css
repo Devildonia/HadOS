@@ -1,0 +1,537 @@
+/* ===== HadOS THEME =====
+ *
+ * The system's own identity, replacing the Windows 95 chrome. Dark surfaces with
+ * the blue of the HadOS mark, soft elevation, rounded geometry and acrylic.
+ *
+ * Almost everything here is a token override — style.css already draws the chrome
+ * through CSS variables (--window-header-bg, --control-border, ...). The rules
+ * after the token block exist only for what a variable cannot express: geometry,
+ * hover states, blur, and the handful of places where style.css hardcodes a
+ * Windows 95 colour.
+ */
+
+body.theme-hados {
+    /* Fonts: Sora carries the brand on titles and labels. Body text uses the
+       platform UI face because only Sora 600 is vendored — 400-weight body copy
+       would be synthesised from it and look wrong. */
+    --os-font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, Inter, sans-serif;
+    --os-font-display: 'Sora', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+    --os-font-size: 13px;
+    --os-font-weight-bold: 600;
+
+    /* Brand palette, sampled from the HadOS mark. */
+    --hados-blue-deep: #0b5ed7;
+    --hados-blue: #3b9bf0;
+    --hados-blue-light: #7fd2ff;
+    --accent-color: var(--hados-blue);
+
+    /* Surfaces. */
+    --hados-bg: #0b0e13;
+    --hados-surface: #161b22;
+    --hados-elevated: #1c2431;
+    --hados-line: rgba(127, 210, 255, 0.14);
+    --hados-line-strong: rgba(127, 210, 255, 0.26);
+
+    --os-bg-color: #0b0e13;
+    --os-text-color: #e6edf7;
+    --os-text-muted: #93a4bd;
+    --os-text-color-inverted: #0b0e13;
+
+    /* The Windows 95 variables are still referenced by rules we have not migrated.
+       Remapping them here means nothing can fall back to chiselled grey. */
+    --win-gray: var(--hados-surface);
+    --win-blue: var(--hados-blue-deep);
+    --win-lightblue: var(--hados-blue);
+    --border-light: rgba(255, 255, 255, 0.06);
+    --border-dark: var(--hados-line);
+    --border-darkest: rgba(0, 0, 0, 0.55);
+
+    /* Taskbar */
+    --taskbar-bg: rgba(11, 14, 19, 0.72);
+    --taskbar-height: 48px;
+    --taskbar-border-top: 1px solid var(--hados-line);
+    --taskbar-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+
+    /* Start Menu */
+    --start-menu-bg: rgba(16, 20, 27, 0.85);
+    --start-menu-border: 1px solid;
+    --start-menu-border-color: var(--hados-line-strong);
+    --start-menu-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    --start-sidebar-bg: linear-gradient(180deg, var(--hados-blue-deep), var(--hados-blue));
+
+    /* Windows */
+    --window-bg: var(--hados-surface);
+    --window-content-bg: #10141b;
+    --window-border: 1px solid;
+    --window-border-color: var(--hados-line-strong);
+    --window-border-radius: 10px;
+    --window-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+    /* Window Header */
+    --window-header-bg: linear-gradient(180deg, #1b2330, #141a24);
+    --window-header-color: #e6edf7;
+    --window-header-height: 38px;
+
+    /* Dialogs */
+    --dialog-bg: var(--hados-surface);
+    --dialog-border: 1px solid;
+    --dialog-border-color: var(--hados-line-strong);
+    --dialog-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
+
+    /* Controls */
+    --control-bg: var(--hados-elevated);
+    --control-border: 1px solid;
+    --control-border-color: var(--hados-line);
+    --control-shadow: none;
+    --control-active-border-color: var(--accent-color);
+    --control-active-shadow: 0 0 0 2px rgba(59, 155, 240, 0.35);
+}
+
+body.theme-hados {
+    font-family: var(--os-font-family);
+    color: var(--os-text-color);
+}
+
+/* ===== WINDOWS ===== */
+
+body.theme-hados .win95-window,
+body.theme-hados .win95-dialog {
+    /* The radius has to clip the header's gradient and the content beneath it. */
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+}
+
+body.theme-hados .win95-window.maximized {
+    border-radius: 0 !important;
+    background: var(--window-bg) !important;
+}
+
+body.theme-hados .window-header {
+    font-family: var(--os-font-display);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 0 6px 0 12px;
+    border-bottom: 1px solid var(--hados-line);
+}
+
+/* The active window earns the accent; the rest recede. */
+body.theme-hados .win95-window.active-window .window-header {
+    background: linear-gradient(180deg, #223049, #161e2b);
+    box-shadow: inset 0 1px 0 rgba(127, 210, 255, 0.14);
+}
+
+body.theme-hados .window-btn {
+    width: 28px;
+    height: 26px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    /* style.css hardcodes black here, which would vanish on a dark header. */
+    color: var(--os-text-muted);
+    font-size: 12px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+body.theme-hados .window-btn:hover {
+    background: rgba(127, 210, 255, 0.12);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .window-btn:active {
+    /* Kill the Windows 95 "pushed in" nudge — modern buttons do not shift. */
+    padding: 0;
+    background: rgba(127, 210, 255, 0.2);
+}
+
+body.theme-hados .window-btn.close-btn:hover,
+body.theme-hados .window-btn[data-action="close"]:hover {
+    background: #e5484d;
+    color: #ffffff;
+}
+
+body.theme-hados .window-body {
+    background: var(--window-content-bg);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .window-resize-handle {
+    background: none;
+    /* Two short strokes instead of the Win95 diagonal hatch. */
+    border-right: 2px solid var(--hados-line-strong);
+    border-bottom: 2px solid var(--hados-line-strong);
+    border-bottom-right-radius: var(--window-border-radius);
+    width: 12px;
+    height: 12px;
+    margin: 0 3px 3px 0;
+    opacity: 0.7;
+}
+
+/* ===== CONTROLS ===== */
+
+body.theme-hados .win95-btn,
+body.theme-hados button:not(.window-btn):not(#start-button) {
+    border-radius: 6px;
+    color: var(--os-text-color);
+    font-family: var(--os-font-family);
+    font-weight: 500;
+    padding: 6px 16px;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+body.theme-hados .win95-btn:hover:not(:disabled),
+body.theme-hados button:not(.window-btn):not(#start-button):hover:not(:disabled) {
+    /* style.css brightens; on dark surfaces that reads as grey mush. */
+    filter: none;
+    background: #243044;
+    border-color: var(--hados-line-strong);
+}
+
+body.theme-hados .win95-btn:active:not(:disabled),
+body.theme-hados button:not(.window-btn):not(#start-button):active:not(:disabled) {
+    padding: 6px 16px;
+    transform: scale(0.97);
+    border-color: var(--accent-color);
+}
+
+body.theme-hados .win95-btn:focus-visible,
+body.theme-hados button:focus-visible,
+body.theme-hados input:focus-visible,
+body.theme-hados select:focus-visible {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: var(--control-active-shadow);
+}
+
+body.theme-hados .win95-btn:disabled,
+body.theme-hados button:disabled {
+    color: #5a6b80;
+    /* The Win95 disabled look embossed the label with a white shadow. */
+    text-shadow: none;
+    opacity: 0.6;
+}
+
+body.theme-hados input[type="text"],
+body.theme-hados input[type="number"],
+body.theme-hados input:not([type]),
+body.theme-hados textarea,
+body.theme-hados select {
+    background: #0d1117;
+    color: var(--os-text-color);
+    border: 1px solid var(--hados-line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: var(--os-font-family);
+    font-size: var(--os-font-size);
+}
+
+body.theme-hados input::placeholder,
+body.theme-hados textarea::placeholder {
+    color: #5a6b80;
+}
+
+/* ===== PROGRESS ===== */
+
+body.theme-hados .progress-container {
+    background: #0d1117;
+    border: 1px solid var(--hados-line);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+}
+
+body.theme-hados #install-bar-fill {
+    background: linear-gradient(90deg, var(--hados-blue-deep), var(--hados-blue-light));
+    box-shadow: 0 0 12px rgba(59, 155, 240, 0.6);
+}
+
+/* ===== DIALOGS ===== */
+
+body.theme-hados .win95-dialog {
+    border-radius: var(--window-border-radius);
+}
+
+body.theme-hados .dialog-message {
+    font-size: var(--os-font-size);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .dialog-buttons {
+    border-top: 1px solid var(--hados-line);
+    padding-top: 16px;
+    justify-content: flex-end;
+}
+
+/* ===== TASKBAR ===== */
+
+body.theme-hados #taskbar {
+    background: var(--taskbar-bg);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    box-shadow: var(--taskbar-shadow);
+    padding: 0 8px;
+    gap: 6px;
+}
+
+body.theme-hados .taskbar-button {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    height: 36px;
+    color: var(--os-text-muted);
+    font-size: 12px;
+    box-shadow: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+body.theme-hados .taskbar-button:hover {
+    background: rgba(127, 210, 255, 0.1);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .taskbar-button:active {
+    /* Undo the Win95 pixel nudge. */
+    padding: 0 5px;
+    border-color: var(--hados-line-strong);
+}
+
+/* The running/active app is marked by an accent underline, not bold text. */
+body.theme-hados .taskbar-button.active {
+    background: rgba(59, 155, 240, 0.16);
+    color: var(--os-text-color);
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--accent-color);
+}
+
+/* ===== START BUTTON ===== */
+
+body.theme-hados #start-button {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    box-shadow: none;
+    height: 38px;
+    padding: 0 12px 0 8px;
+    gap: 8px;
+    color: var(--os-text-color);
+    font-family: var(--os-font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    transition: background 0.15s ease, transform 0.08s ease;
+}
+
+body.theme-hados #start-button:hover {
+    background: rgba(127, 210, 255, 0.12);
+}
+
+body.theme-hados #start-button:active {
+    background: rgba(127, 210, 255, 0.2);
+    transform: scale(0.96);
+    padding: 0 12px 0 8px;
+}
+
+body.theme-hados #start-button .start-icon {
+    margin: 0;
+}
+
+body.theme-hados #start-button .start-icon img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    /* The mark is the only saturated thing on the bar — let it glow a little. */
+    filter: drop-shadow(0 0 6px rgba(59, 155, 240, 0.5));
+}
+
+/* ===== START MENU ===== */
+
+body.theme-hados #start-menu {
+    bottom: var(--taskbar-height);
+    width: 280px;
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(28px) saturate(140%);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+    padding: 0;
+}
+
+body.theme-hados .start-sidebar {
+    width: 36px;
+    font-family: var(--os-font-display);
+    font-size: 16px;
+    letter-spacing: 3px;
+}
+
+body.theme-hados .menu-items-container {
+    padding: 8px;
+    gap: 2px;
+}
+
+body.theme-hados .menu-item {
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--os-text-color);
+    font-size: var(--os-font-size);
+    transition: background 0.12s ease;
+}
+
+/* .menu-item is shared by the Start menu and the in-app menu bars, so its hover
+   is defined once, further down, under "IN-APP MENU BARS". */
+
+body.theme-hados .menu-separator {
+    border: none;
+    border-top: 1px solid var(--hados-line);
+    margin: 6px 4px;
+}
+
+body.theme-hados .submenu {
+    background: var(--start-menu-bg);
+    border: 1px solid var(--hados-line-strong);
+    border-radius: 10px;
+    box-shadow: var(--start-menu-shadow);
+    padding: 6px;
+    backdrop-filter: blur(28px) saturate(140%);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+}
+
+/* ===== SYSTEM TRAY ===== */
+
+body.theme-hados #system-tray,
+body.theme-hados #clock {
+    color: var(--os-text-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===== CONTEXT / WINDOW MENUS ===== */
+
+body.theme-hados .window-menu,
+body.theme-hados .context-menu,
+body.theme-hados .dropdown-menu {
+    background: var(--start-menu-bg);
+    border: 1px solid var(--hados-line-strong);
+    border-radius: 10px;
+    box-shadow: var(--start-menu-shadow);
+    color: var(--os-text-color);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+
+/* ===== IN-APP MENU BARS AND DROPDOWNS =====
+ * These predate the token system and hardcode Windows 95 greys and navy. Left
+ * alone they render light-on-light: the Notepad dropdowns measured a 1.54:1
+ * contrast ratio against their own text.
+ */
+
+body.theme-hados .window-menu {
+    border-bottom: 1px solid var(--hados-line);
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+/* The deep blue, not --accent-color: white on #3b9bf0 measures 2.94:1, which
+   fails AA for label text. On #0b5ed7 it clears 5:1. */
+body.theme-hados .menu-item:hover,
+body.theme-hados .notepad-menu-label:hover,
+body.theme-hados .notepad-menu-entry.open .notepad-menu-label,
+body.theme-hados .notepad-dropdown-item:hover {
+    background: var(--hados-blue-deep);
+    color: #ffffff;
+    border-radius: 4px;
+}
+
+/* The pet's toolbar label hardcodes black, which disappears on dark chrome. */
+body.theme-hados .ragdoll-text {
+    color: var(--os-text-color);
+    font-size: 12px;
+}
+
+body.theme-hados .notepad-menu-label {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+body.theme-hados .notepad-dropdown,
+body.theme-hados .notepad-dialog {
+    background: var(--hados-elevated);
+    color: var(--os-text-color);
+    border: 1px solid var(--hados-line-strong);
+    border-radius: 8px;
+    box-shadow: var(--start-menu-shadow);
+    font-size: 12px;
+    padding: 6px;
+}
+
+body.theme-hados .notepad-dropdown-item {
+    border-radius: 4px;
+    padding: 6px 14px;
+}
+
+body.theme-hados .notepad-dropdown-item.disabled,
+body.theme-hados .notepad-dropdown-item.disabled:hover {
+    color: #5a6b80;
+    background: transparent;
+}
+
+body.theme-hados .notepad-dropdown-separator {
+    background: var(--hados-line);
+    border-bottom: none;
+    margin: 5px 6px;
+}
+
+/* ===== SCROLLBARS ===== */
+
+body.theme-hados ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+body.theme-hados ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body.theme-hados ::-webkit-scrollbar-thumb {
+    background: rgba(127, 210, 255, 0.2);
+    border: 2px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+}
+
+body.theme-hados ::-webkit-scrollbar-thumb:hover {
+    background: rgba(127, 210, 255, 0.38);
+    background-clip: content-box;
+}
+
+/* Win95 drew stepper arrows at each end; modern scrollbars have none. */
+body.theme-hados ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* ===== DESKTOP ICONS ===== */
+
+body.theme-hados .icon span {
+    color: var(--os-text-color);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    font-size: 12px;
+}
+
+body.theme-hados .icon:hover .icon-box {
+    background: rgba(127, 210, 255, 0.12);
+    border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    body.theme-hados .win95-btn,
+    body.theme-hados button,
+    body.theme-hados .taskbar-button,
+    body.theme-hados #start-button,
+    body.theme-hados .window-btn {
+        transition: none;
+    }
+}

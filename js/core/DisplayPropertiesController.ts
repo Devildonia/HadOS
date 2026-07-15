@@ -8,7 +8,7 @@ export function setupDisplayProperties(): void {
             if (window.playBlip) window.playBlip(600);
             const tm: any = Services.get('ThemeManager');
             if (tm) {
-                const nextTheme = tm.currentTheme === 'win95' ? 'modern' : 'win95';
+                const nextTheme = tm.currentTheme === 'modern' ? 'hados' : 'modern';
                 tm.applyTheme(nextTheme);
             }
         };

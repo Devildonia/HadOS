@@ -17,6 +17,13 @@ export interface IDesktopManager {
     handleWallpaperUpload(input: HTMLInputElement | { files: FileList | File[] }): void;
 }
 
+/**
+ * The Windows 95 grey that init() used to apply and save as its default taskbar
+ * colour. An install carrying exactly this value never chose it, so it is treated
+ * as "no preference" rather than as an override of the HadOS theme.
+ */
+const LEGACY_DEFAULT_TASKBAR_COLOR = '#c0c0c0';
+
 const DesktopManager: IDesktopManager = (() => {
     'use strict';
 
@@ -66,7 +73,7 @@ const DesktopManager: IDesktopManager = (() => {
 
         // Restore state (Only set image wallpaper if user specifically set one)
         const wallpaper = Store.get('wallpaper', '') || Utils.getStorage('desktop-wallpaper', '');
-        const taskbarColor = Store.get('taskbarColor', '') || Utils.getStorage('taskbar-color', '#c0c0c0');
+        const taskbarColor = Store.get('taskbarColor', '') || Utils.getStorage('taskbar-color', '');
 
         if (wallpaper) {
             setWallpaper(wallpaper, true);
@@ -74,7 +81,15 @@ const DesktopManager: IDesktopManager = (() => {
             setWallpaper('', true);
         }
 
-        if (taskbarColor) setTaskbarColor(taskbarColor, true);
+        // A colour is a user override, pinned inline on <body>, which by definition
+        // beats the theme. Init used to default it to Win95 grey and save that, so
+        // every install ended up overriding its own theme with a colour nobody
+        // picked. Only honour a real choice; drop the old auto-written default.
+        if (taskbarColor && taskbarColor.toLowerCase() !== LEGACY_DEFAULT_TASKBAR_COLOR) {
+            setTaskbarColor(taskbarColor, true);
+        } else if (taskbarColor) {
+            clearTaskbarColor();
+        }
     }
 
     function destroy(): void {
@@ -162,6 +177,16 @@ const DesktopManager: IDesktopManager = (() => {
             Utils.Logger.log(`[DESKTOP] Wallpaper changed: ${url || 'Standard'}`);
             _playBlip();
         }
+    }
+
+    /**
+     * Removes a taskbar-colour override so the active theme paints the bar again.
+     */
+    function clearTaskbarColor(): void {
+        document.documentElement.style.removeProperty('--taskbar-bg');
+        document.body?.style.removeProperty('--taskbar-bg');
+        Store.set('taskbarColor', '');
+        Utils.setStorage('taskbar-color', '');
     }
 
     function setTaskbarColor(color: string, isSilent: boolean = false): void {

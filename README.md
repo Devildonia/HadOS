@@ -2,7 +2,7 @@
 
 # 🖥️ HadOS
 
-**A Web OS with a retro-90s soul: isolated processes, mediated syscalls and consented capabilities — running entirely in your browser.**
+**A Web OS with its own face: isolated processes, mediated syscalls and consented capabilities — running entirely in your browser.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -24,7 +24,7 @@
 
 ---
 
-HadOS is a fully functional desktop environment that runs entirely in the browser — but under the retro chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and a 667-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
+HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and a 667-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
 
 > [!NOTE]
 > HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/). See the [CHANGELOG](CHANGELOG.md).
@@ -64,7 +64,11 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 
 ## 📸 Screenshots
 
-| Classic theme | Modern theme (HadOS UI) |
+> [!WARNING]
+> These screenshots predate the HadOS chrome and still show the retired Windows 95 theme.
+> They need retaking.
+
+| Classic theme (retired) | Modern theme (HadOS UI) |
 |:---:|:---:|
 | ![Classic Win95 desktop](docs/screenshots/desktop-win95.png) | ![Modern HadOS UI desktop](docs/screenshots/desktop-modern.png) |
 | **Start Menu** | **Multitasking — Task Manager & Terminal** |
@@ -272,7 +276,7 @@ HadOS/
 │  └─ webos-roadmap/  # per-phase design notes (0 → 5)
 ├─ public/
 │  ├─ games/       # sandboxed iframe games
-│  ├─ css/themes/  # theme-base / theme-win95 / theme-modern tokens
+│  ├─ css/themes/  # theme-base / theme-hados / theme-modern tokens
 │  └─ sw.js        # PWA service worker source (Workbox injectManifest)
 ├─ test/           # Vitest unit/characterization + Playwright E2E
 ├─ scripts/        # create-app.js scaffolder
