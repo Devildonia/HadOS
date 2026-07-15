@@ -12,6 +12,10 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="/assets/icons/pwa_icon_512.png">
     <link rel="manifest" href="/manifest.json">
+
+    <!-- Brand font for the splash: preloaded so the boot title paints in Sora, not in the fallback. -->
+    <link rel="preload" href="/assets/fonts/sora-600.woff2" as="font" type="font/woff2" crossorigin>
+
     <link rel="stylesheet" href="/css/themes/theme-base.css">
     <link rel="stylesheet" href="/css/themes/theme-win95.css">
     <link rel="stylesheet" href="/css/themes/theme-modern.css">
@@ -39,11 +43,16 @@
         <div id="bsod-content"></div>
     </div>
 
-    <!-- Windows 95 Splash Screen -->
+    <!-- HadOS Splash Screen -->
     <div id="splash-screen" style="display:none;">
-        <img src="assets/icons/pwa_icon_512.png" alt="Windows 95">
-        <div class="splash-progress">
-            <div class="splash-progress-bar"></div>
+        <img src="assets/icons/pwa_icon_512.png" alt="HadOS">
+        <p class="splash-title">loading <span class="splash-brand-had">Had</span>OS</p>
+        <div class="splash-loader">
+            <div class="splash-progress" role="progressbar" aria-label="Boot progress" aria-valuemin="0"
+                aria-valuemax="100" aria-valuenow="0">
+                <div class="splash-progress-bar"></div>
+            </div>
+            <div class="splash-percent">0%</div>
         </div>
     </div>
 

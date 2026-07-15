@@ -118,7 +118,29 @@ html {
     }
 }
 
-/* ===== WINDOWS 95 SPLASH SCREEN ===== */
+/* ===== HadOS SPLASH SCREEN ===== */
+
+/**
+ * Sora — the HadOS brand face. Self-hosted (the CSP is default-src 'self', and a
+ * boot screen must never wait on a third party). font-display: block so the title
+ * never flashes in MS Sans Serif before swapping; the file is preloaded in <head>.
+ */
+@font-face {
+    font-family: 'Sora';
+    src: url('/assets/fonts/sora-600.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: block;
+}
+
+:root {
+    /* Splash palette, sampled from the HadOS mark. */
+    --hados-blue-deep: #0b5ed7;
+    --hados-blue: #3b9bf0;
+    --hados-blue-light: #7fd2ff;
+    --hados-font: 'Sora', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+}
+
 #splash-screen {
     position: fixed;
     top: 0;
@@ -135,34 +157,130 @@ html {
 
 #splash-screen img {
     max-width: 90%;
-    max-height: 70vh;
+    max-height: 55vh;
     object-fit: contain;
 }
 
-.splash-progress {
-    position: absolute;
-    bottom: 15%;
-    width: 400px;
-    max-width: 80%;
-    height: 4px;
-    background-color: #000080;
-    border: 1px solid #ffffff;
+.splash-title {
+    margin: clamp(16px, 4vh, 40px) 0 0;
+    font-family: var(--hados-font);
+    font-weight: 600;
+    font-size: clamp(17px, 2vw, 26px);
+    letter-spacing: 0.22em;
+    color: #a8d4ff;
+    /* Optical centring: the tracking adds a trailing gap on the last letter. */
+    text-indent: 0.22em;
 }
 
-.splash-progress-bar {
-    width: 0%;
-    height: 100%;
-    background-color: #1084d0;
-    animation: splashProgress 4s ease-in-out forwards;
+/* Slow sheen across the wordmark, matching the bar. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .splash-title {
+        background: linear-gradient(100deg,
+                var(--hados-blue) 20%,
+                #dff0ff 45%,
+                var(--hados-blue) 70%);
+        background-size: 250% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: splashTitleSheen 4s ease-in-out infinite;
+    }
 }
 
-@keyframes splashProgress {
+/**
+ * "Had" stays white against the blue "OS" — the brand lockup. It has to override
+ * both `color` and `-webkit-text-fill-color`: the parent sets the text
+ * transparent so its gradient shows through, and in WebKit text-fill-color wins
+ * over color, so setting only one leaves the letters invisible.
+ */
+.splash-brand-had {
+    color: #ffffff;
+    -webkit-text-fill-color: #ffffff;
+}
+
+@keyframes splashTitleSheen {
     0% {
-        width: 0%;
+        background-position: 120% 0;
     }
 
     100% {
-        width: 100%;
+        background-position: -60% 0;
+    }
+}
+
+.splash-loader {
+    position: absolute;
+    bottom: 15%;
+    width: 420px;
+    max-width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.splash-progress {
+    position: relative;
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(127, 210, 255, 0.22);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+}
+
+.splash-progress-bar {
+    position: relative;
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg,
+            var(--hados-blue-deep),
+            var(--hados-blue) 55%,
+            var(--hados-blue-light));
+    box-shadow: 0 0 10px rgba(59, 155, 240, 0.9), 0 0 26px rgba(59, 155, 240, 0.4);
+    /* Width is driven by BootLoader; the transition just smooths the ticks. */
+    transition: width 0.2s linear;
+}
+
+/* Travelling highlight: keeps the bar visibly alive while it waits at the hold point. */
+.splash-progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    background-size: 45% 100%;
+    background-repeat: no-repeat;
+    animation: splashSheen 1.3s linear infinite;
+}
+
+@keyframes splashSheen {
+    0% {
+        background-position: -50% 0;
+    }
+
+    100% {
+        background-position: 150% 0;
+    }
+}
+
+.splash-percent {
+    font-family: var(--hados-font);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: rgba(168, 212, 255, 0.85);
+    /* Digits must not jitter as the number grows. */
+    font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .splash-progress-bar::after,
+    .splash-title {
+        animation: none;
     }
 }
 

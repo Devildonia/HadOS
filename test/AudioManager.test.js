@@ -300,7 +300,7 @@ describe('AudioManager — loadSound()', () => {
             value: { protocol: 'http:' }, configurable: true,
         });
 
-        await am.loadSound('shutdown', 'assets/audio/w95_shutdown.opus');
+        await am.loadSound('shutdown', 'assets/audio/HadOS_shutdown.opus');
         expect(am.audioBuffers.get('shutdown')).toBe(fakeBuffer);
     });
 

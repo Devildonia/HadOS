@@ -96,19 +96,27 @@ console.log(`[VITE] Windows 95 App Center v${CONFIG.APP.VERSION} — ES Modules 
 // system is ready by the time any app can read it. VFS.init() is idempotent.
 async function boot(): Promise<void> {
     try {
-        await VFS.init();
-    } catch (err) {
-        console.error('[Kernel] VFS init failed, booting with defaults:', err);
-    }
-    if (window.initOS) window.initOS();
+        try {
+            await VFS.init();
+        } catch (err) {
+            console.error('[Kernel] VFS init failed, booting with defaults:', err);
+        }
+        if (window.initOS) window.initOS();
 
-    // Fase 5: keep the session up to date and resume the previous one (open apps
-    // + window layout). No saved session -> restore() is a no-op.
-    try {
-        SessionManager.init();
-        await SessionManager.restore();
-    } catch (err) {
-        console.error('[Kernel] Session restore failed:', err);
+        // Fase 5: keep the session up to date and resume the previous one (open apps
+        // + window layout). No saved session -> restore() is a no-op.
+        try {
+            SessionManager.init();
+            await SessionManager.restore();
+        } catch (err) {
+            console.error('[Kernel] Session restore failed:', err);
+        }
+    } finally {
+        // Release the splash: its progress bar holds at 90% until this lands, so a
+        // slow session restore keeps the splash up rather than revealing a
+        // half-built desktop. In a finally so a thrown boot still reaches the
+        // desktop instead of stranding the user on the splash.
+        BootLoader.signalReady();
     }
 }
 

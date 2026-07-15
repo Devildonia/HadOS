@@ -56,7 +56,7 @@ const DesktopManager: IDesktopManager = (() => {
         // Preload Startup Sound and Window Sounds
         const audio = svc('AudioManager');
         if (audio) {
-            audio.loadSound('startup', 'assets/audio/w95_startup.opus');
+            audio.loadSound('startup', 'assets/audio/HadOS_startup.opus');
             audio.loadSound('startup_modern', 'assets/themes/winui/audio/start_winui.opus');
             audio.loadSound('open_window_modern', 'assets/themes/winui/audio/open_window_winui.opus');
             audio.loadSound('close_window_modern', 'assets/themes/winui/audio/close_window_winui.opus');

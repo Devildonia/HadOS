@@ -105,7 +105,7 @@ Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life 
 ### 🌈 Advanced Visuals
 - **GLSL Wallpaper Engine** — multi-pass shaders for dynamic backgrounds.
 - **HDR Support** — detection and toggling of High Dynamic Range rendering.
-- **BIOS & Boot** — realistic startup sequence with BIOS check and splash.
+- **BIOS & Boot** — POST screen that reports your real hardware (CPU, GPU, memory, storage quota), then a splash whose progress bar waits on the actual boot.
 
 ---
 

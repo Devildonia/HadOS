@@ -70,7 +70,7 @@ window.initOS = function (): void {
     bootStep('Audio System', () => {
         if (AudioManager) {
             AudioManager.getInstance().init();
-            AudioManager.getInstance().loadSound('shutdown', 'assets/audio/w95_shutdown.opus');
+            AudioManager.getInstance().loadSound('shutdown', 'assets/audio/HadOS_shutdown.opus');
             AudioManager.getInstance().loadSound('shutdown_modern', 'assets/themes/winui/audio/logoff_winui.opus');
         }
     });
