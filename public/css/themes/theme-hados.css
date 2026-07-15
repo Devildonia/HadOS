@@ -372,16 +372,23 @@ body.theme-hados .menu-items-container {
     gap: 2px;
 }
 
-body.theme-hados .menu-item {
+/**
+ * Start-menu entries and in-app menu-bar entries. They are separate components
+ * with separate classes, and the theme styles both here on purpose.
+ *
+ * Until now they shared the class .menu-item, and the menu bar picked up this
+ * look by accident — the name clash was the only reason Paint's File/Edit bar
+ * was not raw Windows 95 navy. Naming .window-menu-item explicitly keeps exactly
+ * the same rendering, but by decision rather than by collision.
+ */
+body.theme-hados .menu-item,
+body.theme-hados .window-menu-item {
     border-radius: 6px;
     padding: 8px 10px;
     color: var(--os-text-color);
     font-size: var(--os-font-size);
     transition: background 0.12s ease;
 }
-
-/* .menu-item is shared by the Start menu and the in-app menu bars, so its hover
-   is defined once, further down, under "IN-APP MENU BARS". */
 
 body.theme-hados .menu-separator {
     border: none;
@@ -438,6 +445,7 @@ body.theme-hados .window-menu {
 /* The deep blue, not --accent-color: white on #3b9bf0 measures 2.94:1, which
    fails AA for label text. On #0b5ed7 it clears 5:1. */
 body.theme-hados .menu-item:hover,
+body.theme-hados .window-menu-item:hover,
 body.theme-hados .notepad-menu-label:hover,
 body.theme-hados .notepad-menu-entry.open .notepad-menu-label,
 body.theme-hados .notepad-dropdown-item:hover {

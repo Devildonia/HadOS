@@ -115,7 +115,7 @@ export const WindowFactory: IWindowFactory = (function () {
             menuBar.className = 'window-menu';
             menu.forEach(label => {
                 const item = document.createElement('span');
-                item.className = 'menu-item';
+                item.className = 'window-menu-item';
                 item.textContent = label;
                 menuBar.appendChild(item);
             });

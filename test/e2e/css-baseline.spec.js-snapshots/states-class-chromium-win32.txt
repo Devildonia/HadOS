@@ -1,0 +1,137 @@
+#ragdollToggle.active
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 135.516px
+  height: 24px
+  min-height: 24px
+  max-height: none
+  padding: 6px 16px
+  margin: 2px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(230, 237, 247)
+  background-color: rgb(176, 176, 176)
+  background-image: none
+  border-width: 2px
+  border-style: inset
+  border-color: rgb(255, 255, 255)
+  border-radius: 6px
+  box-shadow: none
+  outline: rgb(230, 237, 247) none 3px
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
+  font-size: 13px
+  font-weight: 500
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: center
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: center
+  gap: 6px
+  flex: 0 1 auto
+  transform: none
+  transition: background, border-color, transform
+  animation-name: none
+  backdrop-filter: none
+  cursor: pointer
+
+#ragdollToggle.disabled
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 0.6
+  width: 133.516px
+  height: 24px
+  min-height: 24px
+  max-height: none
+  padding: 6px 16px
+  margin: 2px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(230, 237, 247)
+  background-color: rgb(28, 36, 49)
+  background-image: none
+  border-width: 1px
+  border-style: solid
+  border-color: rgba(127, 210, 255, 0.14)
+  border-radius: 6px
+  box-shadow: none
+  outline: rgb(230, 237, 247) none 3px
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
+  font-size: 13px
+  font-weight: 500
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: center
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: center
+  gap: 6px
+  flex: 0 1 auto
+  transform: none
+  transition: background, border-color, transform
+  animation-name: none
+  backdrop-filter: none
+  cursor: not-allowed
+
+#hdr-toggle.active
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 0.6
+  width: 116.406px
+  height: 24px
+  min-height: 24px
+  max-height: none
+  padding: 6px 16px
+  margin: 2px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(230, 237, 247)
+  background-color: rgb(176, 176, 176)
+  background-image: none
+  border-width: 2px
+  border-style: inset
+  border-color: rgb(255, 255, 255)
+  border-radius: 6px
+  box-shadow: none
+  outline: rgb(230, 237, 247) none 3px
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
+  font-size: 13px
+  font-weight: 500
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: center
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: center
+  gap: 6px
+  flex: 0 1 auto
+  transform: none
+  transition: background, border-color, transform
+  animation-name: none
+  backdrop-filter: none
+  cursor: not-allowed

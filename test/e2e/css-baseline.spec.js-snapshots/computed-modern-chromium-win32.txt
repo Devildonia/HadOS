@@ -374,12 +374,12 @@ body
   visibility: visible
   opacity: 1
   width: 220px
-  height: 237.672px
+  height: 277.672px
   min-height: 0px
   max-height: none
   padding: 0px
   margin: 0px
-  top: -239.672px
+  top: -279.672px
   left: 0px
   right: 1058px
   bottom: 48px
@@ -466,7 +466,7 @@ body
   visibility: visible
   opacity: 1
   width: 218px
-  height: 22.5px
+  height: 30.5px
   min-height: 0px
   max-height: none
   padding: 2px
@@ -512,10 +512,10 @@ body
   visibility: visible
   opacity: 1
   width: 214px
-  height: 18.5px
+  height: 26.5px
   min-height: auto
   max-height: none
-  padding: 1px 3px
+  padding: 5px 10px
   margin: 0px
   top: 0px
   left: 0px
@@ -1377,3 +1377,239 @@ body
   animation-name: none
   backdrop-filter: none
   cursor: auto
+
+#system-tray
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 301.547px
+  height: 26px
+  min-height: auto
+  max-height: none
+  padding: 0px 8px
+  margin: 0px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(0, 0, 0)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: none
+  border-width: 2px
+  border-style: solid
+  border-color: rgb(229, 229, 229) rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgb(229, 229, 229)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(0, 0, 0) none 3px
+  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-size: 13px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: center
+  gap: normal
+  flex: 0 1 auto
+  transform: none
+  transition: all
+  animation-name: none
+  backdrop-filter: none
+  cursor: auto
+
+#clock
+  <absent>
+
+#ragdollToggle
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 123.172px
+  height: 24px
+  min-height: 24px
+  max-height: none
+  padding: 5px 15px
+  margin: 2px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(0, 0, 0)
+  background-color: rgb(249, 249, 249)
+  background-image: none
+  border-width: 1px
+  border-style: solid
+  border-color: rgb(209, 209, 209)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(0, 0, 0) none 3px
+  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-size: 13px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: center
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: center
+  gap: 6px
+  flex: 0 1 auto
+  transform: none
+  transition: none
+  animation-name: none
+  backdrop-filter: none
+  cursor: pointer
+
+#hdr-toggle
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 0.6
+  width: 105.375px
+  height: 24px
+  min-height: 24px
+  max-height: none
+  padding: 5px 15px
+  margin: 2px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(128, 128, 128)
+  background-color: rgb(249, 249, 249)
+  background-image: none
+  border-width: 1px
+  border-style: solid
+  border-color: rgb(209, 209, 209)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(128, 128, 128) none 3px
+  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-size: 13px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: center
+  text-transform: none
+  text-shadow: rgba(0, 0, 0, 0) 1px 1px 0px
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: center
+  gap: 6px
+  flex: 0 1 auto
+  transform: none
+  transition: none
+  animation-name: none
+  backdrop-filter: none
+  cursor: not-allowed
+
+.ragdoll-text
+  display: block
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 51.375px
+  height: 16.5px
+  min-height: auto
+  max-height: none
+  padding: 0px
+  margin: 0px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(0, 0, 0)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: none
+  border-width: 0px
+  border-style: solid
+  border-color: rgb(229, 231, 235)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(0, 0, 0) none 3px
+  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-size: 11px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 16.5px
+  text-align: center
+  text-transform: none
+  text-shadow: rgba(0, 0, 0, 0) 1px 1px 0px
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: normal
+  flex: 0 1 auto
+  transform: none
+  transition: all
+  animation-name: none
+  backdrop-filter: none
+  cursor: not-allowed
+
+.window-menu
+  display: flex
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 498px
+  height: 23.5px
+  min-height: auto
+  max-height: none
+  padding: 2px 5px
+  margin: 0px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(0, 0, 0)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: none
+  border-width: 0px 0px 1px
+  border-style: solid
+  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgb(128, 128, 128)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(0, 0, 0) none 3px
+  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-size: 11px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 16.5px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: 10px
+  flex: 0 1 auto
+  transform: none
+  transition: all
+  animation-name: none
+  backdrop-filter: none
+  cursor: auto
+
+.window-menu .window-menu-item
+  <absent>

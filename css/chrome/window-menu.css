@@ -1,4 +1,13 @@
-/* ===== WINDOW MENU ===== */
+/* ===== WINDOW MENU =====
+ * The menu bar inside an application window (Paint, and anything WindowFactory
+ * builds with a `menu` array).
+ *
+ * Its items used to be .menu-item — the same class the Start menu uses for an
+ * unrelated component. Two different surfaces sharing one class meant whichever
+ * partial happened to come last silently restyled the other; the Start menu's
+ * hover already had to be defined once, globally, because of it. They are now
+ * .window-menu-item and own their own look.
+ */
 .window-menu {
     border-bottom: 1px solid #808080;
     padding: 2px 5px;
@@ -7,12 +16,12 @@
     font-size: 11px;
 }
 
-.menu-item {
+.window-menu-item {
     cursor: pointer;
     padding: 1px 3px;
 }
 
-.menu-item:hover {
+.window-menu-item:hover {
     background: #000080;
     color: white;
 }

@@ -200,7 +200,7 @@ body
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgba(0, 0, 0, 0)
+  background-color: rgba(127, 210, 255, 0.12)
   background-image: none
   border-width: 1px
   border-style: solid
@@ -521,15 +521,15 @@ body
   left: 0px
   right: 0px
   bottom: 0px
-  color: rgb(255, 255, 255)
-  background-color: rgb(11, 94, 215)
+  color: rgb(230, 237, 247)
+  background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px
   border-style: solid
   border-color: rgb(229, 231, 235)
-  border-radius: 4px
+  border-radius: 6px
   box-shadow: none
-  outline: rgb(255, 255, 255) none 3px
+  outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
   font-size: 13px
   font-weight: 400
@@ -557,8 +557,8 @@ body
   overflow: hidden
   visibility: visible
   opacity: 1
-  width: 228px
-  height: 1px
+  width: auto
+  height: 0px
   min-height: 0px
   max-height: none
   padding: 0px
@@ -567,15 +567,15 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(255, 255, 255)
+  color: rgb(230, 237, 247)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 1px 0px 0px
   border-style: solid none none
-  border-color: rgba(127, 210, 255, 0.14) rgb(255, 255, 255) rgb(255, 255, 255)
+  border-color: rgba(127, 210, 255, 0.14) rgb(230, 237, 247) rgb(230, 237, 247)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(255, 255, 255) none 3px
+  outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
   font-size: 13px
   font-weight: 400
@@ -597,23 +597,23 @@ body
   cursor: pointer
 
 #start-menu .submenu
-  display: block
+  display: none
   position: absolute
   z-index: 10001
   overflow: visible
   visibility: visible
   opacity: 1
   width: 250px
-  height: 275.5px
+  height: auto
   min-height: 0px
   max-height: none
   padding: 6px
   margin: 0px
-  top: -237px
-  left: 262px
-  right: -250px
+  top: auto
+  left: 100%
+  right: auto
   bottom: -3px
-  color: rgb(255, 255, 255)
+  color: rgb(230, 237, 247)
   background-color: rgba(16, 20, 27, 0.85)
   background-image: none
   border-width: 1px
@@ -621,7 +621,7 @@ body
   border-color: rgba(127, 210, 255, 0.26)
   border-radius: 10px
   box-shadow: rgba(0, 0, 0, 0.6) 0px 24px 64px 0px
-  outline: rgb(255, 255, 255) none 3px
+  outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
   font-size: 13px
   font-weight: 400
@@ -1572,8 +1572,8 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 498px
-  height: 34px
+  width: 598px
+  height: 45.5px
   min-height: auto
   max-height: none
   padding: 4px 8px
@@ -1612,4 +1612,47 @@ body
   cursor: auto
 
 .window-menu .window-menu-item
-  <absent>
+  display: block
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 39.4531px
+  height: 35.5px
+  min-height: auto
+  max-height: none
+  padding: 8px 10px
+  margin: 0px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(230, 237, 247)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: none
+  border-width: 0px
+  border-style: solid
+  border-color: rgb(229, 231, 235)
+  border-radius: 6px
+  box-shadow: none
+  outline: rgb(230, 237, 247) none 3px
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
+  font-size: 13px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 19.5px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: normal
+  flex: 0 1 auto
+  transform: none
+  transition: background
+  animation-name: none
+  backdrop-filter: none
+  cursor: pointer

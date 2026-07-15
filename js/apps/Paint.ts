@@ -10,12 +10,12 @@ import { Services } from '../core/ServiceContainer.js';
 
 const PAINT_BODY_HTML = `
     <div class="window-menu">
-        <span class="menu-item">File</span>
-        <span class="menu-item">Edit</span>
-        <span class="menu-item">View</span>
-        <span class="menu-item">Image</span>
-        <span class="menu-item">Colors</span>
-        <span class="menu-item">Help</span>
+        <span class="window-menu-item">File</span>
+        <span class="window-menu-item">Edit</span>
+        <span class="window-menu-item">View</span>
+        <span class="window-menu-item">Image</span>
+        <span class="window-menu-item">Colors</span>
+        <span class="window-menu-item">Help</span>
     </div>
     <div class="paint-main-area">
         <div class="paint-toolbar">

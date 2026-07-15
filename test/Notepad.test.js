@@ -23,8 +23,8 @@ describe('Notepad', () => {
             <div id="win-notepad" class="win95-window" style="display:none;">
                 <div class="window-header"><span>Untitled - Notepad</span></div>
                 <div class="window-menu">
-                    <span class="menu-item">File</span>
-                    <span class="menu-item">Edit</span>
+                    <span class="window-menu-item">File</span>
+                    <span class="window-menu-item">Edit</span>
                 </div>
                 <div class="window-body">
                     <textarea id="notepad-textarea"></textarea>

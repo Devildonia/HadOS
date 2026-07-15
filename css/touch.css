@@ -5,7 +5,8 @@ button,
 .icon,
 .window-btn,
 .window-header,
-.menu-item {
+.menu-item,
+.window-menu-item {
     touch-action: manipulation;
 }
 
@@ -34,7 +35,8 @@ button,
         padding: 4px 12px;
     }
 
-    .menu-item {
+    .menu-item,
+    .window-menu-item {
         min-height: 48px;
         display: flex;
         align-items: center;

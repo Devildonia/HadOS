@@ -36,13 +36,13 @@ body.theme-hados #start-button .start-icon img { width: 24px; height: 24px; obje
 body.theme-hados #start-menu { bottom: var(--taskbar-height); width: 280px; border-radius: 12px; backdrop-filter: blur(28px) saturate(140%); padding: 0px; }
 body.theme-hados .start-sidebar { width: 36px; font-family: var(--os-font-display); font-size: 16px; letter-spacing: 3px; border-radius: 12px 0px 0px 12px; }
 body.theme-hados .menu-items-container { padding: 8px; gap: 2px; }
-body.theme-hados .menu-item { border-radius: 6px; padding: 8px 10px; color: var(--os-text-color); font-size: var(--os-font-size); transition: background 0.12s; }
+body.theme-hados .menu-item, body.theme-hados .window-menu-item { border-radius: 6px; padding: 8px 10px; color: var(--os-text-color); font-size: var(--os-font-size); transition: background 0.12s; }
 body.theme-hados .menu-separator { border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-right-style: none; border-bottom-style: none; border-left-style: none; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image: initial; border-top: 1px solid var(--hados-line); margin: 6px 4px; }
 body.theme-hados .submenu { background: var(--start-menu-bg); border: 1px solid var(--hados-line-strong); border-radius: 10px; box-shadow: var(--start-menu-shadow); padding: 6px; backdrop-filter: blur(28px) saturate(140%); }
 body.theme-hados #system-tray, body.theme-hados #clock { color: var(--os-text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 body.theme-hados .window-menu, body.theme-hados .context-menu, body.theme-hados .dropdown-menu { background: var(--start-menu-bg); border: 1px solid var(--hados-line-strong); border-radius: 10px; box-shadow: var(--start-menu-shadow); color: var(--os-text-color); backdrop-filter: blur(24px) saturate(140%); }
 body.theme-hados .window-menu { border-bottom: 1px solid var(--hados-line); background: rgba(0, 0, 0, 0.2); font-size: 12px; padding: 4px 8px; }
-body.theme-hados .menu-item:hover, body.theme-hados .notepad-menu-label:hover, body.theme-hados .notepad-menu-entry.open .notepad-menu-label, body.theme-hados .notepad-dropdown-item:hover { background: var(--hados-blue-deep); color: rgb(255, 255, 255); border-radius: 4px; }
+body.theme-hados .menu-item:hover, body.theme-hados .window-menu-item:hover, body.theme-hados .notepad-menu-label:hover, body.theme-hados .notepad-menu-entry.open .notepad-menu-label, body.theme-hados .notepad-dropdown-item:hover { background: var(--hados-blue-deep); color: rgb(255, 255, 255); border-radius: 4px; }
 body.theme-hados .ragdoll-text { color: var(--os-text-color); font-size: 12px; }
 body.theme-hados .notepad-menu-label { font-size: 12px; padding: 3px 8px; border-radius: 4px; }
 body.theme-hados .notepad-dropdown, body.theme-hados .notepad-dialog { background: var(--hados-elevated); color: var(--os-text-color); border: 1px solid var(--hados-line-strong); border-radius: 8px; box-shadow: var(--start-menu-shadow); font-size: 12px; padding: 6px; }
@@ -269,6 +269,12 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .explorer-icon .icon-box, .explorer-icon .icon-img { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 48px; background: transparent; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; box-shadow: none; }
 .explorer-icon span { font-size: 11px; text-align: center; overflow-wrap: break-word; max-width: 100px; color: rgb(0, 0, 0); }
 #readme-content { background: var(--window-content-bg); color: var(--os-text-color); font-family: "Courier New", monospace; font-size: 11px; padding: 10px; margin: 0px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+.explorer-address input { flex: 1 1 0%; border: 1px solid rgb(128, 128, 128); padding: 2px 4px; font-family: "MS Sans Serif", Arial; font-size: 11px; }
+.wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; background: white; padding: 10px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); }
+.wallpaper-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 5px; border: 1px solid transparent; }
+.wallpaper-item:hover { background: rgb(0, 0, 128); color: white; border-color: var(--border-dark); }
+.wallpaper-preview { width: 60px; height: 45px; background-size: cover; background-position: center center; border: 1px solid black; margin-bottom: 5px; }
+.wallpaper-item span { font-size: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 #taskbar { position: fixed; bottom: 0px; left: 0px; width: 100%; height: var(--taskbar-height); background: var(--taskbar-bg); border-top: var(--taskbar-border-top); display: flex; align-items: center; padding: 2px 4px; z-index: 1000; box-shadow: 0 -1px 0 0 var(--border-dark) inset; }
 #taskbar-apps { display: flex; gap: 2px; margin-left: 5px; flex: 1 1 0%; height: 100%; align-items: center; }
 .taskbar-button { background: var(--taskbar-bg); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-color: var(--control-border-color); height: 100%; min-width: 60px; max-width: 160px; padding: 0px 5px; display: flex; align-items: center; gap: 5px; font-size: var(--os-font-size); cursor: default; user-select: none; box-shadow: var(--control-shadow); overflow: hidden; }
@@ -314,20 +320,6 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
   .start-text { display: none; }
   #start-button { padding: 0px 6px; }
 }
-#talents-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-@media (max-width: 768px) {
-  #talents-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 580px) {
-  #talents-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 380px) {
-  #talents-grid { grid-template-columns: 1fr; }
-}
-#stats-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-@media (max-width: 580px) {
-  #stats-container { grid-template-columns: 1fr; }
-}
 ::-webkit-scrollbar { width: 16px; height: 16px; }
 ::-webkit-scrollbar-track { background: var(--window-content-bg); }
 ::-webkit-scrollbar-thumb { background: var(--window-bg); border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); }
@@ -357,6 +349,20 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .milestone-list { list-style: none; padding: 0px; margin: 10px 0px; }
 .milestone-list li { padding: 6px; margin: 4px 0px; background: rgb(255, 255, 204); border-left: 3px solid rgb(0, 0, 128); font-size: 10px; }
 .milestone-age { font-weight: bold; color: rgb(0, 0, 128); }
+#talents-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 768px) {
+  #talents-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 580px) {
+  #talents-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 380px) {
+  #talents-grid { grid-template-columns: 1fr; }
+}
+#stats-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 580px) {
+  #stats-container { grid-template-columns: 1fr; }
+}
 .folder-item:hover { color: white; background: rgb(0, 0, 128) !important; }
 .folder-item:active { background: rgb(16, 132, 208) !important; }
 #win-flappy-neon { width: 520px; height: 600px; min-height: 300px; }
@@ -368,9 +374,6 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 #ragdoll-canvas { position: fixed; top: 0px; left: 0px; width: 100vw; height: 100vh; z-index: 5; pointer-events: auto; background: transparent; }
 .ragdoll-chat-input { background: white; border-width: 2px; border-style: solid; border-image: initial; border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); padding: 2px 5px; font-size: 11px; font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; width: 120px; margin-right: 6px; outline: none; color: black; }
 .ragdoll-chat-input:focus { border-color: rgb(0, 0, 0) rgb(192, 192, 192) rgb(192, 192, 192) rgb(0, 0, 0); }
-.ragdoll-pet-btn { display: flex; align-items: center; gap: 5px; padding: 3px 8px; margin-right: 6px; background: rgb(192, 192, 192); border-width: 1px; border-style: solid; border-image: initial; border-color: rgb(255, 255, 255) rgb(128, 128, 128) rgb(128, 128, 128) rgb(255, 255, 255); font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; font-size: 11px; cursor: pointer; transition: none; user-select: none; }
-.ragdoll-pet-btn:hover { background: rgb(212, 212, 212); }
-.ragdoll-pet-btn:active, .ragdoll-pet-btn.active { border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); padding: 4px 7px 2px 9px; background: rgb(176, 176, 176); }
 .ragdoll-icon { display: flex; align-items: center; justify-content: center; line-height: 0; }
 .ragdoll-icon svg { display: block; }
 .ragdoll-text { font-size: 11px; color: rgb(0, 0, 0); }
@@ -392,17 +395,9 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .paint-canvas-container { flex: 1 1 0%; overflow: hidden; background: rgb(128, 128, 128); padding: 10px; display: flex; justify-content: center; align-items: center; }
 #paint-canvas { background: white; cursor: crosshair; box-shadow: rgba(0, 0, 0, 0.5) 2px 2px 5px; width: 100%; height: 100%; }
 .paint-color-bar { height: 40px; background: rgb(192, 192, 192); border-top: 1px solid rgb(128, 128, 128); display: flex; align-items: center; padding-left: 5px; }
-.explorer-address input { flex: 1 1 0%; border: 1px solid rgb(128, 128, 128); padding: 2px 4px; font-family: "MS Sans Serif", Arial; font-size: 11px; }
-.wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; background: white; padding: 10px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); }
-.wallpaper-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 5px; border: 1px solid transparent; }
-.wallpaper-item:hover { background: rgb(0, 0, 128); color: white; border-color: var(--border-dark); }
-.wallpaper-preview { width: 60px; height: 45px; background-size: cover; background-position: center center; border: 1px solid black; margin-bottom: 5px; }
-.wallpaper-item span { font-size: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-.ragdoll-pet-btn { display: flex; align-items: center; gap: 5px; background: var(--win-gray); border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light); height: 22px; padding: 0px 5px; margin-right: 5px; }
-.ragdoll-pet-btn:active { border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest); }
 .window-menu { border-bottom: 1px solid rgb(128, 128, 128); padding: 2px 5px; display: flex; gap: 10px; font-size: 11px; }
-.menu-item { cursor: pointer; padding: 1px 3px; }
-.menu-item:hover { background: rgb(0, 0, 128); color: white; }
+.window-menu-item { cursor: pointer; padding: 1px 3px; }
+.window-menu-item:hover { background: rgb(0, 0, 128); color: white; }
 .notepad-menu-entry { position: relative; display: inline-block; }
 .notepad-menu-label { cursor: default; padding: 1px 5px; font-size: 11px; display: inline-block; user-select: none; }
 .notepad-menu-label:hover, .notepad-menu-entry.open .notepad-menu-label { background: rgb(0, 0, 128); color: white; }
@@ -436,9 +431,9 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .ie-address-bar input { flex: 1 1 0%; border-width: 2px; border-style: solid; border-image: initial; border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); padding: 3px; font-family: "Courier New", monospace; height: 24px; }
 .ie-content { flex: 1 1 0%; border-width: 2px; border-style: solid; border-image: initial; border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); background: white; position: relative; overflow: hidden; min-height: 0px; }
 .ie-go-btn { padding: 2px 10px; height: 24px; }
-.ragdoll-pet-btn { display: flex; align-items: center; gap: 6px; padding: 2px 8px; height: 24px; background: rgb(192, 192, 192); border: 2px outset rgb(255, 255, 255); cursor: pointer; font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; font-size: 11px; margin: 2px; }
+.ragdoll-pet-btn { display: flex; align-items: center; gap: 6px; height: 24px; padding: 2px 8px; margin: 2px; background: rgb(192, 192, 192); border: 2px outset rgb(255, 255, 255); cursor: pointer; font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; font-size: 11px; transition: none; user-select: none; }
 .ragdoll-pet-btn:hover { background: rgb(208, 208, 208); }
-.ragdoll-pet-btn:active, .ragdoll-pet-btn.active { border: 2px inset rgb(255, 255, 255); background: rgb(176, 176, 176); }
+.ragdoll-pet-btn:active, .ragdoll-pet-btn.active { border: 2px inset rgb(255, 255, 255); background: rgb(176, 176, 176); padding: 4px 7px 2px 9px; }
 .ragdoll-pet-btn.disabled { color: rgb(128, 128, 128); cursor: not-allowed; opacity: 0.6; }
 :root { --hdr-brightness: 1; --hdr-contrast: 1; --hdr-saturate: 1; }
 .hdr-enabled { --hdr-brightness: 1.02; --hdr-contrast: 1.12; --hdr-saturate: 1.08; }
@@ -446,13 +441,13 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .hdr-enabled #desktop { box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 100px inset; text-shadow: rgba(255, 255, 255, 0.4) 0px 0px 8px; }
 #hdr-toggle .ragdoll-icon svg { transition: filter 0.2s; }
 #hdr-toggle.active .ragdoll-icon svg { filter: drop-shadow(rgb(255, 204, 0) 0px 0px 4px) brightness(1.2); color: rgb(0, 0, 128); }
-a, button, .icon, .window-btn, .window-header, .menu-item { touch-action: manipulation; }
+a, button, .icon, .window-btn, .window-header, .menu-item, .window-menu-item { touch-action: manipulation; }
 .window-header, .icon, .draggable-sticky {  }
 @media (pointer: coarse) {
   .window-btn { min-width: 48px; min-height: 48px; }
   .icon { min-width: 80px; min-height: 80px; padding: 10px; }
   .taskbar-button { min-height: 48px; padding: 4px 12px; }
-  .menu-item { min-height: 48px; display: flex; align-items: center; padding: 8px 16px; }
+  .menu-item, .window-menu-item { min-height: 48px; display: flex; align-items: center; padding: 8px 16px; }
   #start-button { min-width: 80px; min-height: 48px; }
 }
 @keyframes win95-notify-in { 0% { opacity: 0; transform: translateX(100%); } 100% { opacity: 1; transform: translateX(0px); } }
@@ -1255,6 +1250,12 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .explorer-icon .icon-box, .explorer-icon .icon-img { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 48px; background: transparent; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; box-shadow: none; }
 .explorer-icon span { font-size: 11px; text-align: center; overflow-wrap: break-word; max-width: 100px; color: rgb(0, 0, 0); }
 #readme-content { background: var(--window-content-bg); color: var(--os-text-color); font-family: "Courier New", monospace; font-size: 11px; padding: 10px; margin: 0px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+.explorer-address input { flex: 1 1 0%; border: 1px solid rgb(128, 128, 128); padding: 2px 4px; font-family: "MS Sans Serif", Arial; font-size: 11px; }
+.wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; background: white; padding: 10px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); }
+.wallpaper-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 5px; border: 1px solid transparent; }
+.wallpaper-item:hover { background: rgb(0, 0, 128); color: white; border-color: var(--border-dark); }
+.wallpaper-preview { width: 60px; height: 45px; background-size: cover; background-position: center center; border: 1px solid black; margin-bottom: 5px; }
+.wallpaper-item span { font-size: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 #taskbar { position: fixed; bottom: 0px; left: 0px; width: 100%; height: var(--taskbar-height); background: var(--taskbar-bg); border-top: var(--taskbar-border-top); display: flex; align-items: center; padding: 2px 4px; z-index: 1000; box-shadow: 0 -1px 0 0 var(--border-dark) inset; }
 #taskbar-apps { display: flex; gap: 2px; margin-left: 5px; flex: 1 1 0%; height: 100%; align-items: center; }
 .taskbar-button { background: var(--taskbar-bg); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-color: var(--control-border-color); height: 100%; min-width: 60px; max-width: 160px; padding: 0px 5px; display: flex; align-items: center; gap: 5px; font-size: var(--os-font-size); cursor: default; user-select: none; box-shadow: var(--control-shadow); overflow: hidden; }
@@ -1300,20 +1301,6 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
   .start-text { display: none; }
   #start-button { padding: 0px 6px; }
 }
-#talents-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-@media (max-width: 768px) {
-  #talents-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 580px) {
-  #talents-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 380px) {
-  #talents-grid { grid-template-columns: 1fr; }
-}
-#stats-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-@media (max-width: 580px) {
-  #stats-container { grid-template-columns: 1fr; }
-}
 ::-webkit-scrollbar { width: 16px; height: 16px; }
 ::-webkit-scrollbar-track { background: var(--window-content-bg); }
 ::-webkit-scrollbar-thumb { background: var(--window-bg); border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); }
@@ -1343,6 +1330,20 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .milestone-list { list-style: none; padding: 0px; margin: 10px 0px; }
 .milestone-list li { padding: 6px; margin: 4px 0px; background: rgb(255, 255, 204); border-left: 3px solid rgb(0, 0, 128); font-size: 10px; }
 .milestone-age { font-weight: bold; color: rgb(0, 0, 128); }
+#talents-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 768px) {
+  #talents-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 580px) {
+  #talents-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 380px) {
+  #talents-grid { grid-template-columns: 1fr; }
+}
+#stats-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 580px) {
+  #stats-container { grid-template-columns: 1fr; }
+}
 .folder-item:hover { color: white; background: rgb(0, 0, 128) !important; }
 .folder-item:active { background: rgb(16, 132, 208) !important; }
 #win-flappy-neon { width: 520px; height: 600px; min-height: 300px; }
@@ -1354,9 +1355,6 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 #ragdoll-canvas { position: fixed; top: 0px; left: 0px; width: 100vw; height: 100vh; z-index: 5; pointer-events: auto; background: transparent; }
 .ragdoll-chat-input { background: white; border-width: 2px; border-style: solid; border-image: initial; border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); padding: 2px 5px; font-size: 11px; font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; width: 120px; margin-right: 6px; outline: none; color: black; }
 .ragdoll-chat-input:focus { border-color: rgb(0, 0, 0) rgb(192, 192, 192) rgb(192, 192, 192) rgb(0, 0, 0); }
-.ragdoll-pet-btn { display: flex; align-items: center; gap: 5px; padding: 3px 8px; margin-right: 6px; background: rgb(192, 192, 192); border-width: 1px; border-style: solid; border-image: initial; border-color: rgb(255, 255, 255) rgb(128, 128, 128) rgb(128, 128, 128) rgb(255, 255, 255); font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; font-size: 11px; cursor: pointer; transition: none; user-select: none; }
-.ragdoll-pet-btn:hover { background: rgb(212, 212, 212); }
-.ragdoll-pet-btn:active, .ragdoll-pet-btn.active { border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); padding: 4px 7px 2px 9px; background: rgb(176, 176, 176); }
 .ragdoll-icon { display: flex; align-items: center; justify-content: center; line-height: 0; }
 .ragdoll-icon svg { display: block; }
 .ragdoll-text { font-size: 11px; color: rgb(0, 0, 0); }
@@ -1378,17 +1376,9 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .paint-canvas-container { flex: 1 1 0%; overflow: hidden; background: rgb(128, 128, 128); padding: 10px; display: flex; justify-content: center; align-items: center; }
 #paint-canvas { background: white; cursor: crosshair; box-shadow: rgba(0, 0, 0, 0.5) 2px 2px 5px; width: 100%; height: 100%; }
 .paint-color-bar { height: 40px; background: rgb(192, 192, 192); border-top: 1px solid rgb(128, 128, 128); display: flex; align-items: center; padding-left: 5px; }
-.explorer-address input { flex: 1 1 0%; border: 1px solid rgb(128, 128, 128); padding: 2px 4px; font-family: "MS Sans Serif", Arial; font-size: 11px; }
-.wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; background: white; padding: 10px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); }
-.wallpaper-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 5px; border: 1px solid transparent; }
-.wallpaper-item:hover { background: rgb(0, 0, 128); color: white; border-color: var(--border-dark); }
-.wallpaper-preview { width: 60px; height: 45px; background-size: cover; background-position: center center; border: 1px solid black; margin-bottom: 5px; }
-.wallpaper-item span { font-size: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-.ragdoll-pet-btn { display: flex; align-items: center; gap: 5px; background: var(--win-gray); border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light); height: 22px; padding: 0px 5px; margin-right: 5px; }
-.ragdoll-pet-btn:active { border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest); }
 .window-menu { border-bottom: 1px solid rgb(128, 128, 128); padding: 2px 5px; display: flex; gap: 10px; font-size: 11px; }
-.menu-item { cursor: pointer; padding: 1px 3px; }
-.menu-item:hover { background: rgb(0, 0, 128); color: white; }
+.window-menu-item { cursor: pointer; padding: 1px 3px; }
+.window-menu-item:hover { background: rgb(0, 0, 128); color: white; }
 .notepad-menu-entry { position: relative; display: inline-block; }
 .notepad-menu-label { cursor: default; padding: 1px 5px; font-size: 11px; display: inline-block; user-select: none; }
 .notepad-menu-label:hover, .notepad-menu-entry.open .notepad-menu-label { background: rgb(0, 0, 128); color: white; }
@@ -1422,9 +1412,9 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .ie-address-bar input { flex: 1 1 0%; border-width: 2px; border-style: solid; border-image: initial; border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); padding: 3px; font-family: "Courier New", monospace; height: 24px; }
 .ie-content { flex: 1 1 0%; border-width: 2px; border-style: solid; border-image: initial; border-color: rgb(128, 128, 128) rgb(255, 255, 255) rgb(255, 255, 255) rgb(128, 128, 128); background: white; position: relative; overflow: hidden; min-height: 0px; }
 .ie-go-btn { padding: 2px 10px; height: 24px; }
-.ragdoll-pet-btn { display: flex; align-items: center; gap: 6px; padding: 2px 8px; height: 24px; background: rgb(192, 192, 192); border: 2px outset rgb(255, 255, 255); cursor: pointer; font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; font-size: 11px; margin: 2px; }
+.ragdoll-pet-btn { display: flex; align-items: center; gap: 6px; height: 24px; padding: 2px 8px; margin: 2px; background: rgb(192, 192, 192); border: 2px outset rgb(255, 255, 255); cursor: pointer; font-family: "MS Sans Serif", Tahoma, Arial, sans-serif; font-size: 11px; transition: none; user-select: none; }
 .ragdoll-pet-btn:hover { background: rgb(208, 208, 208); }
-.ragdoll-pet-btn:active, .ragdoll-pet-btn.active { border: 2px inset rgb(255, 255, 255); background: rgb(176, 176, 176); }
+.ragdoll-pet-btn:active, .ragdoll-pet-btn.active { border: 2px inset rgb(255, 255, 255); background: rgb(176, 176, 176); padding: 4px 7px 2px 9px; }
 .ragdoll-pet-btn.disabled { color: rgb(128, 128, 128); cursor: not-allowed; opacity: 0.6; }
 :root { --hdr-brightness: 1; --hdr-contrast: 1; --hdr-saturate: 1; }
 .hdr-enabled { --hdr-brightness: 1.02; --hdr-contrast: 1.12; --hdr-saturate: 1.08; }
@@ -1432,13 +1422,13 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .hdr-enabled #desktop { box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 100px inset; text-shadow: rgba(255, 255, 255, 0.4) 0px 0px 8px; }
 #hdr-toggle .ragdoll-icon svg { transition: filter 0.2s; }
 #hdr-toggle.active .ragdoll-icon svg { filter: drop-shadow(rgb(255, 204, 0) 0px 0px 4px) brightness(1.2); color: rgb(0, 0, 128); }
-a, button, .icon, .window-btn, .window-header, .menu-item { touch-action: manipulation; }
+a, button, .icon, .window-btn, .window-header, .menu-item, .window-menu-item { touch-action: manipulation; }
 .window-header, .icon, .draggable-sticky {  }
 @media (pointer: coarse) {
   .window-btn { min-width: 48px; min-height: 48px; }
   .icon { min-width: 80px; min-height: 80px; padding: 10px; }
   .taskbar-button { min-height: 48px; padding: 4px 12px; }
-  .menu-item { min-height: 48px; display: flex; align-items: center; padding: 8px 16px; }
+  .menu-item, .window-menu-item { min-height: 48px; display: flex; align-items: center; padding: 8px 16px; }
   #start-button { min-width: 80px; min-height: 48px; }
 }
 @keyframes win95-notify-in { 0% { opacity: 0; transform: translateX(100%); } 100% { opacity: 1; transform: translateX(0px); } }
@@ -1491,4 +1481,4 @@ a, button, .icon, .window-btn, .window-header, .menu-item { touch-action: manipu
 .settings-divider { margin: 16px 0px; border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-right-style: none; border-bottom-style: none; border-left-style: none; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image: initial; border-top: 1px solid var(--border-dark); opacity: 0.4; }
 .settings-muted { opacity: 0.6; font-style: italic; }
 *, ::before, ::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }
-#shader-wallpaper, #ragdoll-container, #ragdoll-3d-container { visibility: hidden !important; }
+#shader-wallpaper, #ragdoll-canvas, #ragdoll-3d-canvas { visibility: hidden !important; }

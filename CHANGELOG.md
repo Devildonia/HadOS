@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Start menu's items were being restyled by Paint's menu bar, and vice versa.** Both
+  components used the class `.menu-item`. With equal specificity, whichever partial came last won:
+  the in-app menu bar's `padding: 1px 3px` squashed the Start menu's entries, and the Start menu's
+  `display: flex; gap: 8px` leaked onto the menu bar's. The Start menu bug was only visible in the
+  **modern** theme — in HadOS a higher-specificity theme rule masked it. The menu bar is now
+  `.window-menu-item`, and the Start menu's entries render at their intended size.
+
+### Changed
+
+- **The three copies of `.ragdoll-pet-btn` are now one.** The tray buttons (HDR and pet toggles —
+  the class name fits neither) were declared in `system/ragdoll.css`, in the tray/clock section
+  and in the taskbar-buttons section, disagreeing on gap, hover colour and border; the last one
+  silently won. Consolidated into `chrome/tray-buttons.css` in exactly its resolved state, so
+  nothing that was rendering changed. Most of those declarations turn out to be dead anyway —
+  `button:not(.window-btn)` scores (0,1,1) and beats the class's (0,1,0), so the theme supplies
+  the real look. Pruning them is a behaviour change and gets its own commit.
+- Duplicate selectors across the stylesheets: **5 → 0**. `chrome/clock.css` held nothing but tray
+  button rules and is gone; `explorer-panels.css` and `family-tree-cards.css` are folded into the
+  partials they belong to. With the collisions resolved, the manifest order is no longer
+  load-bearing for identical selectors.
+
 ### Changed
 
 - **`style.css` is no longer a god file.** Its 2507 lines are split into **37 partials** under

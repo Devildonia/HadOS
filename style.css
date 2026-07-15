@@ -1,20 +1,23 @@
 /**
  * HadOS — stylesheet entry point.
  *
- * This file was a 2507-line god file. It is now only an ordered manifest.
+ * This file was a 2507-line god file. It is now only a manifest.
  *
- * ORDER IS LOAD-BEARING — do not sort this list. The partials are concatenated in
- * exactly the order they held inside the original file, because five selectors
- * (.menu-item and .ragdoll-pet-btn) are defined in more than one section and
- * their relative order decides which one wins.
+ * No selector is declared in two partials any more, so the order below no longer
+ * decides who wins a tie — it did until .menu-item and .ragdoll-pet-btn were
+ * untangled. Order still matters for the cascade in general (two *different*
+ * selectors of equal specificity can match the same element), so treat a
+ * reordering as a change to be verified, not as free.
  *
  * Nothing but @import may live here: an @import placed after any other rule is
  * invalid and gets dropped silently — no error, no warning, just a stylesheet
  * with none of the OS in it. That is why the Tailwind directives sit in the
- * first partial rather than at the top of this file.
+ * first partial rather than at the top of this file. tailwind.css must stay
+ * first regardless: preflight is a reset, and every partial after it is written
+ * expecting it to already be in the cascade.
  *
  * Adding a rule means editing the partial that owns that surface. Adding a
- * surface means a new partial, imported at the position its cascade needs.
+ * surface means a new partial, imported where it belongs.
  *
  * Verified by test/e2e/css-baseline.spec.js, which pins the parsed CSSOM, the
  * computed styles of every chrome surface, and the rendered pixels.
@@ -36,7 +39,6 @@
 @import './css/chrome/start-menu.css';
 @import './css/chrome/tray.css';
 @import './css/responsive.css';
-@import './css/apps/family-tree-cards.css';
 @import './css/base/scrollbars.css';
 @import './css/effects/glitch.css';
 @import './css/chrome/tabs.css';
@@ -46,12 +48,10 @@
 @import './css/system/ragdoll.css';
 @import './css/apps/notepad.css';
 @import './css/apps/paint.css';
-@import './css/apps/explorer-panels.css';
-@import './css/chrome/clock.css';
 @import './css/chrome/window-menu.css';
 @import './css/apps/notepad-menus.css';
 @import './css/apps/internet-explorer.css';
-@import './css/chrome/taskbar-buttons.css';
+@import './css/chrome/tray-buttons.css';
 @import './css/system/hdr.css';
 @import './css/touch.css';
 @import './css/apps/terminal.css';

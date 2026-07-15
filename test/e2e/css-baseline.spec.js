@@ -53,6 +53,20 @@ const TRACKED_SELECTORS = [
     '.win95-window', '.window-header', '.window-header span', '.window-controls',
     '.window-btn', '.window-body', '.window-resize-handle',
     '.win95-btn', '#splash-screen', '.splash-title', '.splash-progress', '.splash-progress-bar',
+    // Tray buttons and the in-app menu bar: both are served by selectors that are
+    // declared in three partials each, so they are the ones a consolidation can
+    // most easily change by accident.
+    '#system-tray', '#clock', '#ragdollToggle', '#hdr-toggle', '.ragdoll-text',
+    '.window-menu', '.window-menu .window-menu-item',
+];
+
+/**
+ * Interactive states. Rest styles alone would miss a consolidation that gets
+ * :hover or :active wrong, and those are exactly where the duplicated blocks
+ * disagree with each other (#d4d4d4 vs #d0d0d0, and so on).
+ */
+const HOVER_TARGETS = [
+    '#ragdollToggle', '#hdr-toggle', '#start-menu .menu-item', '.window-menu .window-menu-item',
 ];
 
 /** Freezes everything that moves, so measurements are reproducible. */
@@ -77,8 +91,12 @@ async function settle(page) {
                 transition-duration: 0s !important;
                 transition-delay: 0s !important;
             }
-            /* The shader wallpaper and the pet are the only moving parts left. */
-            #shader-wallpaper, #ragdoll-container, #ragdoll-3d-container { visibility: hidden !important; }
+            /* The shader wallpaper is the only thing still moving: the physics pet
+               is a canvas that only mounts when ragdollPetActive is set, which a
+               fresh test profile never has. Note #ragdoll-container is NOT the pet
+               — it wraps the tray button, and hiding it makes that button
+               unhoverable. */
+            #shader-wallpaper, #ragdoll-canvas, #ragdoll-3d-canvas { visibility: hidden !important; }
         `,
     });
     // One frame for the freeze to take effect.
@@ -187,12 +205,77 @@ test.describe('CSS baseline', () => {
         expect(styles).toMatchSnapshot('computed-modern.txt');
     });
 
+    test('interactive states are unchanged', async ({ page }) => {
+        await page.addInitScript(() => localStorage.setItem('os-theme', 'hados'));
+        await page.goto('/');
+        await settle(page);
+
+        // Paint carries the in-app menu bar (.window-menu > .menu-item spans);
+        // Notepad's bar uses its own markup, so it would not cover this.
+        await page.locator('#icon-paint').dblclick();
+        await expect(page.locator('#win-paint')).toBeVisible();
+
+        const hovered = [];
+        const capture = async (sel) => {
+            const el = page.locator(sel).first();
+            if (!(await el.count())) { hovered.push(`${sel} :hover\n  <absent>`); return; }
+            await el.hover();
+            const styles = await computedStyles(page, [sel], TRACKED_PROPS);
+            hovered.push(styles.replace(sel, `${sel} :hover`));
+        };
+
+        // Tray buttons and the app menu bar first: the Start menu sits at z-index
+        // 10000 and would cover them, so hovering would never land.
+        await capture('#ragdollToggle');
+        await capture('#hdr-toggle');
+        await capture('.window-menu .window-menu-item');
+
+        await page.locator('#start-button').click();
+        await expect(page.locator('#start-menu')).toBeVisible();
+
+        const rest = await computedStyles(page, TRACKED_SELECTORS, TRACKED_PROPS);
+        expect.soft(rest).toMatchSnapshot('states-rest.txt');
+
+        await capture('#start-menu .menu-item');
+        expect.soft(hovered.join('\n\n')).toMatchSnapshot('states-hover.txt');
+
+        // Class-driven states. .active is applied persistently by the toggles and
+        // is styled by rules that :hover never exercises, so without this a
+        // consolidation could quietly drop it.
+        const classStates = await page.evaluate((props) => {
+            const out = [];
+            for (const [sel, cls] of [['#ragdollToggle', 'active'], ['#ragdollToggle', 'disabled'], ['#hdr-toggle', 'active']]) {
+                const el = document.querySelector(sel);
+                if (!el) { out.push(`${sel}.${cls}\n  <absent>`); continue; }
+                el.classList.add(cls);
+                const cs = getComputedStyle(el);
+                out.push(`${sel}.${cls}\n` + props.map(p => `  ${p}: ${cs.getPropertyValue(p)}`).join('\n'));
+                el.classList.remove(cls);
+            }
+            return out.join('\n\n');
+        }, TRACKED_PROPS);
+        expect.soft(classStates).toMatchSnapshot('states-class.txt');
+    });
+
     test('the desktop looks unchanged', async ({ page }) => {
         await page.addInitScript(() => localStorage.setItem('os-theme', 'hados'));
         await page.goto('/');
         await settle(page);
 
         await expect(page).toHaveScreenshot('desktop-hados.png');
+    });
+
+    test('the in-app menu bar looks unchanged', async ({ page }) => {
+        await page.addInitScript(() => localStorage.setItem('os-theme', 'hados'));
+        await page.goto('/');
+        await settle(page);
+
+        // Paint is the only app with a .window-menu bar, and no other screenshot
+        // covers it — which is exactly how a change there would slip through.
+        await page.locator('#icon-paint').dblclick();
+        await expect(page.locator('#win-paint')).toBeVisible();
+
+        await expect(page.locator('#win-paint .window-menu')).toHaveScreenshot('window-menu-bar-hados.png');
     });
 
     test('the start menu and a window look unchanged', async ({ page }) => {

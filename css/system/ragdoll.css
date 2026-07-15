@@ -30,35 +30,9 @@
     border-color: #000000 #c0c0c0 #c0c0c0 #000000;
 }
 
-/* Ragdoll Pet Button in System Tray */
-.ragdoll-pet-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    margin-right: 6px;
-    background: #c0c0c0;
-    border: 1px solid;
-    border-color: #ffffff #808080 #808080 #ffffff;
-    font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
-    font-size: 11px;
-    cursor: pointer;
-    transition: none;
-    user-select: none;
-}
-
-.ragdoll-pet-btn:hover {
-    background: #d4d4d4;
-}
-
-.ragdoll-pet-btn:active,
-.ragdoll-pet-btn.active {
-    /* Efecto presionado - bordes invertidos */
-    border-color: #808080 #ffffff #ffffff #808080;
-    padding: 4px 7px 2px 9px;
-    /* Fondo más oscuro cuando está activo */
-    background: #b0b0b0;
-}
+/* The tray button itself lives in chrome/tray-buttons.css — it is not the pet.
+   It was declared here, again in the tray/clock section and a third time in the
+   taskbar-buttons section, three copies deep, with the last one winning. */
 
 .ragdoll-icon {
     display: flex;
@@ -87,6 +61,12 @@
         display: none;
     }
 
+    /* DEAD, and deliberately left where it is. A media query adds no specificity,
+       and chrome/tray-buttons.css sets padding on the same selector further down
+       the manifest, so this never applies at any width. Kept in place so the
+       consolidation changes nothing; moving it after that partial would silently
+       *revive* a mobile padding that has not been in effect for a long time.
+       Decide it on purpose, not as a side effect of a refactor. */
     .ragdoll-pet-btn {
         padding: 2px 4px;
     }
