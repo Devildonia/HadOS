@@ -1,0 +1,97 @@
+/* ===== RAGDOLL PET SYSTEM ===== */
+
+/* Ragdoll Canvas - Full screen overlay, below windows */
+#ragdoll-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5;
+    pointer-events: auto;
+    background: transparent;
+}
+
+/* Ragdoll Chat Input in System Tray */
+.ragdoll-chat-input {
+    background: white;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 2px 5px;
+    font-size: 11px;
+    font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
+    width: 120px;
+    margin-right: 6px;
+    outline: none;
+    color: black;
+}
+
+.ragdoll-chat-input:focus {
+    border-color: #000000 #c0c0c0 #c0c0c0 #000000;
+}
+
+/* Ragdoll Pet Button in System Tray */
+.ragdoll-pet-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    margin-right: 6px;
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    transition: none;
+    user-select: none;
+}
+
+.ragdoll-pet-btn:hover {
+    background: #d4d4d4;
+}
+
+.ragdoll-pet-btn:active,
+.ragdoll-pet-btn.active {
+    /* Efecto presionado - bordes invertidos */
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 4px 7px 2px 9px;
+    /* Fondo más oscuro cuando está activo */
+    background: #b0b0b0;
+}
+
+.ragdoll-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.ragdoll-icon svg {
+    display: block;
+}
+
+.ragdoll-text {
+    font-size: 11px;
+    color: #000000;
+}
+
+/* Eliminar el check cuando está activo */
+.ragdoll-pet-btn.active .ragdoll-text::after {
+    content: '';
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .ragdoll-text {
+        display: none;
+    }
+
+    .ragdoll-pet-btn {
+        padding: 2px 4px;
+    }
+
+    .ragdoll-icon {
+        font-size: 16px;
+    }
+}

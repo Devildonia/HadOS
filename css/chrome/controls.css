@@ -1,0 +1,49 @@
+/* ===== WIN95 BUTTONS ===== */
+.win95-btn,
+button:not(.window-btn) {
+    background: var(--control-bg);
+    border: var(--control-border);
+    border-color: var(--control-border-color);
+    padding: 5px 15px;
+    font-size: var(--os-font-size);
+    font-family: var(--os-font-family);
+    cursor: pointer;
+    min-height: 24px;
+    box-shadow: var(--control-shadow);
+}
+
+.win95-btn:hover:not(:disabled),
+button:not(.window-btn):hover:not(:disabled) {
+    filter: brightness(1.05);
+}
+
+.win95-btn:active:not(:disabled),
+button:not(.window-btn):active:not(:disabled) {
+    border-color: var(--control-active-border-color);
+    padding: 6px 14px 4px 16px;
+    box-shadow: var(--control-active-shadow);
+}
+
+.win95-btn:disabled,
+button:disabled {
+    color: var(--border-dark);
+    text-shadow: 1px 1px 0 var(--border-light);
+    cursor: not-allowed;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-container {
+    width: 100%;
+    height: 24px;
+    background: white;
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+    margin: 10px 0;
+}
+
+#install-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--win-blue);
+    transition: width 0.1s linear;
+}

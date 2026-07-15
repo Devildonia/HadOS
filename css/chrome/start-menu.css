@@ -1,0 +1,114 @@
+/* ===== START BUTTON ===== */
+#start-button {
+    font-weight: bold;
+    height: 26px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+}
+
+.start-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.start-text {
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* ===== START MENU ===== */
+#start-menu {
+    position: fixed;
+    bottom: var(--taskbar-height);
+    left: 0;
+    width: 220px;
+    background: var(--start-menu-bg);
+    border: var(--start-menu-border);
+    border-color: var(--start-menu-border-color);
+    box-shadow: var(--start-menu-shadow);
+    z-index: 10000;
+    display: flex;
+}
+
+.start-sidebar {
+    width: 30px;
+    background: var(--start-sidebar-bg);
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+    color: white;
+    font-size: 20px;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+/* Contenedor para los items del menú derecho */
+.menu-items-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+}
+
+/* Items del menú principal que tienen hijos */
+.menu-item.has-submenu {
+    position: relative;
+    /* Necesario para anclar el submenú */
+}
+
+/* Estilo base de los submenús (ocultos por defecto) */
+.submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    bottom: -3px;
+    top: auto;
+    /* Ajuste fino para alinear bordes */
+    width: 250px;
+    background: var(--start-menu-bg);
+    border: var(--start-menu-border);
+    border-color: var(--start-menu-border-color);
+    box-shadow: 2px 2px 0 black;
+    z-index: 10001;
+    /* Por encima de todo */
+    padding: 2px;
+}
+
+/* Mostrar submenú al hacer hover en el padre */
+.menu-item.has-submenu:hover .submenu {
+    display: block;
+}
+
+/* Estilo general de ítems de menú */
+.menu-item {
+    padding: 5px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: black;
+}
+
+.menu-item:hover {
+    background: #000080;
+    color: white;
+}
+
+.menu-label {
+    flex: 1;
+}
+
+.menu-separator {
+    border: 0;
+    border-top: 1px solid var(--border-dark);
+    border-bottom: 1px solid var(--border-light);
+    margin: 5px 0;
+}

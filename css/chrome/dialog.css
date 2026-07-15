@@ -1,0 +1,47 @@
+/* ===== DIALOG WINDOWS (SMALLER, CENTERED) ===== */
+.win95-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-width: 90%;
+    background: var(--dialog-bg);
+    border: var(--dialog-border);
+    border-color: var(--dialog-border-color);
+    box-shadow: var(--dialog-shadow);
+    z-index: 20000;
+    font-family: var(--os-font-family);
+    border-radius: var(--window-border-radius);
+}
+
+.dialog-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    min-height: 60px;
+}
+
+.dialog-icon {
+    font-size: 32px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.dialog-message {
+    flex: 1;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 20px 20px 20px;
+}
+
+.dialog-buttons .win95-btn {
+    min-width: 80px;
+}

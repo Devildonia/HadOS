@@ -1,0 +1,61 @@
+/* ===== TOUCH SUPPORT (Fase 2) ===== */
+/* Prevent 300ms tap delay on mobile */
+a,
+button,
+.icon,
+.window-btn,
+.window-header,
+.menu-item {
+    touch-action: manipulation;
+}
+
+/* Prevent text selection on drag targets */
+.window-header,
+.icon,
+.draggable-sticky {
+    -webkit-touch-callout: none;
+}
+
+/* Larger touch targets for mobile */
+@media (pointer: coarse) {
+    .window-btn {
+        min-width: 48px;
+        min-height: 48px;
+    }
+
+    .icon {
+        min-width: 80px;
+        min-height: 80px;
+        padding: 10px;
+    }
+
+    .taskbar-button {
+        min-height: 48px;
+        padding: 4px 12px;
+    }
+
+    .menu-item {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+    }
+
+    #start-button {
+        min-width: 80px;
+        min-height: 48px;
+    }
+}
+
+/* === Win95 Notification Toast === */
+@keyframes win95-notify-in {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

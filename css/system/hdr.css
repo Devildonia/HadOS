@@ -1,0 +1,34 @@
+/* ===== HDR SYSTEM STYLES ===== */
+:root {
+    --hdr-brightness: 1;
+    --hdr-contrast: 1;
+    --hdr-saturate: 1;
+}
+
+.hdr-enabled {
+    --hdr-brightness: 1.02;
+    --hdr-contrast: 1.12;
+    --hdr-saturate: 1.08;
+}
+
+/* Apply filters to body and iframes when HDR is enabled */
+.hdr-enabled body,
+.hdr-enabled iframe {
+    filter: brightness(var(--hdr-brightness)) contrast(var(--hdr-contrast)) saturate(var(--hdr-saturate));
+    transition: filter 0.5s ease-in-out;
+}
+
+.hdr-enabled #desktop {
+    /* Enhance brilliance and shadow depth */
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+#hdr-toggle .ragdoll-icon svg {
+    transition: filter 0.2s ease;
+}
+
+#hdr-toggle.active .ragdoll-icon svg {
+    filter: drop-shadow(0 0 4px #ffcc00) brightness(1.2);
+    color: #000080;
+}

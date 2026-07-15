@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`style.css` is no longer a god file.** Its 2507 lines are split into **37 partials** under
+  `css/` (`base/`, `boot/`, `chrome/`, `desktop/`, `apps/`, `system/`, `effects/`), and the entry
+  is now a 59-line ordered manifest of `@import`s. The split is strictly mechanical: each partial
+  is a contiguous run of the original, imported in the original order, so the emitted stylesheet
+  is unchanged. Nothing was renamed, merged or reordered.
+  - Order is load-bearing and the manifest says so: `.menu-item` and `.ragdoll-pet-btn` are each
+    defined in three different sections, and their relative order decides which wins.
+
+### Added
+
+- **`test/e2e/css-baseline.spec.js` — a safety net for stylesheet work.** The unit suite never
+  evaluates CSS (jsdom does not load external stylesheets), so `style.css` could be deleted and
+  704 tests would still pass. The spec pins three levels: the **CSSOM fingerprint** (every rule
+  the browser parsed, in cascade order), the **computed styles** of every chrome surface in both
+  themes, and **screenshots**. It is what proved the refactor changed nothing.
+
+### Fixed
+
+- Playwright ran with the default worker count locally, which on a many-core machine starts ~12
+  concurrent pages. Each one boots the whole OS with a WebGL wallpaper and a physics pet, and the
+  contexts starve each other until the boot itself times out — failing specs unrelated to the
+  change under test. Capped at 2 locally (CI already used 1).
+
 ## [1.0.1] - 2026-07-15
 
 The release where HadOS stops wearing Windows. The Start button, the window chrome, the taskbar,

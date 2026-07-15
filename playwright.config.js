@@ -12,7 +12,12 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : undefined,
+    // Capped deliberately. Every spec boots the whole OS, and each page brings up
+    // a WebGL shader wallpaper plus a physics pet; at Playwright's default (half
+    // the CPU count — 12 here) the concurrent contexts starve each other and the
+    // boot itself times out, failing specs that have nothing to do with the
+    // change under test. Two is comfortably under the cliff.
+    workers: process.env.CI ? 1 : 2,
     reporter: 'html',
     use: {
         actionTimeout: 0,

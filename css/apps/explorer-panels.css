@@ -1,0 +1,54 @@
+/* ===== EXPLORER STYLES ===== */
+.explorer-address input {
+    flex: 1;
+    border: 1px solid #808080;
+    padding: 2px 4px;
+    font-family: 'MS Sans Serif', Arial;
+    font-size: 11px;
+}
+
+/* ===== WALLPAPER GRID STYLES ===== */
+.wallpaper-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    background: white;
+    padding: 10px;
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+}
+
+.wallpaper-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px;
+    border: 1px solid transparent;
+}
+
+.wallpaper-item:hover {
+    background: #000080;
+    color: white;
+    border-color: var(--border-dark);
+}
+
+.wallpaper-preview {
+    width: 60px;
+    height: 45px;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid black;
+    margin-bottom: 5px;
+}
+
+.wallpaper-item span {
+    font-size: 10px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}

@@ -1,0 +1,72 @@
+/* ===== PAINT STYLES ===== */
+.paint-body {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background: #808080;
+    overflow: hidden;
+    /* Prevent double scrollbars, let inner container scroll */
+}
+
+.paint-main-area {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    /* Important for nested flex scrolling */
+}
+
+.paint-toolbar {
+    width: 56px;
+    background: #c0c0c0;
+    border-right: 1px solid #808080;
+    padding: 3px;
+    display: grid;
+    grid-template-columns: 24px 24px;
+    grid-gap: 2px;
+    grid-auto-rows: 24px;
+}
+
+.paint-tool-btn {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.paint-tool-btn:active {
+    padding: 1px 0 0 1px !important;
+}
+
+.paint-canvas-container {
+    flex: 1;
+    overflow: hidden;
+    /* Prevent scrolling, let canvas fill */
+    background: #808080;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    /* Center the canvas */
+    align-items: center;
+}
+
+#paint-canvas {
+    background: white;
+    cursor: crosshair;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    /* Dynamic sizing */
+    width: 100%;
+    height: 100%;
+}
+
+.paint-color-bar {
+    height: 40px;
+    background: #c0c0c0;
+    border-top: 1px solid #808080;
+    display: flex;
+    align-items: center;
+    padding-left: 5px;
+}

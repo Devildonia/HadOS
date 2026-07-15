@@ -272,6 +272,8 @@ HadOS/
 │  ├─ audio/       # AudioManager, procedural synth
 │  ├─ services/    # i18n and other cross-cutting services
 │  └─ utils.ts     # shared helpers (escapeHTML, eventManager, logger…)
+├─ css/            # stylesheet partials — base/ boot/ chrome/ desktop/ apps/ system/ effects/
+├─ style.css       # entry: an ORDERED @import manifest, nothing else (order is load-bearing)
 ├─ docs/
 │  └─ webos-roadmap/  # per-phase design notes (0 → 5)
 ├─ public/

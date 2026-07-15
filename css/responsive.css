@@ -1,0 +1,94 @@
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+
+    /* Adjust icons for mobile */
+    #system-icons {
+        top: 10px;
+        left: 10px;
+        gap: 20px;
+    }
+
+    #app-launch-zone {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .icon-box {
+        font-size: 32px !important;
+    }
+
+    .main-app .icon-box {
+        font-size: 40px !important;
+    }
+
+    /* Adjust windows for mobile */
+    .win95-window {
+        min-width: 280px;
+        max-width: 95vw;
+        max-height: 85vh;
+    }
+
+    .window-body {
+        padding: 10px;
+        max-height: calc(85vh - 24px);
+    }
+
+    /* Adjust Start Menu */
+    #start-menu {
+        width: 180px;
+    }
+
+    .windows-logo {
+        font-size: 16px;
+    }
+
+    /* Adjust taskbar for mobile */
+    #taskbar {
+        height: 28px;
+    }
+
+    #start-button {
+        height: 24px;
+        padding: 0 8px;
+        font-size: 10px;
+    }
+
+    .start-icon {
+        font-size: 14px;
+    }
+
+    #system-tray {
+        height: 24px;
+        padding: 0 6px;
+    }
+
+    #taskbar-clock {
+        font-size: 10px;
+        min-width: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* Extra small screens */
+    .icon {
+        width: 70px;
+        font-size: 10px;
+    }
+
+    #app-launch-zone {
+        gap: 20px;
+    }
+
+    .win95-window {
+        min-width: 260px;
+    }
+
+    .start-text {
+        display: none;
+    }
+
+    #start-button {
+        padding: 0 6px;
+    }
+}

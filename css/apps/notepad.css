@@ -1,0 +1,40 @@
+/* ===== NOTEPAD STYLES ===== */
+.notepad-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    /* Remove padding so textarea fills completely */
+}
+
+.readme-body {
+    display: flex;
+    /* Scale content */
+    flex-direction: column;
+    padding: 0;
+    background: white;
+    height: 100%;
+}
+
+.readme-body pre {
+    flex: 1;
+    /* Fill available space */
+    margin: 0;
+    padding: 10px;
+    border: none;
+    overflow: auto;
+    /* Scrollable content */
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: black;
+    white-space: pre-wrap;
+}
+
+.notepad-body textarea {
+    flex: 1;
+    border: none;
+    resize: none;
+    outline: none;
+    padding: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}

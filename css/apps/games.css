@@ -1,0 +1,57 @@
+/* ===== GAME WINDOW (iframe-based games like Flappy Neon) ===== */
+#win-flappy-neon {
+    width: 520px;
+    height: 600px;
+    min-height: 300px;
+}
+
+#win-flappy-neon .window-body {
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #070716 !important;
+    max-height: none !important;
+    /* Override mobile media query */
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    /* Anchor for absolute iframe */
+}
+
+#win-flappy-neon .window-body iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+/* ===== FOOTBALL RUSH GAME WINDOW ===== */
+#win-football-rush {
+    width: 520px;
+    height: 820px;
+    min-height: 400px;
+}
+
+#win-football-rush .window-body {
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #1a1a2e !important;
+    max-height: none !important;
+    /* Override mobile media query */
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    /* Anchor for absolute iframe */
+}
+
+#win-football-rush .window-body iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}

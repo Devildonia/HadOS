@@ -1,0 +1,63 @@
+/* ===== TASKBAR ===== */
+#taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    /* Was hardcoded 32px, which pinned every theme to the Win95 bar height and
+       silently ignored --taskbar-height. */
+    height: var(--taskbar-height);
+    background: var(--taskbar-bg);
+    border-top: var(--taskbar-border-top);
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    z-index: 1000;
+    box-shadow: 0 -1px 0 0 var(--border-dark) inset;
+}
+
+#taskbar-apps {
+    display: flex;
+    gap: 2px;
+    margin-left: 5px;
+    flex: 1;
+    height: 100%;
+    align-items: center;
+}
+
+.taskbar-button {
+    background: var(--taskbar-bg);
+    border: var(--control-border);
+    border-color: var(--control-border-color);
+    height: 100%;
+    min-width: 60px;
+    max-width: 160px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--os-font-size);
+    cursor: default;
+    user-select: none;
+    box-shadow: var(--control-shadow);
+    overflow: hidden;
+}
+
+.taskbar-button.active {
+    font-weight: bold;
+}
+
+.taskbar-button:active {
+    border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest);
+    padding: 1px 4px 0 6px;
+}
+
+.task-icon {
+    font-size: 14px;
+}
+
+.task-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

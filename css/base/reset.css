@@ -1,0 +1,19 @@
+/* ===== BASE STYLES ===== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: var(--os-font-family);
+    /* Black behind everything: the BIOS and splash paint over it at boot. */
+    background-color: #000000;
+    overflow: hidden;
+    font-size: var(--os-font-size);
+}

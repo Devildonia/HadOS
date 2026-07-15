@@ -1,0 +1,52 @@
+/* ===== STICKY NOTE (POST-IT) ===== */
+/* Sticky Notes - Common styles */
+.sticky-note {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 160px;
+    min-height: 140px;
+    background-color: #ffff88;
+    padding: 15px;
+    font-family: 'Comic Sans MS', 'Bradley Hand', cursive, sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+    line-height: 1.4;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    transform: rotate(-2deg);
+    z-index: 50;
+    border: 1px solid #e6e600;
+    transition: transform 0.2s ease;
+    cursor: move;
+    user-select: none;
+}
+
+.sticky-note:hover {
+    transform: rotate(0deg) scale(1.02);
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.sticky-note.dragging {
+    cursor: grabbing;
+    z-index: 1000;
+    transform: rotate(0deg) scale(1.05);
+}
+
+.sticky-note p {
+    margin: 0;
+    font-size: 13px;
+    word-wrap: break-word;
+}
+
+#sticky-note {
+    transform: rotate(-2deg);
+}
+
+#sticky-note-2 {
+    transform: rotate(2deg);
+}
+
+#sticky-note p:first-child {
+    font-weight: bold;
+    color: #cc0000;
+}

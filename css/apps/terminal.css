@@ -1,0 +1,52 @@
+/* ===== TERMINAL APP ===== */
+.terminal-app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.terminal-output {
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    padding: 6px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    background: var(--window-content-bg);
+    color: var(--os-text-color);
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+}
+
+.terminal-input-line {
+    display: flex;
+    align-items: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    margin-top: 4px;
+    padding: 2px;
+}
+
+.terminal-prompt {
+    color: var(--os-text-color);
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--os-text-color);
+    padding: 0;
+    caret-color: var(--os-text-color);
+}
+
+.term-error-line {
+    color: #aa0000;
+}

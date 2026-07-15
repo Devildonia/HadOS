@@ -1,0 +1,13 @@
+/**
+ * Tailwind layers. First in the manifest because preflight is a reset: every
+ * rule that follows is written expecting it to already be in the cascade.
+ *
+ * These directives live in a partial rather than in style.css because @import
+ * must precede every other rule. Left in the entry, PostCSS expanded them into
+ * hundreds of preflight rules above the @import list, which silently invalidated
+ * and dropped every import: the build still reported success and emitted a
+ * stylesheet with none of the OS in it.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,18 @@
+/* ===== WINDOW MENU ===== */
+.window-menu {
+    border-bottom: 1px solid #808080;
+    padding: 2px 5px;
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+}
+
+.menu-item {
+    cursor: pointer;
+    padding: 1px 3px;
+}
+
+.menu-item:hover {
+    background: #000080;
+    color: white;
+}

@@ -1,0 +1,177 @@
+/* ===== WIN95 WINDOW ===== */
+.win95-window {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--window-bg);
+    border: var(--window-border);
+    border-color: var(--window-border-color);
+    box-shadow: var(--window-shadow);
+    border-radius: var(--window-border-radius);
+    /* v1.0.7: Adaptive Sizing (replaced fixed min/max with auto) */
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== ANIMACIONES WINDOW ===== */
+@keyframes windowOpen {
+    0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes windowClose {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+}
+
+.window-opening {
+    animation: windowOpen 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.window-closing {
+    animation: windowClose 0.12s ease-in forwards;
+}
+
+/* ===== WINDOW HEADER ===== */
+.window-header {
+    background: var(--window-header-bg);
+    color: var(--window-header-color);
+    padding: 3px 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: var(--os-font-size);
+    height: var(--window-header-height);
+    user-select: none;
+    cursor: move;
+}
+
+.window-header span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.window-controls {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.window-btn {
+    background: var(--control-bg);
+    border: var(--control-border);
+    border-color: var(--control-border-color);
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: black;
+    line-height: 1;
+}
+
+.window-btn:active {
+    border-color: var(--control-active-border-color);
+    padding-top: 1px;
+    padding-left: 1px;
+}
+
+.win95-window.maximized {
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    height: calc(100% - var(--taskbar-height)) !important;
+    max-width: 100% !important;
+    max-height: calc(100% - var(--taskbar-height)) !important;
+    border: none !important;
+    box-shadow: none !important;
+    /* v1.0.7.5: Fix background colors when maximized */
+    background: var(--win-gray) !important;
+}
+
+/* v1.0.7.5: Resize Handle */
+.window-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 0%, transparent 45%, var(--border-dark) 45%, var(--border-dark) 50%, transparent 50%, transparent 55%, var(--border-dark) 55%, var(--border-dark) 60%, transparent 60%);
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.window-resize-handle::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 16px 16px;
+    border-color: transparent transparent var(--win-gray) transparent;
+}
+
+/* Hide resize handle when maximized */
+.win95-window.maximized .window-resize-handle {
+    display: none;
+}
+
+/* ===== WINDOW BODY ===== */
+.window-body {
+    padding: 15px;
+    background: var(--window-bg);
+    /* In a flex window, let the body take remaining space and scroll internally when needed */
+    flex: 1;
+    overflow: auto;
+}
+
+/* v1.0.7.5: Fix double color in explorer windows */
+.window-body.explorer-window {
+    padding: 0;
+    background: white;
+}
+
+/* Toolbar and Address bar = gray (Windows 95 authentic) */
+.window-body.explorer-window .explorer-toolbar,
+.window-body.explorer-window .explorer-address {
+    background: var(--window-bg);
+    padding: 8px;
+}
+
+/* Content area = white */
+.window-body.explorer-window .explorer-content {
+    background: var(--window-content-bg);
+    padding: 8px;
+}
+
+.window-body h3 {
+    font-size: 12px;
+    margin: 0 0 12px 0;
+}
+
+.window-body p {
+    margin: 8px 0;
+    font-size: 11px;
+}
+
+.window-body hr {
+    border: none;
+    border-top: 1px solid var(--border-dark);
+    border-bottom: 1px solid var(--border-light);
+    margin: 12px 0;
+}
+
+/* ===== CLOSE BUTTON ===== */

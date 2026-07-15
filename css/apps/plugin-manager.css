@@ -1,0 +1,187 @@
+/* ===== PLUGIN MANAGER ===== */
+#plugin-manager {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.pm-install-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+
+.pm-input {
+    flex: 1;
+    height: 24px;
+    padding: 2px 6px;
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+    background: white;
+    font-family: var(--os-font-family);
+    font-size: 11px;
+    outline: none;
+}
+
+.plugin-msg {
+    min-height: 18px;
+    font-size: 11px;
+    font-family: var(--os-font-family);
+    margin-bottom: 8px;
+}
+
+.plugin-msg.success {
+    color: #008800;
+}
+
+.plugin-msg.error {
+    color: #cc0000;
+}
+
+.pm-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+    background: var(--window-content-bg);
+    padding: 4px;
+}
+
+.pm-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--win-gray);
+}
+
+.pm-row-info {
+    flex: 1;
+}
+
+.pm-row-title {
+    font-weight: bold;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pm-row-desc {
+    color: var(--border-dark);
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+/* ============================================
+   SETTINGS APP
+   ============================================ */
+.settings-app {
+    display: flex;
+    height: 100%;
+    box-sizing: border-box;
+    font-family: var(--os-font-family);
+    color: var(--os-text-color);
+}
+
+.settings-nav {
+    width: 170px;
+    flex-shrink: 0;
+    padding: 6px;
+    box-sizing: border-box;
+    background: var(--win-gray);
+    border-right: 2px solid;
+    border-color: var(--border-dark);
+    overflow-y: auto;
+}
+
+.settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 2px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.settings-nav-item:hover {
+    background: rgba(16, 132, 208, 0.12);
+}
+
+.settings-nav-item.active {
+    background: var(--win-blue);
+    color: #fff;
+}
+
+.settings-nav-icon {
+    font-size: 15px;
+    line-height: 1;
+}
+
+.settings-content {
+    flex: 1;
+    padding: 16px 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.settings-heading {
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.settings-label {
+    font-size: 12px;
+    min-width: 130px;
+}
+
+.settings-select {
+    font-family: var(--os-font-family);
+    font-size: 12px;
+    padding: 3px 6px;
+    min-width: 160px;
+    background: var(--window-content-bg, #fff);
+    color: var(--os-text-color);
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+}
+
+.settings-desc {
+    font-size: 11px;
+    opacity: 0.85;
+    margin: 4px 0 0;
+    max-width: 380px;
+}
+
+.settings-hint {
+    font-size: 11px;
+    color: #00807a;
+    min-height: 14px;
+    margin: 8px 0 0;
+    font-weight: bold;
+}
+
+.settings-divider {
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid var(--border-dark);
+    opacity: 0.4;
+}
+
+.settings-muted {
+    opacity: 0.6;
+    font-style: italic;
+}

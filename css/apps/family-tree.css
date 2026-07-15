@@ -1,0 +1,80 @@
+/* ===== FAMILY TREE STYLES ===== */
+#family-tree {
+    background: white;
+    padding: 15px;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    min-height: 350px;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    font-size: 11px;
+    color: black;
+}
+
+.family-section {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f0f0f0;
+    border: 1px solid #808080;
+}
+
+.family-section h4 {
+    margin: 0 0 8px 0;
+    color: #000080;
+    font-size: 12px;
+    border-bottom: 1px solid #000080;
+    padding-bottom: 4px;
+}
+
+.family-member {
+    padding: 5px;
+    margin: 4px 0;
+    background: white;
+    border: 1px solid #c0c0c0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.family-member.deceased {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.member-name {
+    font-weight: bold;
+}
+
+.member-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.member-status.alive {
+    background: #00ff00;
+    color: #000;
+}
+
+.member-status.dead {
+    background: #808080;
+    color: white;
+}
+
+.milestone-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.milestone-list li {
+    padding: 6px;
+    margin: 4px 0;
+    background: #ffffcc;
+    border-left: 3px solid #000080;
+    font-size: 10px;
+}
+
+.milestone-age {
+    font-weight: bold;
+    color: #000080;
+}

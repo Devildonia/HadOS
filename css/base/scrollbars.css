@@ -1,0 +1,27 @@
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--window-content-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--window-bg);
+    border: 2px solid;
+    border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+}
+
+::-webkit-scrollbar-button {
+    background: var(--window-bg);
+    border: 2px solid;
+    border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+    height: 16px;
+    width: 16px;
+}
+
+::-webkit-scrollbar-button:active {
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+}

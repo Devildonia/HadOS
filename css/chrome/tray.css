@@ -1,0 +1,19 @@
+/* ===== TASKBAR SPACER & TRAY ===== */
+.taskbar-spacer {
+    flex: 1;
+}
+
+#system-tray {
+    display: flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 8px;
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+}
+
+#taskbar-clock {
+    font-size: 11px;
+    min-width: 45px;
+    text-align: center;
+}

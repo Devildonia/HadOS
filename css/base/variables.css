@@ -1,0 +1,8 @@
+/* ===== CSS VARIABLES =====
+ * The palette lives in css/themes/theme-base.css and the theme files. This block
+ * used to redeclare the Windows 95 greys here and — being loaded last — silently
+ * won over theme-base. Only --bg-color survives, because nothing else defines it.
+ */
+:root {
+    --bg-color: var(--hados-bg, #0b0e13);
+}

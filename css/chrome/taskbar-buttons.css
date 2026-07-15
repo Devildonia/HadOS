@@ -1,0 +1,30 @@
+/* ===== TASKBAR BUTTONS ===== */
+.ragdoll-pet-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    height: 24px;
+    background: #c0c0c0;
+    border: 2px outset #ffffff;
+    cursor: pointer;
+    font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
+    font-size: 11px;
+    margin: 2px;
+}
+
+.ragdoll-pet-btn:hover {
+    background: #d0d0d0;
+}
+
+.ragdoll-pet-btn:active,
+.ragdoll-pet-btn.active {
+    border: 2px inset #ffffff;
+    background: #b0b0b0;
+}
+
+.ragdoll-pet-btn.disabled {
+    color: #808080;
+    cursor: not-allowed;
+    opacity: 0.6;
+}

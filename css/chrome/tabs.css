@@ -1,0 +1,40 @@
+/* ===== TABS SYSTEM ===== */
+.tabs-container {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--border-dark);
+}
+
+.tab-btn,
+.display-tab-btn {
+    background: var(--window-bg);
+    border: 2px solid;
+    border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    padding: 6px 12px;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+}
+
+.tab-btn.active,
+.display-tab-btn.active {
+    background: white;
+    border-bottom-color: white;
+    font-weight: bold;
+}
+
+.tab-btn:active,
+.display-tab-btn:active {
+    border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}

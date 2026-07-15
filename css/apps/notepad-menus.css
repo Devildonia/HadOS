@@ -1,0 +1,172 @@
+/* ===== NOTEPAD NATIVE DROPDOWN MENU ===== */
+.notepad-menu-entry {
+    position: relative;
+    display: inline-block;
+}
+
+.notepad-menu-label {
+    cursor: default;
+    padding: 1px 5px;
+    font-size: 11px;
+    display: inline-block;
+    user-select: none;
+}
+
+.notepad-menu-label:hover,
+.notepad-menu-entry.open .notepad-menu-label {
+    background: #000080;
+    color: white;
+}
+
+.notepad-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: #c0c0c0;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    box-shadow: 2px 2px 0 #000000;
+    z-index: 9999;
+    padding: 2px 0;
+    font-size: 11px;
+}
+
+.notepad-menu-entry.open .notepad-dropdown {
+    display: block;
+}
+
+.notepad-dropdown-item {
+    padding: 3px 20px 3px 20px;
+    cursor: default;
+    white-space: pre;
+    user-select: none;
+}
+
+.notepad-dropdown-item:hover {
+    background: #000080;
+    color: white;
+}
+
+.notepad-dropdown-item.disabled {
+    color: #808080;
+    cursor: default;
+}
+
+.notepad-dropdown-item.disabled:hover {
+    background: transparent;
+    color: #808080;
+}
+
+.notepad-dropdown-separator {
+    height: 1px;
+    background: #808080;
+    margin: 3px 4px;
+    border-bottom: 1px solid #ffffff;
+}
+
+/* ===== NOTEPAD DIALOGS ===== */
+.notepad-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    background: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    box-shadow: 3px 3px 0 #000000;
+    z-index: 10000;
+    font-size: 11px;
+    font-family: inherit;
+}
+
+.notepad-dialog-title {
+    background: #000080;
+    color: white;
+    padding: 3px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    user-select: none;
+}
+
+.notepad-dialog-body {
+    padding: 12px 10px 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.notepad-dialog-body label {
+    font-size: 11px;
+}
+
+.notepad-dialog-input {
+    width: 100%;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+    padding: 2px 4px;
+    font-family: inherit;
+    font-size: 11px;
+    background: white;
+    box-sizing: border-box;
+}
+
+.notepad-dialog-files {
+    max-height: 80px;
+    overflow-y: auto;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+    background: white;
+    padding: 2px;
+    font-size: 11px;
+}
+
+.notepad-dialog-file-entry {
+    padding: 1px 4px;
+    cursor: default;
+    user-select: none;
+}
+
+.notepad-dialog-file-entry:hover {
+    background: #000080;
+    color: white;
+}
+
+.notepad-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 6px 10px 10px 10px;
+}
+
+.win95-btn {
+    min-width: 72px;
+    padding: 3px 8px;
+    background: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: default;
+    user-select: none;
+}
+
+.win95-btn:active {
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    padding: 4px 7px 2px 9px;
+}
