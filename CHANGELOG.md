@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A wallpaper of our own.** `SHADER_HADOS` raymarches the HadOS mark: two uprights and a
+  crossbar as rounded boxes unioned into one extruded solid, lit with a key light, a fresnel edge
+  and a specular highlight to echo the bevels of the logo, drifting slowly over a dark blue pool.
+  Like the Windows 95 flag it replaces, the mark is *drawn* rather than blitted — a few KB of
+  GLSL, resolution independent and animated for free. It costs 72 march steps against three
+  boxes, well under `SHADER_MODERN`'s 40 layers of noise.
+
+### Fixed
+
+- **The Programs flyout vanished from the Start menu.** The rounded corners were done with
+  `overflow: hidden`, but `.submenu` is positioned at `left: 100%` — outside the menu's box — so
+  it was clipped away entirely. The sidebar now rounds its own corners instead. Regression from
+  the HadOS chrome, reported from a screenshot.
+
 ### Changed — the Windows 95 chrome is gone
 
 - **HadOS is now the system's own interface**, replacing the Windows 95 theme entirely. Dark

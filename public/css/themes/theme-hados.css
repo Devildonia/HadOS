@@ -350,7 +350,9 @@ body.theme-hados #start-menu {
     bottom: var(--taskbar-height);
     width: 280px;
     border-radius: 12px;
-    overflow: hidden;
+    /* Deliberately NOT overflow:hidden. The Programs flyout is a .submenu at
+       left:100% — outside this box — so clipping to the rounded corners would
+       make it disappear. The sidebar rounds its own corners instead. */
     backdrop-filter: blur(28px) saturate(140%);
     -webkit-backdrop-filter: blur(28px) saturate(140%);
     padding: 0;
@@ -361,6 +363,8 @@ body.theme-hados .start-sidebar {
     font-family: var(--os-font-display);
     font-size: 16px;
     letter-spacing: 3px;
+    /* Matches the menu's radius, since the menu no longer clips it. */
+    border-radius: 12px 0 0 12px;
 }
 
 body.theme-hados .menu-items-container {

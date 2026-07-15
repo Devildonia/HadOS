@@ -123,6 +123,129 @@ void main() {
 }
 `;
 
+/**
+ * HadOS Shader — the brand mark, drawn rather than blitted.
+ *
+ * The Win95 wallpaper it replaces built its flag procedurally in GLSL; this does
+ * the same for the HadOS H, so the wallpaper stays a few KB of source, resolution
+ * independent, and animated for free.
+ *
+ * The mark is a raymarched extrusion: two uprights and a crossbar as rounded
+ * boxes, unioned into one solid, lit with a key light, a blue rim and a fresnel
+ * edge to echo the bevels of the logo render. It drifts rather than spins — this
+ * sits behind a desktop all day, so the motion has to be ignorable.
+ *
+ * Budget: 72 march steps against three boxes. That is well under SHADER_MODERN,
+ * which raymarches 40 layers of noise.
+ */
+export const SHADER_HADOS = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+uniform vec2 iResolution;
+uniform float iTime;
+
+#define PI 3.1415926535897932384626433832795
+
+// Brand palette, matching the CSS tokens in theme-hados.css.
+#define BLUE_DEEP  vec3(0.043, 0.369, 0.843)
+#define BLUE_MID   vec3(0.231, 0.608, 0.941)
+#define BLUE_LIGHT vec3(0.498, 0.824, 1.000)
+#define BG_TOP     vec3(0.043, 0.055, 0.075)
+#define BG_BOTTOM  vec3(0.020, 0.027, 0.039)
+
+mat2 rot(float a) {
+    float c = cos(a), s = sin(a);
+    return mat2(c, -s, s, c);
+}
+
+float sdRoundBox(vec3 p, vec3 b, float r) {
+    vec3 q = abs(p) - b + r;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0) - r;
+}
+
+/** The H: two uprights joined by a crossbar, extruded along z. */
+float sdH(vec3 p) {
+    const float stem = 0.17;   // half-width of an upright
+    const float tall = 0.62;   // half-height
+    const float gap = 0.36;    // upright offset from centre
+    const float deep = 0.14;   // half-depth of the extrusion
+    const float bevel = 0.035; // rounding that catches the light
+
+    float left  = sdRoundBox(p - vec3(-gap, 0.0, 0.0), vec3(stem, tall, deep), bevel);
+    float right = sdRoundBox(p - vec3( gap, 0.0, 0.0), vec3(stem, tall, deep), bevel);
+    float bar   = sdRoundBox(p, vec3(gap, 0.115, deep * 0.82), bevel);
+    return min(min(left, right), bar);
+}
+
+float map(vec3 p) {
+    // Slow, shallow drift. Never a full turn: the mark should read as itself.
+    p.xz *= rot(sin(iTime * 0.18) * 0.55);
+    p.yz *= rot(sin(iTime * 0.13) * 0.20);
+    p.y -= sin(iTime * 0.35) * 0.03;
+    return sdH(p);
+}
+
+vec3 calcNormal(vec3 p) {
+    vec2 e = vec2(0.0015, 0.0);
+    return normalize(vec3(
+        map(p + e.xyy) - map(p - e.xyy),
+        map(p + e.yxy) - map(p - e.yxy),
+        map(p + e.yyx) - map(p - e.yyx)
+    ));
+}
+
+void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * iResolution.xy) / iResolution.y;
+
+    // Backdrop: a vertical fade with a soft blue pool behind the mark, so the
+    // desktop has depth without competing with the icons on top of it.
+    float grad = gl_FragCoord.y / iResolution.y;
+    vec3 col = mix(BG_BOTTOM, BG_TOP, grad);
+    col += BLUE_DEEP * 0.14 * exp(-2.6 * dot(uv, uv));
+
+    vec3 ro = vec3(0.0, 0.0, 2.6);
+    vec3 rd = normalize(vec3(uv, -1.6));
+
+    float t = 0.0;
+    float hit = 0.0;
+    for (int i = 0; i < 72; i++) {
+        vec3 p = ro + rd * t;
+        float d = map(p);
+        if (d < 0.001) { hit = 1.0; break; }
+        if (t > 6.0) break;
+        t += d;
+    }
+
+    if (hit > 0.5) {
+        vec3 p = ro + rd * t;
+        vec3 n = calcNormal(p);
+        vec3 v = -rd;
+
+        vec3 key = normalize(vec3(-0.5, 0.8, 0.7));
+        float diff = max(dot(n, key), 0.0);
+        float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+        float spec = pow(max(dot(reflect(-key, n), v), 0.0), 48.0);
+
+        // Faces read deep blue, edges catch the light — the chiselled look.
+        vec3 mat = mix(BLUE_DEEP, BLUE_MID, diff);
+        mat = mix(mat, BLUE_LIGHT, fres * 0.7);
+        mat += BLUE_LIGHT * spec * 0.5;
+        mat += BLUE_DEEP * 0.25; // ambient, so the dark side is never a hole
+
+        col = mat;
+    }
+
+    // Vignette settles the edges.
+    col *= 1.0 - 0.25 * dot(uv, uv);
+
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
+
 // Modern UI Shader (Provided cool geometric raymarching effect)
 export const SHADER_MODERN = `
 #ifdef GL_ES
