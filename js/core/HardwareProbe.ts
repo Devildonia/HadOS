@@ -9,12 +9,15 @@
  *   - The values stay on the machine; nothing is sent anywhere.
  *
  * Accuracy caveats worth knowing when reading the screen:
- *   - navigator.deviceMemory is deliberately coarse and CAPPED AT 8 GB by the
- *     spec (anti-fingerprinting), so a 32 GB PC honestly reports 8 GB. Chromium
- *     only; Firefox and Safari do not implement it at all.
+ *   - navigator.deviceMemory is deliberately coarse: the spec has it round down
+ *     to a power of two and permits clamping (8 GB is the usual ceiling) to
+ *     resist fingerprinting. What you get is therefore browser-dependent — some
+ *     report the true figure, some clamp — and Firefox and Safari do not
+ *     implement it at all. We print whatever is offered; we never extrapolate.
  *   - There is no clock-speed API. We do not invent one.
  *   - The GPU string comes from WEBGL_debug_renderer_info, which some browsers
  *     (and privacy modes) mask or omit.
+ *   - screen.* can be 0 in embedded/headless browsers; see detectDisplay.
  */
 
 export interface HardwareReport {
@@ -113,9 +116,21 @@ function detectDisplay(): string {
     try {
         const dpr = window.devicePixelRatio || 1;
         const depth = screen.colorDepth || 24;
-        const native = `${Math.round(screen.width * dpr)}x${Math.round(screen.height * dpr)}`;
         const scale = dpr !== 1 ? ` @${dpr}x` : '';
-        return `${native}${scale}, ${depth}-bit`;
+
+        if (screen.width > 0 && screen.height > 0) {
+            return `${Math.round(screen.width * dpr)}x${Math.round(screen.height * dpr)}${scale}, ${depth}-bit`;
+        }
+
+        // Embedded and headless browsers can report a 0x0 screen (offscreen
+        // rendering has no display to describe). The viewport is then the only
+        // real measurement left — and it gets labelled, because the window size
+        // is not the display's resolution.
+        const vw = Math.round(window.innerWidth * dpr);
+        const vh = Math.round(window.innerHeight * dpr);
+        if (vw > 0 && vh > 0) return `${vw}x${vh} viewport${scale}, ${depth}-bit`;
+
+        return 'Unknown';
     } catch {
         return 'Unknown';
     }

@@ -32,14 +32,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The splash progress bar grew from a 4px hairline to a glowing 10px track with a live percentage
   readout.
 
+### Fixed
+
+- The POST printed `Video Mode: 0x0` in embedded and headless browsers, and on a cold boot in
+  general: `screen.width`/`height` can be 0 before the window is attached to a display. It now
+  falls back to the viewport and **labels it as such** — a window size is not a display
+  resolution — or says `Unknown` when even that is unmeasurable.
+
 ### Known limitations
 
-- `navigator.deviceMemory` is **capped at 8 GB by the specification** (anti-fingerprinting), so a
-  32 GB machine honestly reports 8 GB. It is Chromium-only; Firefox and Safari report nothing and
-  the POST says so.
+- `navigator.deviceMemory` is deliberately coarse: the spec rounds it down to a power of two and
+  permits clamping (8 GB is the usual ceiling) to resist fingerprinting. What you see is
+  therefore **browser-dependent** — some report the machine's true size, others clamp — and
+  Firefox and Safari do not implement it at all, in which case the POST says `Not reported`. We
+  print what the browser offers and never extrapolate.
 - There is no clock-speed API in any browser, so the old `Speed: 133 MHz` line was removed rather
   than faked.
 - The GPU name comes from `WEBGL_debug_renderer_info`, which privacy modes may mask.
+- `navigator.connection.effectiveType` is a coarse latency bucket, so a fast wired desktop is
+  commonly reported as `4G`. That is the API's vocabulary, not a measurement error.
 
 ## [1.0.0] - 2026-07-15
 

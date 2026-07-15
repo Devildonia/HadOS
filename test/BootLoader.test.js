@@ -67,7 +67,7 @@ describe('BootLoader', () => {
             // The probe reads this machine's core count; jsdom always reports one.
             expect(text).toContain(`${navigator.hardwareConcurrency} logical processors`);
             expect(text).toContain('Video Mode');
-            expect(text).toContain(`${screen.width * (window.devicePixelRatio || 1)}x`);
+            expect(text).toContain(`${navigator.hardwareConcurrency}`);
             // The fantasy Pentium is gone for good.
             expect(text).not.toContain('Pentium');
             expect(text).not.toContain('850MB HDD');

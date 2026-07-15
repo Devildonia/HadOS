@@ -30,8 +30,10 @@ describe('HardwareProbe', () => {
         const hw = await probeHardware();
 
         expect(hw.cpu).toContain(`${navigator.hardwareConcurrency} logical processors`);
-        expect(hw.display).toContain(`${screen.width}x${screen.height}`);
         expect(hw.pointer).toBe('Mouse detected');
+        // jsdom reports no screen, so this exercises the viewport fallback.
+        expect(hw.display).toMatch(/^\d+x\d+( viewport)?.*, \d+-bit$/);
+        expect(hw.display).not.toMatch(/\b0x0\b/);
     });
 
     it('reads UA Client Hints when the browser offers them', async () => {
@@ -100,6 +102,38 @@ describe('HardwareProbe', () => {
 
         expect((await pending).storage).toBe('Quota not reported');
         vi.useRealTimers();
+    });
+
+    it('scales the display by DPR', async () => {
+        stub(screen, 'width', 1280);
+        stub(screen, 'height', 720);
+        stub(window, 'devicePixelRatio', 2);
+
+        expect((await probeHardware()).display).toBe('2560x1440 @2x, 24-bit');
+    });
+
+    it('falls back to the viewport when the screen reports 0x0, and labels it', async () => {
+        // Embedded/headless browsers render offscreen and report no display.
+        stub(screen, 'width', 0);
+        stub(screen, 'height', 0);
+        stub(window, 'innerWidth', 1280);
+        stub(window, 'innerHeight', 720);
+        stub(window, 'devicePixelRatio', 1);
+
+        const hw = await probeHardware();
+
+        expect(hw.display).toBe('1280x720 viewport, 24-bit');
+        // The old bug: printing the screen's zeroes as if they were a resolution.
+        expect(hw.display).not.toContain('0x0');
+    });
+
+    it('gives up on the display rather than printing zeroes', async () => {
+        stub(screen, 'width', 0);
+        stub(screen, 'height', 0);
+        stub(window, 'innerWidth', 0);
+        stub(window, 'innerHeight', 0);
+
+        expect((await probeHardware()).display).toBe('Unknown');
     });
 
     it('detects a touch digitizer', async () => {
