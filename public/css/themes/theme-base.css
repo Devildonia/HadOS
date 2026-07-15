@@ -1,0 +1,60 @@
+/* ===== CSS VARIABLES (Base Theme Definition) ===== */
+:root {
+    /* Fonts */
+    --os-font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
+    --os-font-size: 11px;
+    --os-font-weight-bold: bold;
+    
+    /* Global Backgrounds */
+    --os-bg-color: #008080;
+    --os-text-color: #000000;
+    --os-text-color-inverted: #ffffff;
+    
+    /* Taskbar */
+    --taskbar-bg: #c0c0c0;
+    --taskbar-height: 32px;
+    --taskbar-border-top: 2px solid var(--border-light);
+    --taskbar-shadow: 0 -1px 0 0 var(--border-dark) inset;
+    
+    /* Start Menu */
+    --start-menu-bg: var(--taskbar-bg);
+    --start-menu-border: 2px solid;
+    --start-menu-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --start-menu-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    --start-sidebar-bg: linear-gradient(180deg, var(--win-blue), var(--win-lightblue));
+    
+    /* Windows */
+    --window-bg: var(--win-gray);
+    --window-content-bg: white;
+    --window-border: 2px solid;
+    --window-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --window-border-radius: 0px;
+    --window-shadow: 1px 1px 0 0 var(--border-dark) inset, -1px -1px 0 0 var(--border-dark) inset, 2px 2px 4px 0 rgba(0, 0, 0, 0.4);
+    
+    /* Window Header */
+    --window-header-bg: linear-gradient(90deg, var(--win-blue), var(--win-lightblue));
+    --window-header-color: white;
+    --window-header-height: 24px;
+    
+    /* Dialogs */
+    --dialog-bg: var(--win-gray);
+    --dialog-border: 2px solid;
+    --dialog-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --dialog-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+
+    /* Controls (Buttons, inputs) */
+    --control-bg: var(--win-gray);
+    --control-border: 2px solid;
+    --control-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --control-shadow: 1px 1px 0 0 var(--border-dark) inset;
+    --control-active-border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest);
+    --control-active-shadow: none;
+    
+    /* Legacy variables mapping (keep for backwards comp during transition) */
+    --win-gray: #c0c0c0;
+    --win-blue: #000080;
+    --win-lightblue: #1084d0;
+    --border-light: #ffffff;
+    --border-dark: #808080;
+    --border-darkest: #000000;
+}

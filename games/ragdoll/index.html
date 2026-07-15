@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ragdoll Standalone</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #008080;
+            /* Win95 Teal */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        canvas {
+            background: transparent;
+            cursor: move;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            padding: 10px;
+            color: black;
+            font-size: 12px;
+            width: 200px;
+            pointer-events: all;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .control-group input {
+            width: 100%;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #808080;
+            padding-bottom: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <h1>Ragdoll Standalone</h1>
+        <p>Arrastra y lanza al personaje</p>
+    </div>
+
+    <div id="controls">
+        <h2>Panel de Control</h2>
+        <div class="control-group">
+            <label>Escala Global: <span id="global-scale-val">1.0</span></label>
+            <input type="range" id="global-scale-slider" min="0.5" max="2.5" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+            <label>Grosor: <span id="global-width-val">1.0</span></label>
+            <input type="range" id="global-width-slider" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+        <button id="reset-global-scale"
+            style="width: 100%; border: 2px solid #fff; border-right-color: #808080; border-bottom-color: #808080; background: #c0c0c0; padding: 4px; cursor: pointer;">
+            Reiniciar
+        </button>
+    </div>
+
+    <canvas id="ragdoll-canvas"></canvas>
+
+    <!-- Libs -->
+    <script src="/libs/matter.min.js"></script>
+
+    <!-- App -->
+    <script type="module">
+        import { RagdollPet } from './js/RagdollPet.js';
+
+        window.addEventListener('load', () => {
+            const canvas = document.getElementById('ragdoll-canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const ragdollPet = new RagdollPet('ragdoll-canvas');
+            window.ragdollPet = ragdollPet;
+
+            // Standalone init
+            ragdollPet.init();
+
+            // Resize handler
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        });
+    </script>
+</body>
+
+</html>

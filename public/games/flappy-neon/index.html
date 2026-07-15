@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Flappy Neon: Pulse</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Game Container (Canvas + UI) -->
+    <div id="app">
+        <!-- Intro Video (Now inside app) -->
+        <div id="intro-layer" class="screen" style="z-index: 20; background: #000;">
+            <video id="intro-video" playsinline style="width: 100%; height: 100%; object-fit: cover;">
+                <source src="assets/Trailer.mp4" type="video/mp4">
+            </video>
+            <div id="skip-hint" style="position:absolute; bottom:20px; right:20px; opacity:0.5; font-size:12px;">TAP TO
+                SKIP</div>
+        </div>
+
+        <!-- Background Shader Canvas -->
+        <canvas id="bgCanvas"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;"></canvas>
+
+        <canvas id="gameCanvas" style="position: relative; z-index: 10;"></canvas>
+
+        <!-- HUD: Always visible during gameplay -->
+        <div id="hud" class="hidden">
+            <div class="score-pill">
+                <span class="label">SCORE</span>
+                <span id="scoreValue" class="value pulse-text">0</span>
+            </div>
+            <div class="score-pill small">
+                <span class="label">BEST</span>
+                <span id="bestValue" class="value">0</span>
+            </div>
+            <div class="score-pill small" id="streak-pill" style="display:none;">
+                <span class="label">STREAK</span>
+                <span id="streakValue" class="value" style="color:#ff0;">0</span>
+            </div>
+        </div>
+
+        <!-- Streak Banner -->
+        <div id="streak-banner" class="hidden"></div>
+
+        <!-- Pause Overlay -->
+        <div id="screen-pause" class="screen hidden">
+            <div class="card glass" style="padding:50px 70px; text-align:center;">
+                <h2 style="color:var(--c-primary); text-shadow:0 0 20px var(--c-primary); margin:0 0 10px;">PAUSED</h2>
+                <p style="color:rgba(255,255,255,0.5); letter-spacing:0.2em; font-size:13px; margin:0 0 30px;">PRESS ESC
+                    TO RESUME</p>
+                <button id="btn-resume" class="btn-neon">RESUME</button>
+                <button id="btn-quit" class="btn-text">QUIT TO MENU</button>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="screen-start" class="screen">
+            <div class="logo-container">
+                <h1 class="logo glitch" data-text="FLAPPY NEON">FLAPPY NEON</h1>
+                <h2 class="subtitle">PULSE EDITION</h2>
+            </div>
+
+            <div class="action-container">
+                <button id="btn-start" class="btn-neon">START ENGINE</button>
+                <button id="btn-credits" class="btn-text">CREDITS</button>
+            </div>
+
+            <div class="footer-tip">TAP OR SPACE TO FLY</div>
+            <div class="footer-tip" style="font-size:10px; opacity:0.4; margin-top:6px; letter-spacing:0.15em;">
+                &copy; HaDeS (A.K.A. DeViLDoNia) 2026
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="screen-gameover" class="screen hidden">
+            <div class="card glass">
+                <h2>SYSTEM FAILURE</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <span class="label">SCORE</span>
+                        <span id="end-score" class="value big">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">BEST</span>
+                        <span id="end-best" class="value">0</span>
+                    </div>
+                </div>
+
+                <div id="new-high-score" class="hidden">
+                    <span class="files-alert">NEW RECORD RECORDED</span>
+                </div>
+
+                <!-- Leaderboard -->
+                <div id="leaderboard-section">
+                    <div class="lb-title">TOP 5</div>
+                    <ol id="leaderboard-list" class="lb-list"></ol>
+                </div>
+
+                <button id="btn-restart" class="btn-neon">REBOOT SYSTEM</button>
+                <button id="btn-home" class="btn-text">MAIN MENU</button>
+            </div>
+        </div>
+
+        <!-- Name Input Modal -->
+        <div id="name-modal" class="hidden">
+            <div class="credits-card" style="border-top-color:var(--c-primary);">
+                <h2 style="color:var(--c-primary); text-shadow:0 0 15px var(--c-primary);">NEW RECORD!</h2>
+                <p style="color:rgba(255,255,255,0.7); font-size:14px; margin-bottom:18px;">Enter your pilot name:</p>
+                <input id="name-input" type="text" maxlength="12" placeholder="PILOT" autocomplete="off" style="background:rgba(0,243,255,0.08); border:1px solid var(--c-primary); color:#fff;
+                    font-family:var(--f-display); font-size:18px; padding:10px 16px; width:100%;
+                    border-radius:2px; outline:none; text-align:center; letter-spacing:0.15em;">
+                <button id="btn-name-submit" class="btn-neon" style="margin-top:16px; width:100%;">SUBMIT</button>
+            </div>
+        </div>
+
+        <!-- Flash Effect Overlay -->
+        <div id="flash-overlay"></div>
+
+        <!-- Credits Modal -->
+        <div id="credits-modal" class="hidden">
+            <div class="credits-card">
+                <h2>CREDITS</h2>
+                <p>
+                    🎮 <strong>Flappy Neon: Pulse Edition</strong><br>
+                    Developed for Windows App Center<br><br>
+                    🎨 Shader Background<br>
+                    Synthwave retrowave scene<br><br>
+                    🎵 Audio<br>
+                    flappy.opus · wii.opus · oh_no.opus<br><br>
+                    Built with Canvas 2D + WebGL
+                </p>
+                <button id="btn-credits-close" class="btn-neon" style="margin-top:20px;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entry Point -->
+    <script src="shader_bg.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

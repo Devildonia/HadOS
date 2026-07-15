@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="description" content="Virtual Life Restart Simulator - Transform your life with every decision">
+    <title>Virtual Life Restart Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=6.0.5">
+    <link rel="stylesheet" href="rebirth-styles.css?v=6.0.5">
+    <link rel="stylesheet" href="family-tree.css?v=6.0.5">
+</head>
+
+<body>
+    <!-- Header Removed - Title now in hero section -->
+
+    <!-- Home Screen -->
+    <section id="home-screen" class="hero-section active-screen">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="highlight-badge geometric-bg">
+                    VIRTUAL LIFE RESTART SIMULATOR
+                </div>
+                <h1 class="hero-title">
+                    Restart the way<br>your life works
+                </h1>
+                <p class="hero-subtitle">
+                    Experience life simulation with powerful choices designed to
+                    shape your destiny, develop your character, and reveal outcomes.
+                </p>
+                <div class="cta-buttons">
+                    <button class="btn-primary btn-large" onclick="showTalentSelection()">
+                        Start <span class="arrow">→</span>
+                    </button>
+                    <button class="btn-secondary btn-large" onclick="showDemo()">
+                        <span class="play-icon">▶</span> Instructions
+                    </button>
+                </div>
+            </div>
+
+            <div class="hero-image geometric-bg">
+                <div class="floating-card card-1">
+                    <img src="assets/talents/make_choices.webp" alt="Make Choices" class="card-icon-img">
+                    <div class="card-text">Make Choices</div>
+                </div>
+                <div class="floating-card card-2">
+                    <img src="assets/talents/grow_stats.webp" alt="Grow Stats" class="card-icon-img">
+                    <div class="card-text">Grow Stats</div>
+                </div>
+                <div class="floating-card card-3">
+                    <img src="assets/talents/Legacy.webp" alt="Legacy" class="card-icon-img">
+                    <div class="card-text">Leave Your Legacy</div>
+                </div>
+                <div class="floating-card card-4">
+                    <img src="assets/talents/build_family.webp" alt="Build Family" class="card-icon-img">
+                    <div class="card-text">Build Family</div>
+                </div>
+                <div class="hero-illustration">
+                    <div class="circle-decoration purple"></div>
+                    <div class="circle-decoration yellow"></div>
+                    <div class="circle-decoration pink"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats cards removed -->
+    </section>
+
+    <!-- Talent Selection Screen -->
+    <section id="talent-selection" class="screen">
+        <div class="container">
+            <div class="screen-header">
+                <h2 class="screen-title">Choose Your Starting Talents</h2>
+                <p class="screen-subtitle">Select up to 3 talents to begin your life journey</p>
+            </div>
+
+            <div id="talents-grid" class="talents-grid">
+                <!-- Generated dynamically from DATA.talents -->
+            </div>
+
+            <div class="selection-footer">
+                <div class="selection-info">
+                    <span class="selection-label">Selected Talents:</span>
+                    <span class="selection-count">
+                        <span id="talent-count">0</span>/3
+                    </span>
+                </div>
+                <button class="btn-primary btn-large" id="confirm-talents-btn" onclick="confirmTalents()" disabled>
+                    Begin Life <span class="arrow">→</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulation Screen -->
+    <section id="character-creation-screen" class="screen">
+        <div class="container">
+            <div class="screen-header">
+                <h2 class="screen-title">Who Are You?</h2>
+                <p class="screen-subtitle">Define your identity before you are born.</p>
+            </div>
+
+            <div class="character-creation-form"
+                style="max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="char-name"
+                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Your
+                        Name</label>
+                    <input type="text" id="char-name" placeholder="Enter your name..."
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label
+                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Gender</label>
+                    <div class="gender-options" style="display: flex; gap: 1rem;">
+                        <button class="gender-btn btn-secondary" onclick="selectGender('male')" id="btn-male"
+                            style="flex: 1;">♂ Male</button>
+                        <button class="gender-btn btn-secondary" onclick="selectGender('female')" id="btn-female"
+                            style="flex: 1;">♀ Female</button>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-large btn-block" onclick="confirmCharacterCreation()">
+                    Continue <span class="arrow">→</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="intro-story-screen" class="screen">
+        <div class="container">
+            <div class="story-container" style="max-width: 700px; margin: 0 auto; text-align: center;">
+                <h2 class="screen-title" style="margin-bottom: 2rem;">The Story Begins...</h2>
+                <div id="intro-story-text"
+                    style="font-size: 1.25rem; line-height: 1.8; color: #4B5563; background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                    <!-- Dynamic Text -->
+                </div>
+                <button class="btn-primary btn-large pulse-animation" onclick="beginLife()">
+                    👶 Be Born
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulation Screen -->
+    <section id="simulation-screen" class="screen">
+        <div class="game-container">
+            <!-- Stats Sidebar -->
+            <aside class="stats-sidebar">
+                <div class="player-info">
+                    <div class="player-avatar">
+                        <span id="player-emoji">👶</span>
+                    </div>
+                    <h3 class="player-name" id="player-name">Your Life</h3>
+                    <p class="player-age">Age: <span id="player-age">0</span></p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-icon">❤️</span>
+                            <span class="stat-label">Health</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill health" id="health-bar" style="width:50%"></div>
+                        </div>
+                        <span class="stat-value" id="health-value">50</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-icon">🧠</span>
+                            <span class="stat-label">Intelligence</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill intelligence" id="intelligence-bar" style="width:50%"></div>
+                        </div>
+                        <span class="stat-value" id="intelligence-value">50</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-icon">😊</span>
+                            <span class="stat-label">Happiness</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill happiness" id="happiness-bar" style="width:50%"></div>
+                        </div>
+                        <span class="stat-value" id="happiness-value">50</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-icon">✨</span>
+                            <span class="stat-label">Appearance</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill appearance" id="appearance-bar" style="width:50%"></div>
+                        </div>
+                        <span class="stat-value" id="appearance-value">50</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-icon">💰</span>
+                            <span class="stat-label">Money</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill money" id="money-bar" style="width:50%"></div>
+                        </div>
+                        <span class="stat-value" id="money-value">50</span>
+                    </div>
+
+                    <div class="stat-item stress-stat">
+                        <div class="stat-header">
+                            <span class="stat-icon">😰</span>
+                            <span class="stat-label">Stress</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill stress" id="stress-bar" style="width:0%"></div>
+                        </div>
+                        <span class="stat-value" id="stress-value">0</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-actions">
+                    <button class="btn-secondary btn-block" onclick="viewFamily()">
+                        <span class="btn-icon">👥</span> Family Tree
+                    </button>
+                    <button class="btn-secondary btn-block" onclick="restartGame()">
+                        <span class="btn-icon">🔄</span> Restart Life
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Event Area -->
+            <main class="event-area">
+                <div class="event-card" id="current-event">
+                    <div class="event-header">
+                        <div class="event-badge">
+                            <span class="event-year" id="event-year">Year 0</span>
+                        </div>
+                        <h3 class="event-title" id="event-title">Birth</h3>
+                    </div>
+
+                    <div class="event-description" id="event-description">
+                        You are born into this world. Your journey begins now...
+                    </div>
+
+                    <div class="event-options" id="event-options">
+                        <!-- Generated dynamically -->
+                    </div>
+
+                    <div class="event-result" id="event-result" style="display:none;">
+                        <!-- Shown after choice -->
+                    </div>
+                </div>
+
+                <div class="life-timeline" id="life-timeline">
+                    <h4 class="timeline-title">Life Milestones</h4>
+                    <div class="timeline-items" id="timeline-items">
+                        <!-- Generated dynamically -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <!-- Summary Screen -->
+    <section id="summary-screen" class="screen">
+        <div class="container">
+            <div class="summary-header">
+                <div class="summary-icon">🌟</div>
+                <h2 class="screen-title">Life Complete</h2>
+                <p class="final-age-text">
+                    You lived for <span class="final-age-number" id="final-age">0</span> years
+                </p>
+            </div>
+
+            <div class="final-stats-grid" id="final-stats">
+                <!-- Generated dynamically -->
+            </div>
+
+            <div class="life-highlights">
+                <h3 class="highlights-title">Major Milestones</h3>
+                <div class="milestones-list" id="milestones-list">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+
+            <div class="cta-buttons">
+                <button class="btn-primary btn-large" onclick="restartGame()">
+                    Restart Life <span class="arrow">→</span>
+                </button>
+                <button class="btn-secondary btn-large" onclick="shareResults()">
+                    <span class="btn-icon">📤</span> Share Results
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Family Tree Modal -->
+    <div class="modal" id="family-modal">
+        <div class="modal-overlay" onclick="closeModal('family-modal')"></div>
+        <div class="modal-content family-tree-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🌳 Family Tree</h3>
+                <button class="modal-close" onclick="closeModal('family-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="family-tree-container">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Modal -->
+    <div class="modal" id="demo-modal">
+        <div class="modal-overlay" onclick="closeModal('demo-modal')"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Instructions</h3>
+                <button class="modal-close" onclick="closeModal('demo-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="demo-content">
+                    <div class="demo-step">
+                        <div class="demo-number">1</div>
+                        <div class="demo-text">
+                            <h4>Choose Your Path</h4>
+                            <p>Select starting talents to define your strengths. Use Karma from past lives to unlock
+                                permanent upgrades.</p>
+                        </div>
+                    </div>
+                    <div class="demo-step">
+                        <div class="demo-number">2</div>
+                        <div class="demo-text">
+                            <h4>Live Your Life</h4>
+                            <p>Navigate events, manage your career, and make tough choices. Achieve Elite Status by
+                                raising stats over 100.</p>
+                        </div>
+                    </div>
+                    <div class="demo-step">
+                        <div class="demo-number">3</div>
+                        <div class="demo-text">
+                            <h4>Build a Family</h4>
+                            <p>Find a spouse, raise children (watch out for costs!), and guide them to independence.</p>
+                        </div>
+                    </div>
+                    <div class="demo-step">
+                        <div class="demo-number">4</div>
+                        <div class="demo-text">
+                            <h4>Legacy & Rebirth</h4>
+                            <p>Your actions earn Karma. Die and be reborn with powerful bonuses to live an even better
+                                life.</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary btn-large" onclick="closeModal('demo-modal'); showTalentSelection();">
+                    Start Playing Now <span class="arrow">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Game Logic -->
+    <script>
+        // Force clear cache for v6.0.5 (Event Loop + Milestones Fix)
+        const version = 'v6.0.5';
+        const lastVersion = localStorage.getItem('app_version');
+
+        if (lastVersion !== version) {
+            console.log('[CACHE] Clearing old version:', lastVersion);
+
+            // Clear Service Workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                        console.log('[CACHE] Service Worker unregistered');
+                    }
+                });
+            }
+
+            // Clear Cache Storage
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                        console.log('[CACHE] Cache deleted:', name);
+                    });
+                });
+            }
+
+            // Clear only app-specific data, preserve game progress
+            const upgrades = localStorage.getItem('lifesim_permanent_upgrades');
+            const history = localStorage.getItem('lifesim_life_history');
+            localStorage.clear();
+            if (upgrades) localStorage.setItem('lifesim_permanent_upgrades', upgrades);
+            if (history) localStorage.setItem('lifesim_life_history', history);
+            localStorage.setItem('app_version', version);
+            console.log('[CACHE] Version updated to:', version);
+
+            // Force hard reload
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 100);
+        }
+    </script>
+    <!-- Game Logic -->
+    <script src="events.js"></script>
+    <script src="main.js?v=6.0.5"></script>
+    <script src="integration.js?v=6.0.5"></script>
+</body>
+
+</html>

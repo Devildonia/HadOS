@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>H.I.P. Game Boy Emulator</title>
+    <meta name="description" content="H.I.P. Game Boy Emulator en 3D con Three.js y WebGL" />
+
+  <script type="module" crossorigin src="./assets/main-CPzMUN-c.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/main-DLK21gNE.css">
+<link rel="manifest" href="./manifest.webmanifest"></head>
+
+<body>
+    <!-- ── Loading overlay ── -->
+    <div id="loading-overlay">
+        <div class="loader-title">H.I.P. GAME BOY EMULATOR</div>
+        <div class="spinner"></div>
+        <div class="loader-sub" data-i18n="loading_model">Cargando modelo 3D y ROM…</div>
+    </div>
+
+    <!-- ── 3D scene container ── -->
+    <div id="scene-root">
+        <!-- Capa inyectada de Controles Táctiles (HTML 2D sobre 3D) -->
+        <div id="touch-controls">
+            <div id="touch-dpad" class="touch-btn" data-btn="DPAD"></div>
+            <div id="touch-select" class="touch-btn" data-btn="SELECT"></div>
+            <div id="touch-start" class="touch-btn" data-btn="START"></div>
+            <div id="touch-b" class="touch-btn" data-btn="B"></div>
+            <div id="touch-a" class="touch-btn" data-btn="A"></div>
+        </div>
+        <!-- mainCanvas must be inside a visible container so clientWidth > 0 -->
+        <canvas id="mainCanvas" width="160" height="144"></canvas>
+    </div>
+
+    <!-- ── Drag & Drop Overlay ── -->
+    <div id="drag-overlay" data-i18n="drop_rom">SUELTA LA ROM AQUÍ</div>
+
+    <!-- ── HUD Panel (Bottom Slide-Up) ── -->
+    <div id="hud-panel" class="hidden">
+        <div class="hud-content">
+            <div class="hud-left">
+                <span class="game-title">TETRIS</span>
+            </div>
+
+            <div class="hud-center">
+                <div class="hud-capture-tools">
+                    <button id="btn-screenshot" data-i18n-title="title_screenshot"
+                        title="Capture Screenshot">📸</button>
+                    <button id="btn-gif" data-i18n-title="title_gif" title="Record GIF (3s)">📹</button>
+                    <button id="btn-video" data-i18n-title="title_video" title="Record Video (.webm)">🎬</button>
+                </div>
+            </div>
+
+            <div class="hud-right">
+                <div id="metrics-container" class="metrics-grid">
+                    <span id="metric-fps">-- FPS</span>
+                    <span id="metric-drops">-- DRPS</span>
+                    <span id="metric-latency">-- MS</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hud-status" class="hud-status hidden"></div>
+
+    <!-- ── Watermark & Copyright ── -->
+    <div id="copyright">© HaDeS 2026 v<span id="app-version">1.0.0-rc04</span></div>
+
+    <!-- ── Settings Button ── -->
+    <button id="btn-settings" aria-label="Settings">⚙️</button>
+
+    <!-- ── Load ROM Button ── -->
+    <!-- ── State Manager Panel ── -->
+    <div id="state-panel" class="hidden">
+        <div class="state-content">
+            <div class="state-header">
+                <h2 data-i18n="state_title">Gestor de Estados</h2>
+                <div class="state-actions">
+                    <button id="btn-import-state" class="action-btn" data-i18n="state_import">📥 Importar</button>
+                    <button id="btn-close-state" class="close-icon">×</button>
+                </div>
+            </div>
+            <div class="state-slots-grid">
+                <!-- Slots 1-5 -->
+                <div class="state-slot" data-slot="1">
+                    <div class="slot-info">
+                        <span class="slot-number">#1</span>
+                        <span class="slot-status" data-i18n="state_empty">Vacío</span>
+                    </div>
+                    <div class="slot-controls">
+                        <button class="btn-save-slot" data-i18n="state_save">Guardar</button>
+                        <button class="btn-load-slot hidden-emu" data-i18n="state_load">Cargar</button>
+                        <button class="btn-export-slot hidden-emu">💾</button>
+                    </div>
+                </div>
+                <div class="state-slot" data-slot="2">
+                    <div class="slot-info">
+                        <span class="slot-number">#2</span>
+                        <span class="slot-status" data-i18n="state_empty">Vacío</span>
+                    </div>
+                    <div class="slot-controls">
+                        <button class="btn-save-slot" data-i18n="state_save">Guardar</button>
+                        <button class="btn-load-slot hidden-emu" data-i18n="state_load">Cargar</button>
+                        <button class="btn-export-slot hidden-emu">💾</button>
+                    </div>
+                </div>
+                <div class="state-slot" data-slot="3">
+                    <div class="slot-info">
+                        <span class="slot-number">#3</span>
+                        <span class="slot-status" data-i18n="state_empty">Vacío</span>
+                    </div>
+                    <div class="slot-controls">
+                        <button class="btn-save-slot" data-i18n="state_save">Guardar</button>
+                        <button class="btn-load-slot hidden-emu" data-i18n="state_load">Cargar</button>
+                        <button class="btn-export-slot hidden-emu">💾</button>
+                    </div>
+                </div>
+                <div class="state-slot" data-slot="4">
+                    <div class="slot-info">
+                        <span class="slot-number">#4</span>
+                        <span class="slot-status" data-i18n="state_empty">Vacío</span>
+                    </div>
+                    <div class="slot-controls">
+                        <button class="btn-save-slot" data-i18n="state_save">Guardar</button>
+                        <button class="btn-load-slot hidden-emu" data-i18n="state_load">Cargar</button>
+                        <button class="btn-export-slot hidden-emu">💾</button>
+                    </div>
+                </div>
+                <div class="state-slot" data-slot="5">
+                    <div class="slot-info">
+                        <span class="slot-number">#5</span>
+                        <span class="slot-status" data-i18n="state_empty">Vacío</span>
+                    </div>
+                    <div class="slot-controls">
+                        <button class="btn-save-slot" data-i18n="state_save">Guardar</button>
+                        <button class="btn-load-slot hidden-emu" data-i18n="state_load">Cargar</button>
+                        <button class="btn-export-slot hidden-emu">💾</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="state-upload" accept=".json" class="hidden-emu" />
+    <input type="file" id="rom-upload" accept=".gb,.gbc,.zip" class="hidden-emu" />
+    <button id="btn-load-rom" aria-label="Load ROM">📁</button>
+    <button id="btn-guide" aria-label="Guide" data-i18n-title="panel_info">❔</button>
+
+    <!-- ── Quick Guide Panel ── -->
+    <div id="guide-panel" class="hidden">
+        <div class="guide-content">
+            <div class="guide-header">
+                <h3 data-i18n="panel_info">Panel de Información</h3>
+                <button id="btn-close-guide">×</button>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title" data-i18n="category_general">General</div>
+                <ul>
+                    <li><strong>X / J</strong> → <span data-i18n="hud_a">Botón A</span></li>
+                    <li><strong>Z / Q / Y</strong> → <span data-i18n="hud_b">Botón B</span></li>
+                    <li><strong>Enter</strong> → <span data-i18n="hud_start">Inicio</span></li>
+                    <li><strong>Shift</strong> → <span data-i18n="hud_select">Select</span></li>
+                    <li><strong>↑ ↓ ← →</strong> → <span data-i18n="hud_dpad">Cruceta</span></li>
+                    <li><strong>R</strong> → <span data-i18n="rewinding">REBOBINANDO</span></li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title">UI Hotkeys</div>
+                <ul>
+                    <li><strong>0</strong> → <span data-i18n="show_metrics">Mostrar Métricas</span></li>
+                    <li><strong>6 / O</strong> → <span data-i18n="settings_title">Ajustes</span></li>
+                    <li><strong>7 / P</strong> → <span data-i18n="panel_info">Panel de Info</span></li>
+                    <li><strong>8 / S</strong> → <span data-i18n="panel_states">Panel de Estados</span></li>
+                    <li><strong>9 / D</strong> → <span data-i18n="debug_open">Abrir Depurador</span></li>
+                    <li><strong>H</strong> → <span data-i18n="panel_info">Panel de Información</span> (Quick Guide)</li>
+                    <li><strong>1 / 2 / 3 / 4</strong> → Screen View 1x / 2x / 4x / Full</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <div class="guide-title" data-i18n="category_video">Vídeo</div>
+                <ul>
+                    <li><strong>📸</strong> → <span data-i18n="title_screenshot">Capturar Pantalla</span></li>
+                    <li><strong>📹</strong> → <span data-i18n="title_gif">Grabar GIF (3s)</span></li>
+                    <li><strong>🎬</strong> → <span data-i18n="title_video">Grabar Vídeo (.webm)</span></li>
+                    <li><span data-i18n="drop_rom">SUELTA LA ROM AQUÍ</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Settings Panel ── -->
+    <div id="settings-panel" class="hidden">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2 data-i18n="settings_title">Ajustes</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-reset-settings" data-i18n="factory_reset"
+                        style="background: rgba(255, 68, 102, 0.2); color: #ff4466; border: 1px solid rgba(255, 68, 102, 0.3); border-radius: 12px; padding: 12px 24px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;">Restablecer</button>
+                    <button id="btn-close-settings" data-i18n="close">Cerrar</button>
+                </div>
+            </div>
+
+            <div class="bento-grid">
+                <!-- General Section -->
+                <div class="bento-card">
+                    <span class="card-title" data-i18n="category_general">General</span>
+                    <div class="setting-group">
+                        <label for="lang-select" data-i18n="language">Idioma</label>
+                        <select id="lang-select">
+                            <option value="es">Español</option>
+                            <option value="en">English</option>
+                            <option value="zh">中文 (Chinese)</option>
+                            <option value="ja">日本語 (Japanese)</option>
+                            <option value="ko">한국어 (Korean)</option>
+                            <option value="fr">Français (French)</option>
+                            <option value="de">Deutsch (German)</option>
+                            <option value="it">Italiano (Italian)</option>
+                            <option value="pt">Português (Portuguese)</option>
+                            <option value="ru">Русский (Russian)</option>
+                            <option value="pl">Polski (Polish)</option>
+                            <option value="tr">Türkçe (Turkish)</option>
+                            <option value="ar">العربية (Arabic)</option>
+                            <option value="id">Bahasa Indonesia</option>
+                            <option value="th">ไทย (Thai)</option>
+                            <option value="vi">Tiếng Việt (Vietnamese)</option>
+                            <option value="hi">हिन्दी (Hindi)</option>
+                            <option value="sv">Svenska (Swedish)</option>
+                            <option value="no">Norsk (Norwegian)</option>
+                            <option value="da">Dansk (Danish)</option>
+                        </select>
+                    </div>
+                    <div class="setting-group checkbox-group">
+                        <label for="hdr-toggle" data-i18n="hdr_mode">Modo HDR</label>
+                        <label class="switch">
+                            <input type="checkbox" id="hdr-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="setting-group checkbox-group">
+                        <label for="metrics-toggle" data-i18n="show_metrics">Mostrar Métricas</label>
+                        <label class="switch">
+                            <input type="checkbox" id="metrics-toggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Actions Sidebar -->
+                <div class="bento-card"
+                    style="display: flex; flex-direction: column; gap: 10px; justify-content: center;">
+                    <button id="btn-open-debugger" data-i18n="debug_open" class="settings-action-btn settings-action-btn-full"
+                        >Abrir
+                        Depurador</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button id="btn-toggle-states-settings" data-i18n="panel_states" class="settings-action-btn"
+                            >Panel
+                            de Estados</button>
+                        <button id="btn-toggle-info-settings" data-i18n="panel_info" class="settings-action-btn"
+                            >Panel
+                            de Info</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Section -->
+            <div class="bento-card">
+                <span class="card-title" data-i18n="category_video">Video</span>
+                <div class="setting-group">
+                    <label for="brightness-slider" data-i18n="brightness">Brillo</label>
+                    <input type="range" id="brightness-slider" min="0.5" max="2" step="0.1" value="1">
+                </div>
+                <div class="setting-group">
+                    <label for="contrast-slider" data-i18n="contrast">Contraste</label>
+                    <input type="range" id="contrast-slider" min="0.5" max="2" step="0.1" value="1">
+                </div>
+                <div class="setting-group">
+                    <label for="hd-saturation-slider" data-i18n="saturation">Saturation</label>
+                    <input type="range" id="hd-saturation-slider" min="1" max="2" step="0.05" value="1.25">
+                </div>
+                <div class="setting-group">
+                    <label for="palette-select" data-i18n="palette_title">Paleta DMG</label>
+                    <select id="palette-select">
+                        <option value="original" data-i18n="palette_original">Original</option>
+                        <option value="pocket" data-i18n="palette_pocket">Pocket</option>
+                        <option value="light" data-i18n="palette_light">Light</option>
+                        <option value="amber">Amber</option>
+                        <option value="mint">Mint</option>
+                        <option value="sunset">Sunset</option>
+                        <option value="violet">Violet</option>
+                        <option value="inverted">Inverted</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="cgb-profile-select">CGB Color Profile</label>
+                    <select id="cgb-profile-select">
+                        <option value="accurate">Accurate</option>
+                        <option value="vivid">Vivid</option>
+                        <option value="lcd">LCD</option>
+                        <option value="warm">Warm</option>
+                        <option value="cool">Cool</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="screen-view-select">Screen View</label>
+                    <select id="screen-view-select">
+                        <option value="1x">Original (1x)</option>
+                        <option value="2x">Zoom x2</option>
+                        <option value="4x">Zoom x4</option>
+                        <option value="full">Full Screen</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- HD Video Section -->
+            <div class="bento-card">
+                <span class="card-title" data-i18n="category_hd_video">HD Video</span>
+                <div class="setting-group checkbox-group">
+                    <label for="hd-video-toggle" data-i18n="hd_video">HD Video Orchestrator</label>
+                    <label class="switch">
+                        <input type="checkbox" id="hd-video-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label for="scaling-mode-select" data-i18n="scaling_mode">Scaling Mode</label>
+                    <select id="scaling-mode-select">
+                        <option value="raw" data-i18n="scaling_raw">Pixel Real (Raw)</option>
+                        <option value="smooth" data-i18n="scaling_smooth">Suave (HQ)</option>
+                        <option value="sharp" data-i18n="scaling_sharp">Nítido (Edge)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- HD Audio Section -->
+            <div class="bento-card">
+                <span class="card-title" data-i18n="category_hd_audio">HD Audio</span>
+                <div class="setting-group checkbox-group">
+                    <label for="hd-audio-toggle" data-i18n="hd_audio">HD Audio Orchestrator</label>
+                    <label class="switch">
+                        <input type="checkbox" id="hd-audio-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label for="hd-gain-slider" data-i18n="hd_gain">HD Master Gain</label>
+                    <input type="range" id="hd-gain-slider" min="0" max="2" step="0.1" value="1.2">
+                </div>
+                <div class="setting-group">
+                    <label for="hd-reverb-slider" data-i18n="hd_reverb">HD Reverb Intensity</label>
+                    <input type="range" id="hd-reverb-slider" min="0" max="1" step="0.05" value="0.4">
+                </div>
+                <div class="setting-group">
+                    <label for="hd-sub-slider" data-i18n="hd_sub">HD Sub-bass Punch</label>
+                    <input type="range" id="hd-sub-slider" min="0" max="1" step="0.05" value="0.6">
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="bento-card wide">
+                <span class="card-title" data-i18n="category_lcd_filters">Advanced LCD Filters</span>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div class="setting-group">
+                        <label for="hd-grid-slider" data-i18n="hd_grid">LCD Grid Strength</label>
+                        <input type="range" id="hd-grid-slider" min="0" max="1" step="0.05" value="0.35">
+                    </div>
+                    <div class="setting-group">
+                        <label for="hd-blur-slider" data-i18n="hd_blur">Ghosting (Motion Blur)</label>
+                        <input type="range" id="hd-blur-slider" min="0" max="0.9" step="0.05" value="0.4">
+                    </div>
+                    <div class="setting-group">
+                        <label for="hd-curve-slider" data-i18n="hd_curve">Screen Curvature</label>
+                        <input type="range" id="hd-curve-slider" min="0" max="1" step="0.05" value="0.2">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- ── Debugger Panel ── -->
+    <div id="debugger-panel" class="hidden">
+        <div class="debug-header">
+            <h3 data-i18n="debug_title">Depurador de CPU</h3>
+            <button id="btn-close-debug">×</button>
+        </div>
+
+        <div class="debug-controls">
+            <button id="debug-resume" data-i18n="debug_resume">Reanudar</button>
+            <button id="debug-pause" data-i18n="debug_pause">Pausar</button>
+            <button id="debug-step" data-i18n="debug_step">Paso a Paso</button>
+            <button id="debug-run-tests">🧪 Tests</button>
+        </div>
+
+        <div class="debug-grid">
+            <div class="debug-section debug-card">
+                <div class="section-title" data-i18n="debug_regs">Registros</div>
+                <div id="debug-regs-list" class="debug-list"></div>
+            </div>
+
+            <div class="debug-section debug-card wide">
+                <div class="section-title" data-i18n="debug_disasm">Desensamblado</div>
+                <div id="debug-disasm-list" class="debug-list mono"></div>
+            </div>
+
+            <div class="debug-section debug-card">
+                <div class="section-title" data-i18n="debug_resources">Resources</div>
+                <div id="debug-resources-list" class="debug-list"></div>
+            </div>
+
+            <div class="debug-section debug-card wide">
+                <div class="section-title">Smoke Tests</div>
+                <div class="debug-tests-controls">
+                    <button id="debug-test-all">ALL</button>
+                    <button id="debug-test-cpu">CPU</button>
+                    <button id="debug-test-ppu">PPU</button>
+                    <button id="debug-test-audio">AUDIO</button>
+                </div>
+                <div id="debug-tests-list" class="debug-list"></div>
+                <div class="section-title">History</div>
+                <div id="debug-tests-history" class="debug-list mono"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ── Metrics OSD ── -->
+    <div id="metrics-osd" class="osd-hidden">METRICS: ON</div>
+
+    <!-- ── Rewind Overlay ── -->
+    <div id="rewind-overlay" data-i18n="rewinding">REBOBINANDO</div>
+
+    <!-- ── Vite entry point ── -->
+</body>
+
+</html>

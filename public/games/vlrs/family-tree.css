@@ -1,0 +1,357 @@
+/* ===== FAMILY TREE SYSTEM v6.0 STYLES ===== */
+
+/* Family Tree Modal */
+.family-tree-modal {
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#family-tree-container {
+    padding: var(--spacing-lg);
+}
+
+/* Family Tiers */
+.family-tier {
+    margin-bottom: var(--spacing-xl);
+}
+
+.tier-title {
+    text-align: center;
+    color: var(--gray-700);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.family-row {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Family Cards */
+.family-card {
+    background: linear-gradient(135deg, #FFFFFF, #F9FAFB);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    min-width: 200px;
+    max-width: 280px;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.family-card:hover {
+    border-color: var(--primary-purple);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+    transform: translateY(-4px);
+}
+
+.family-card.gifted {
+    background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+    border-color: #FB923C;
+    border-width: 3px;
+}
+
+.family-card.player-card {
+    background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+    border-color: var(--primary-purple);
+    border-width: 3px;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+}
+
+.family-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.family-relation {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.gifted-badge {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, #FB923C, #F97316);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(251, 146, 60, 0.3);
+}
+
+/* Card Body */
+.family-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.family-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1.3;
+}
+
+.family-age {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.family-profession {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.family-personality {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    font-style: italic;
+    padding: 0.25rem 0.5rem;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.family-description {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    line-height: 1.4;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(139, 92, 246, 0.05);
+    border-radius: var(--radius-sm);
+    border-left: 2px solid var(--primary-purple);
+}
+
+/* Bonuses and Costs */
+.family-bonuses,
+.family-costs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+}
+
+.bonus-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bonus-chip.positive {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    color: #065F46;
+}
+
+.bonus-chip.negative {
+    background: linear-gradient(135deg, #FEE2E2, #FECACA);
+    color: #991B1B;
+}
+
+/* Player Stats Mini */
+.player-stats-mini {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: var(--radius-sm);
+    justify-content: space-around;
+}
+
+/* Family Connector */
+.family-connector {
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
+    margin: 0 auto;
+    border-radius: 2px;
+    position: relative;
+}
+
+.family-connector::before,
+.family-connector::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-purple);
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+.family-connector::before {
+    top: 0;
+}
+
+.family-connector::after {
+    bottom: 0;
+}
+
+/* Special Tier Styles */
+.godparents-tier .tier-title {
+    color: #FB923C;
+    text-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
+}
+
+.parents-tier .tier-title {
+    color: var(--primary-purple);
+}
+
+.player-tier .tier-title {
+    color: var(--primary-mint);
+}
+
+.children-tier .tier-title {
+    color: var(--primary-pink);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.family-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.family-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.family-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.family-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.family-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .family-tree-modal {
+        max-width: 95vw;
+        max-height: 90vh;
+    }
+
+    #family-tree-container {
+        padding: var(--spacing-md);
+    }
+
+    .family-card {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .family-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .tier-title {
+        font-size: 1rem;
+    }
+
+    .family-connector {
+        height: 30px;
+    }
+
+    .player-stats-mini {
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .family-card {
+        padding: var(--spacing-sm);
+    }
+
+    .family-name {
+        font-size: 1rem;
+    }
+
+    .family-description {
+        font-size: 0.6875rem;
+    }
+
+    .bonus-chip {
+        font-size: 0.6875rem;
+        padding: 0.1875rem 0.375rem;
+    }
+}
+
+/* Empty State */
+.family-tree-empty {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--gray-500);
+}
+
+.family-tree-empty h4 {
+    font-size: 1.25rem;
+    color: var(--gray-700);
+    margin-bottom: var(--spacing-sm);
+}
+
+.family-tree-empty p {
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Scrollbar Styling */
+.family-tree-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.family-tree-modal::-webkit-scrollbar-track {
+    background: var(--gray-100);
+    border-radius: 4px;
+}
+
+.family-tree-modal::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
+    border-radius: 4px;
+}
+
+.family-tree-modal::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #7C3AED, #DB2777);
+}

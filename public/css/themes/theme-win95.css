@@ -1,0 +1,39 @@
+/* ===== WINDOWS 95 CLASSIC THEME ===== */
+
+body.theme-win95 {
+    /* These match the base exactly, but we define them here to be explicit when swapping */
+    --os-font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
+    --os-font-size: 11px;
+
+    --os-bg-color: #008080;
+
+    --taskbar-bg: #c0c0c0;
+    --taskbar-height: 32px;
+    --taskbar-border-top: 2px solid var(--border-light);
+    --taskbar-shadow: 0 -1px 0 0 var(--border-dark) inset;
+
+    --start-menu-bg: var(--taskbar-bg);
+    --start-sidebar-bg: linear-gradient(180deg, var(--win-blue), var(--win-lightblue));
+
+    --window-bg: var(--win-gray);
+    --window-border: 2px solid;
+    --window-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --window-border-radius: 0px;
+    --window-shadow: 1px 1px 0 0 var(--border-dark) inset, -1px -1px 0 0 var(--border-dark) inset, 2px 2px 4px 0 rgba(0, 0, 0, 0.4);
+
+    --window-header-bg: linear-gradient(90deg, var(--win-blue), var(--win-lightblue));
+    --window-header-color: white;
+    --window-header-height: 24px;
+
+    --dialog-bg: var(--win-gray);
+    --dialog-border: 2px solid;
+    --dialog-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --dialog-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+
+    --control-bg: var(--win-gray);
+    --control-border: 2px solid;
+    --control-border-color: var(--border-light) var(--border-darkest) var(--border-darkest) var(--border-light);
+    --control-shadow: 1px 1px 0 0 var(--border-dark) inset;
+    --control-active-border-color: var(--border-darkest) var(--border-light) var(--border-light) var(--border-darkest);
+    --control-active-shadow: none;
+}

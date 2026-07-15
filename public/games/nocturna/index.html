@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060c">
+<title>NOCTURNA — El Jardín Silente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Marcellus&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   NOCTURNA — identidad visual
+   Paleta: Obsidiana #05060c · Nocturne #0e1124 · Luma #7df0dd
+           Orquídea #e86bd0 · Violeta #8b7bf0 · Ámbar #ffb45e
+   Display: Cormorant Garamond · UI: Marcellus
+   ============================================================ */
+:root{
+  --obsidian:#05060c; --nocturne:#0e1124; --ink:#161a33;
+  --luma:#7df0dd; --orchid:#e86bd0; --violet:#8b7bf0; --amber:#ffb45e;
+  --text:#dfe3f5; --dim:#8a90b8;
+  --display:'Cormorant Garamond', Didot, 'Bodoni MT', Georgia, serif;
+  --ui:'Marcellus', 'Palatino Linotype', Georgia, serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--obsidian);color:var(--text);
+  font-family:var(--ui);user-select:none;-webkit-user-select:none}
+canvas#game{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none;cursor:none}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;z-index:10;padding:24px;transition:opacity .6s ease;pointer-events:auto}
+.screen.hidden{opacity:0;pointer-events:none}
+.veil{background:radial-gradient(ellipse at 50% 40%, rgba(14,17,36,.25), rgba(5,6,12,.78) 75%)}
+
+/* ---------- Título ---------- */
+#title .eyebrow{font-size:13px;letter-spacing:.55em;text-transform:uppercase;color:var(--dim);margin-bottom:18px}
+#title h1{font-family:var(--display);font-weight:600;font-size:clamp(54px,11vw,128px);
+  letter-spacing:.18em;margin-left:.18em;line-height:1;color:#f3f5ff;
+  text-shadow:0 0 26px rgba(125,240,221,.35), 0 0 90px rgba(139,123,240,.28)}
+#title h1 em{font-style:normal;color:var(--luma)}
+#title .subtitle{font-family:var(--display);font-style:italic;font-size:clamp(18px,3vw,28px);
+  color:var(--violet);margin-top:10px;letter-spacing:.12em}
+.menu{display:flex;flex-direction:column;gap:14px;margin-top:44px;align-items:center}
+.btn{font-family:var(--ui);font-size:17px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--text);background:transparent;border:1px solid rgba(139,123,240,.45);
+  padding:13px 46px;cursor:pointer;border-radius:2px;position:relative;transition:all .25s ease;min-width:260px}
+.btn:hover,.btn:focus-visible{border-color:var(--luma);color:var(--luma);
+  box-shadow:0 0 18px rgba(125,240,221,.28), inset 0 0 18px rgba(125,240,221,.06);outline:none}
+.btn.primary{border-color:var(--luma);color:#06231f;background:linear-gradient(180deg,#a9fff0,#5ad7c4);
+  box-shadow:0 0 30px rgba(125,240,221,.4)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.3;cursor:default;box-shadow:none}
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.pill{font-size:12px;letter-spacing:.18em;padding:7px 16px;border:1px solid rgba(138,144,184,.35);
+  border-radius:999px;color:var(--dim);cursor:pointer;background:transparent;transition:all .2s}
+.pill.on,.pill:hover{color:var(--luma);border-color:var(--luma)}
+#movRow .pill.locked{opacity:.28;cursor:default}
+#movRow .pill.locked:hover{color:var(--dim);border-color:rgba(138,144,184,.35)}
+#nameWrap{margin-top:26px;display:flex;gap:8px;align-items:center}
+#nameInput{font-family:var(--ui);background:rgba(14,17,36,.6);border:1px solid rgba(138,144,184,.3);
+  color:var(--text);padding:9px 14px;letter-spacing:.1em;border-radius:2px;width:200px;text-align:center;font-size:14px}
+#nameInput:focus{outline:none;border-color:var(--violet)}
+.foot{position:absolute;bottom:18px;font-size:11px;letter-spacing:.25em;color:rgba(138,144,184,.5);text-transform:uppercase}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s}
+#hud.on{opacity:1}
+#petals{position:absolute;top:calc(16px + env(safe-area-inset-top));left:20px;display:flex;gap:8px}
+.petal{width:26px;height:26px;transition:all .4s ease;filter:drop-shadow(0 0 6px rgba(232,107,208,.6))}
+.petal.lost{opacity:.12;filter:grayscale(1);transform:scale(.7) rotate(40deg)}
+#scoreBox{position:absolute;top:calc(16px + env(safe-area-inset-top));right:20px;text-align:right}
+#score{font-family:var(--display);font-size:34px;font-weight:600;color:#f3f5ff;letter-spacing:.06em;
+  text-shadow:0 0 14px rgba(125,240,221,.3)}
+#multi{font-size:12px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase}
+#multi.hot{color:var(--amber);text-shadow:0 0 10px rgba(255,180,94,.6)}
+#movLabel{position:absolute;top:calc(18px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+  font-size:12px;letter-spacing:.45em;color:var(--dim);text-transform:uppercase}
+#gardenPct{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  font-size:12px;letter-spacing:.35em;color:var(--dim)}
+/* Firma visual: el tallo de Flujo */
+#stemWrap{position:absolute;left:20px;bottom:calc(20px + env(safe-area-inset-bottom));width:34px;height:200px}
+#stemWrap svg{overflow:visible}
+#pauseBtn{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(34px);
+  z-index:6;background:transparent;border:none;color:rgba(138,144,184,.6);font-size:20px;cursor:pointer;
+  pointer-events:auto;padding:8px 14px;display:none;letter-spacing:.2em;font-family:var(--ui)}
+#pauseBtn.on{display:block}
+#pauseBtn:hover{color:var(--luma)}
+
+/* ---------- Subtítulos / narración ---------- */
+#subtitle{position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  max-width:min(720px,86vw);text-align:center;font-family:var(--display);font-style:italic;
+  font-size:clamp(17px,2.4vw,23px);color:#cfd6f2;z-index:8;pointer-events:none;
+  text-shadow:0 2px 14px rgba(5,6,12,.9);opacity:0;transition:opacity .5s}
+#subtitle.on{opacity:1}
+#bossline{position:fixed;top:22%;left:50%;transform:translateX(-50%);max-width:min(640px,86vw);text-align:center;
+  font-family:var(--display);font-size:clamp(16px,2.4vw,22px);letter-spacing:.14em;color:#e9b8ff;z-index:8;
+  pointer-events:none;opacity:0;transition:opacity .4s;text-shadow:0 0 18px rgba(139,123,240,.7)}
+#bossline.on{opacity:1}
+#callout{position:fixed;top:34%;left:50%;transform:translate(-50%,-50%) scale(.8);font-family:var(--display);
+  font-weight:700;font-size:clamp(30px,5.5vw,54px);letter-spacing:.2em;color:var(--amber);z-index:8;
+  pointer-events:none;opacity:0;text-shadow:0 0 28px rgba(255,180,94,.65)}
+#callout.pop{animation:pop .9s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-56%) scale(1.02)}}
+
+/* ---------- Tarjetas de estado ---------- */
+.card h2{font-family:var(--display);font-weight:600;font-size:clamp(34px,6vw,58px);letter-spacing:.14em;color:#f3f5ff;
+  text-shadow:0 0 22px rgba(139,123,240,.4)}
+.card .sub{font-family:var(--display);font-style:italic;font-size:clamp(16px,2.6vw,22px);color:var(--violet);margin-top:10px}
+.card .big{font-family:var(--display);font-size:clamp(44px,8vw,80px);color:var(--luma);margin:18px 0 4px;
+  text-shadow:0 0 26px rgba(125,240,221,.4)}
+.card .meta{font-size:13px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase;margin-top:6px}
+.card .menu{margin-top:34px}
+#lbList{margin-top:26px;width:min(420px,86vw);text-align:left}
+#lbList .lbrow{display:flex;justify-content:space-between;padding:8px 6px;border-bottom:1px solid rgba(138,144,184,.18);
+  font-size:15px;letter-spacing:.08em}
+#lbList .lbrow .rank{color:var(--dim);width:34px}
+#lbList .lbrow .nm{flex:1;color:var(--text)}
+#lbList .lbrow .sc{font-family:var(--display);font-size:18px;color:var(--luma)}
+#lbList .lbrow.me .nm{color:var(--amber)}
+.skip{position:fixed;bottom:calc(26px + env(safe-area-inset-bottom));right:28px;z-index:12;font-size:12px;
+  letter-spacing:.3em;color:rgba(138,144,184,.7);text-transform:uppercase;cursor:pointer;border:none;background:none;
+  font-family:var(--ui);display:none}
+.skip.on{display:block}
+.skip:hover{color:var(--luma)}
+@media (max-width:560px){ .btn{min-width:220px;font-size:15px;padding:12px 30px} #stemWrap{height:150px} }
+@media (prefers-reduced-motion:reduce){ *{transition-duration:.01ms!important;animation-duration:.01ms!important} }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="petals"></div>
+  <div id="movLabel"></div>
+  <div id="scoreBox"><div id="score">0</div><div id="multi">×1.0</div></div>
+  <div id="stemWrap">
+    <svg width="34" height="200" viewBox="0 0 34 200">
+      <path id="stemPath" d="M17,200 C17,160 10,140 17,110 C24,84 13,60 17,30" fill="none"
+            stroke="#3a4070" stroke-width="3" stroke-linecap="round"/>
+      <path id="stemFill" d="M17,200 C17,160 10,140 17,110 C24,84 13,60 17,30" fill="none"
+            stroke="#7df0dd" stroke-width="3" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"
+            style="filter:drop-shadow(0 0 5px rgba(125,240,221,.8))"/>
+      <g id="stemBud" opacity="0" transform="translate(17,26)">
+        <circle r="7" fill="#ffb45e" opacity=".9"/>
+        <circle r="12" fill="none" stroke="#ffb45e" stroke-width="1.4" opacity=".6"/>
+      </g>
+    </svg>
+  </div>
+  <div id="gardenPct"></div>
+</div>
+<button id="pauseBtn" aria-label="pause">❚❚</button>
+<div id="subtitle"></div>
+<div id="bossline"></div>
+<div id="callout"></div>
+<button id="skipBtn" class="skip"></button>
+
+<!-- TÍTULO -->
+<div id="title" class="screen veil">
+  <div class="eyebrow" data-i18n="tagline"></div>
+  <h1>N<em>O</em>CTURNA</h1>
+  <div class="subtitle" data-i18n="subtitle"></div>
+  <div class="menu">
+    <button class="btn primary" id="playBtn" data-i18n="play"></button>
+    <button class="btn" id="lbBtn" data-i18n="leaderboard"></button>
+    <div class="row" id="movRow" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="pill lang" data-lang="es-ES">Español</button>
+      <button class="pill lang" data-lang="en-US">English</button>
+      <button class="pill lang" data-lang="zh-CN">中文</button>
+    </div>
+    <div id="nameWrap"><input id="nameInput" maxlength="14" spellcheck="false"></div>
+  </div>
+  <div class="foot" data-i18n="foot"></div>
+</div>
+
+<!-- INTERLUDIO -->
+<div id="interlude" class="screen veil hidden">
+  <div class="card">
+    <div class="meta" id="intMeta"></div>
+    <h2 id="intTitle"></h2>
+    <div class="sub" id="intSub"></div>
+    <div class="menu"><button class="btn primary" id="intGo" data-i18n="begin"></button></div>
+  </div>
+</div>
+
+<!-- PAUSA -->
+<div id="pause" class="screen veil hidden">
+  <div class="card">
+    <h2 data-i18n="paused"></h2>
+    <div class="menu">
+      <button class="btn primary" id="resumeBtn" data-i18n="resume"></button>
+      <button class="btn" id="quitBtn" data-i18n="quit"></button>
+    </div>
+  </div>
+</div>
+
+<!-- FIN DE PARTIDA -->
+<div id="gameover" class="screen veil hidden">
+  <div class="card">
+    <h2 data-i18n="extinguished"></h2>
+    <div class="sub" data-i18n="extinguishedSub"></div>
+    <div class="big" id="goScore">0</div>
+    <div class="meta" data-i18n="finalScore"></div>
+    <div class="menu">
+      <button class="btn primary" id="retryBtn" data-i18n="retry"></button>
+      <button class="btn" id="goTitleBtn" data-i18n="toTitle"></button>
+    </div>
+  </div>
+</div>
+
+<!-- VICTORIA -->
+<div id="victory" class="screen veil hidden">
+  <div class="card">
+    <div class="meta" data-i18n="gardenRestored"></div>
+    <h2 data-i18n="dawn"></h2>
+    <div class="big" id="vScore">0</div>
+    <div class="meta" id="vRank"></div>
+    <div class="menu">
+      <button class="btn primary" id="vLbBtn" data-i18n="leaderboard"></button>
+      <button class="btn" id="vTitleBtn" data-i18n="toTitle"></button>
+    </div>
+  </div>
+</div>
+
+<!-- RANKING -->
+<div id="lb" class="screen veil hidden">
+  <div class="card">
+    <h2 data-i18n="leaderboard"></h2>
+    <div class="meta" data-i18n="lbLocal"></div>
+    <div id="lbList"></div>
+    <div class="menu"><button class="btn" id="lbBack" data-i18n="back"></button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(()=>{ /* ================= NOCTURNA: El Jardín Silente ================= */
+
+/* ---------------------------------------------------------------
+   §0 CONFIG
+---------------------------------------------------------------- */
+const CFG = {
+  logicHz: 120,
+  onbeat: { perfect: 0.090, good: 0.165 },           // ventana rítmica (s)
+  trail: { maxAge: 1.5, minSeg: 7, minLoopArea: 1400 },
+  luma:  { r: 11, spring: 11.5, lives: 3, invuln: 1.2 },
+  flow:  { perBloom: 0.11, perfectBonus: 1.5, decay: 0.045, floracionDur: 5.0 },
+  llmEndpoint: null,   // ← adaptador SeaCloud LLM: poner URL para diálogo online del Vacío
+};
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* §0.1 — Definición de pistas (Music Pro → motor procedural Web Audio).
+   El BPM es exacto por construcción → beatmaps.json deriva de aquí. */
+const TRACKS = [
+ { id:'mov1_brisa',   bpm: 88, root: 45, scale:[0,3,5,7,10], pad:[[0,3,7],[5,8,12],[3,7,10],[7,10,14]],
+   kick:[1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0], hat:[0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+   bass:[0,-1,-1,-1, -1,-1,-1,-1, 7,-1,-1,-1, 5,-1,-1,-1], arp:false, clap:false, intensity:.55 },
+ { id:'mov2_savia',   bpm: 96, root: 43, scale:[0,3,5,7,10], pad:[[0,3,7],[8,12,15],[5,8,12],[3,7,10]],
+   kick:[1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0], hat:[0,0,1,0, 0,1,1,0, 0,0,1,0, 0,1,1,0],
+   bass:[0,-1,-1,0, -1,-1,3,-1, 5,-1,-1,-1, 7,-1,5,-1], arp:false, clap:false, intensity:.65 },
+ { id:'mov3_pulso',   bpm:104, root: 41, scale:[0,3,5,7,10], pad:[[0,7,12],[3,10,15],[5,12,17],[7,14,19]],
+   kick:[1,0,0,0, 1,0,0,1, 1,0,0,0, 1,0,1,0], hat:[1,0,1,0, 1,0,1,1, 1,0,1,0, 1,1,1,0],
+   bass:[0,-1,0,-1, 3,-1,-1,3, 5,-1,5,-1, 7,-1,10,-1], arp:true, clap:true, intensity:.78 },
+ { id:'mov4_vortice', bpm:112, root: 40, scale:[0,2,3,7,10], pad:[[0,3,10],[7,10,17],[2,7,12],[3,10,14]],
+   kick:[1,0,0,1, 1,0,0,0, 1,0,1,0, 1,0,0,1], hat:[1,1,1,0, 1,0,1,1, 1,1,1,0, 1,0,1,1],
+   bass:[0,-1,0,3, -1,3,-1,7, 0,-1,0,2, 10,-1,7,-1], arp:true, clap:true, intensity:.9 },
+ { id:'mov5_vacio',   bpm:120, root: 38, scale:[0,1,3,7,8],  pad:[[0,3,8],[1,7,12],[3,8,15],[0,7,13]],
+   kick:[1,0,0,1, 1,0,1,0, 1,0,0,1, 1,1,0,1], hat:[1,1,1,1, 1,0,1,1, 1,1,1,1, 1,0,1,1],
+   bass:[0,-1,1,-1, 3,3,-1,7, 0,-1,1,-1, 8,-1,7,3], arp:true, clap:true, intensity:1 },
+];
+
+/* §0.2 — Diseño de Movimientos (oleadas sincronizadas al beat) */
+const MOVS = [
+ { quota:16, spawnBars:2, perWave:2, types:{mote:.7, weaver:.3, seeker:0,  pulsar:0  }, speed:1.00, boss:false },
+ { quota:22, spawnBars:2, perWave:3, types:{mote:.5, weaver:.3, seeker:.2, pulsar:0  }, speed:1.08, boss:false },
+ { quota:28, spawnBars:1, perWave:2, types:{mote:.35,weaver:.25,seeker:.25,pulsar:.15}, speed:1.16, boss:false, syncopate:true },
+ { quota:34, spawnBars:1, perWave:3, types:{mote:.25,weaver:.25,seeker:.3, pulsar:.2 }, speed:1.26, boss:false, syncopate:true },
+ { quota:5,  spawnBars:2, perWave:2, types:{mote:.3, weaver:.2, seeker:.3, pulsar:.2 }, speed:1.32, boss:true,  syncopate:true },
+];
+
+/* Paletas por Movimiento (estado revelado) */
+const PALETTES = [
+ { sky:['#0a1430','#102842'], glow:'#56e8d2', flora:['#2fe0c4','#67f2da','#9ef7e6'], accent:'#ffb45e' },
+ { sky:['#140f30','#262054'], glow:'#8b7bf0', flora:['#8b7bf0','#a99bff','#cfc4ff'], accent:'#ff9ed8' },
+ { sky:['#1c0c2c','#3a1450'], glow:'#e86bd0', flora:['#e86bd0','#ff8fe0','#ffc0ee'], accent:'#ffd27a' },
+ { sky:['#081226','#0e2c52'], glow:'#6fb8ff', flora:['#6fb8ff','#9ed2ff','#d4ecff'], accent:'#ffcf8a' },
+ { sky:['#1a0716','#3c0f2e'], glow:'#ff6f9c', flora:['#ff6f9c','#ff9ec0','#ffd0de'], accent:'#ffe08a' },
+];
+
+/* ---------------------------------------------------------------
+   §1 UTILIDADES
+---------------------------------------------------------------- */
+const TAU = Math.PI*2;
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=t=>t*t*(3-2*t);
+const rand=(a=1,b)=> b===undefined ? Math.random()*a : a+Math.random()*(b-a);
+function mulberry32(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function segHit(ax,ay,bx,by,cx,cy,dx,dy,out){
+  const rx=bx-ax, ry=by-ay, sx=dx-cx, sy=dy-cy, den=rx*sy-ry*sx;
+  if(Math.abs(den)<1e-9) return false;
+  const t=((cx-ax)*sy-(cy-ay)*sx)/den, u=((cx-ax)*ry-(cy-ay)*rx)/den;
+  if(t<0||t>1||u<0||u>1) return false;
+  out.x=ax+t*rx; out.y=ay+t*ry; return true;
+}
+function pointInPoly(px,py,poly,n){ let inside=false;
+  for(let i=0,j=n-1;i<n;j=i++){ const xi=poly[i*2],yi=poly[i*2+1],xj=poly[j*2],yj=poly[j*2+1];
+    if(((yi>py)!==(yj>py)) && (px < (xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside; }
+  return inside;
+}
+function polyArea(poly,n){ let a=0;
+  for(let i=0,j=n-1;i<n;j=i++) a+=(poly[j*2]+poly[i*2])*(poly[j*2+1]-poly[i*2+1]);
+  return Math.abs(a/2);
+}
+const $=id=>document.getElementById(id);
+
+/* ---------------------------------------------------------------
+   §2 I18N — cero strings hardcodeados (es-ES / en-US / zh-CN)
+---------------------------------------------------------------- */
+const LOCALES = {
+ 'es-ES': {
+  tagline:'Un jardín espera en la oscuridad', subtitle:'El Jardín Silente',
+  play:'Despertar', continue:'Continuar', leaderboard:'Ranking', back:'Volver',
+  begin:'Comenzar', paused:'En silencio', resume:'Seguir', quit:'Abandonar', retry:'Renacer',
+  toTitle:'Al título', skip:'Saltar', foot:'todo el contenido es generado · sin assets externos',
+  extinguished:'La luz se apaga', extinguishedSub:'La estática reclama el jardín… por ahora.',
+  finalScore:'puntuación final', gardenRestored:'el jardín respira de nuevo', dawn:'Amanecer',
+  lbLocal:'guardado en este dispositivo', namePh:'tu nombre', anon:'Luciérnaga',
+  movement:'Movimiento', garden:'jardín', perfect:'PERFECTO', good:'BIEN', off:'',
+  floracion:'¡FLORACIÓN!', chain:'¡CADENA!', maxflow:'¡FLUJO MÁXIMO!', bigloop:'¡GRAN LAZO!',
+  rankOf:(p,n)=>`puesto ${p} de ${n}`,
+  movNames:['I · Brisa','II · Savia','III · Pulso','IV · Vórtice','V · El Vacío'],
+  movSubs:['Las primeras chispas recuerdan el color.','La savia vuelve a correr bajo la tierra.',
+           'El jardín marca el compás contigo.','La estática se vuelve furiosa.',
+           'Algo enorme y hambriento espera al final.'],
+  narration:{
+    intro:'Hubo un jardín que cantaba… hasta que llegó el silencio. Tú eres su última chispa. Baila con la música, y devuélvele la voz.',
+    mov:['Empieza despacio, pequeña luz. Encierra la estática cuando el latido lo pida.',
+         'La savia te escucha. Cierra tus lazos al compás y el verde despertará.',
+         'Siente el pulso. Cada flor que abras hará la noche menos honda.',
+         'El vórtice quiere borrarte. No dejes de bailar.',
+         'Ahí está… el Vacío. Rodéalo con toda tu luz. No temas: el jardín baila contigo.'],
+    reveal:['El primer color regresa… ¿lo oyes respirar?','La savia canta de nuevo bajo tus pies.',
+            'El pulso del jardín es ahora también el tuyo.','Hasta la tormenta florece si la abrazas a tiempo.',''],
+    final:'El silencio se rinde. El jardín canta… gracias a ti, luciérnaga. Que tu luz nunca conozca el final.'
+  },
+  voidLines:{
+    hurt:['ARDES… QUÉ BREVE.','TU LUZ ES UN ERROR.','EL SILENCIO ES MÁS ANTIGUO QUE TÚ.'],
+    hit:['…¿FLORES? QUÉ INSOLENCIA.','ME DESHACES… ME REHAGO.','CADA PÉTALO ME PESA.','NO… EL COLOR NO.'],
+    taunt:['BAILA, CHISPA. BAILA HASTA APAGARTE.','YO ESTABA AQUÍ ANTES DE LA PRIMERA NOTA.','TU JARDÍN ME PERTENECE.'],
+    death:['…qué cálido… es… el color…']
+  }
+ },
+ 'en-US': {
+  tagline:'A garden waits in the dark', subtitle:'The Silent Garden',
+  play:'Awaken', continue:'Continue', leaderboard:'Ranking', back:'Back',
+  begin:'Begin', paused:'In silence', resume:'Resume', quit:'Abandon', retry:'Rekindle',
+  toTitle:'Title', skip:'Skip', foot:'all content is generated · no external assets',
+  extinguished:'The light goes out', extinguishedSub:'Static claims the garden… for now.',
+  finalScore:'final score', gardenRestored:'the garden breathes again', dawn:'Dawn',
+  lbLocal:'saved on this device', namePh:'your name', anon:'Firefly',
+  movement:'Movement', garden:'garden', perfect:'PERFECT', good:'GOOD', off:'',
+  floracion:'FULL BLOOM!', chain:'CHAIN!', maxflow:'MAX FLOW!', bigloop:'GRAND LASSO!',
+  rankOf:(p,n)=>`rank ${p} of ${n}`,
+  movNames:['I · Breeze','II · Sap','III · Pulse','IV · Vortex','V · The Void'],
+  movSubs:['The first sparks remember color.','Sap runs beneath the soil once more.',
+           'The garden keeps time with you.','Static turns furious.',
+           'Something vast and hungry waits at the end.'],
+  narration:{
+    intro:'There was a garden that sang… until the silence came. You are its last spark. Dance with the music, and give it back its voice.',
+    mov:['Begin slowly, little light. Lasso the static when the beat asks for it.',
+         'The sap is listening. Close your loops in time and the green will wake.',
+         'Feel the pulse. Every flower you open makes the night less deep.',
+         'The vortex wants to erase you. Do not stop dancing.',
+         'There it is… the Void. Surround it with all your light. Fear not: the garden dances with you.'],
+    reveal:['The first color returns… can you hear it breathe?','The sap sings again beneath your feet.',
+            'The garden’s pulse is now your own.','Even the storm blooms, if you embrace it in time.',''],
+    final:'The silence yields. The garden sings… because of you, firefly. May your light never know an ending.'
+  },
+  voidLines:{
+    hurt:['YOU BURN… SO BRIEFLY.','YOUR LIGHT IS AN ERROR.','SILENCE IS OLDER THAN YOU.'],
+    hit:['…FLOWERS? INSOLENCE.','YOU UNDO ME… I REMAKE MYSELF.','EVERY PETAL WEIGHS ON ME.','NO… NOT COLOR.'],
+    taunt:['DANCE, SPARK. DANCE UNTIL YOU GUTTER.','I WAS HERE BEFORE THE FIRST NOTE.','YOUR GARDEN BELONGS TO ME.'],
+    death:['…how warm… color… is…']
+  }
+ },
+ 'zh-CN': {
+  tagline:'花园在黑暗中等待', subtitle:'寂静花园',
+  play:'苏醒', continue:'继续', leaderboard:'排行榜', back:'返回',
+  begin:'开始', paused:'静默中', resume:'继续', quit:'放弃', retry:'重燃',
+  toTitle:'标题', skip:'跳过', foot:'所有内容均为生成 · 无外部素材',
+  extinguished:'光熄灭了', extinguishedSub:'静电暂时夺回了花园。',
+  finalScore:'最终得分', gardenRestored:'花园再次呼吸', dawn:'黎明',
+  lbLocal:'保存在本设备', namePh:'你的名字', anon:'萤火',
+  movement:'乐章', garden:'花园', perfect:'完美', good:'不错', off:'',
+  floracion:'盛放！', chain:'连锁！', maxflow:'心流全满！', bigloop:'大光环！',
+  rankOf:(p,n)=>`第 ${p} 名 / 共 ${n}`,
+  movNames:['I · 微风','II · 树液','III · 脉动','IV · 漩涡','V · 虚无'],
+  movSubs:['第一缕火花想起了颜色。','树液重新在土壤下流动。','花园与你同拍。','静电变得狂暴。','尽头有庞大而饥饿之物。'],
+  narration:{
+    intro:'曾有一座会歌唱的花园……直到寂静降临。你是它最后的火花。随音乐起舞，把声音还给它。',
+    mov:['慢慢开始，小小的光。在节拍上圈住静电。','树液在倾听。按节奏闭合光环，绿色就会醒来。',
+         '感受脉动。每开一朵花，夜就浅一分。','漩涡想抹去你。不要停止舞蹈。',
+         '它来了……虚无。用你全部的光包围它。别怕，花园与你共舞。'],
+    reveal:['第一抹颜色回来了……听到它呼吸了吗？','树液在你脚下再次歌唱。','花园的脉动也成了你的脉动。','只要及时拥抱，风暴也会开花。',''],
+    final:'寂静退去。花园歌唱……因为你，萤火。愿你的光永无终点。'
+  },
+  voidLines:{
+    hurt:['你燃烧……如此短暂。','你的光是个错误。','寂静比你古老。'],
+    hit:['……花？放肆。','你拆解我……我重塑自己。','每片花瓣都压着我。','不……不要颜色。'],
+    taunt:['跳吧，火花，跳到熄灭。','第一个音符之前我就在这里。','你的花园属于我。'],
+    death:['……颜色……竟如此温暖……'] }
+ }
+};
+let LANG='es-ES', L=LOCALES[LANG];
+function setLang(l){ LANG = LOCALES[l]?l:'es-ES'; L=LOCALES[LANG];
+  document.documentElement.lang = LANG.split('-')[0];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = L[el.dataset.i18n]||''; });
+  $('nameInput').placeholder = L.namePh;
+  document.querySelectorAll('.pill.lang').forEach(p=>p.classList.toggle('on', p.dataset.lang===LANG));
+  Save.data.lang=LANG; Save.write(); buildMovRow();
+}
+
+/* ---------------------------------------------------------------
+   §3 PERSISTENCIA (adaptación local del Data SDK) + ranking
+---------------------------------------------------------------- */
+const Save = {
+  key:'nocturna_save_v1',
+  data:{ lang:null, name:'', unlocked:1, best:0, leaderboard:[] },
+  read(){ try{ const r=localStorage.getItem(this.key); if(r) Object.assign(this.data, JSON.parse(r)); }catch(e){} },
+  write(){ try{ localStorage.setItem(this.key, JSON.stringify(this.data)); }catch(e){} },
+  submitScore(score){
+    const name = (this.data.name||L.anon).trim()||L.anon;
+    this.data.leaderboard.push({n:name, s:score, d:Date.now()});
+    this.data.leaderboard.sort((a,b)=>b.s-a.s); this.data.leaderboard=this.data.leaderboard.slice(0,10);
+    if(score>this.data.best) this.data.best=score;
+    this.write();
+    return this.data.leaderboard.findIndex(e=>e.s===score)+1;
+  }
+};
+Save.read();
+
+/* ---------------------------------------------------------------
+   §4 MOTOR DE AUDIO (adaptación de Music Pro: síntesis Web Audio)
+---------------------------------------------------------------- */
+const Audio = {
+  ctx:null, master:null, music:null, sfx:null,
+  startTime:0, track:null, stepIdx:0, nextStep:0, timer:null, layersBoost:0,
+  ensure(){ if(this.ctx) { if(this.ctx.state==='suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    this.ctx=new AC(); this.master=this.ctx.createGain(); this.master.gain.value=.8;
+    const comp=this.ctx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=4;
+    this.music=this.ctx.createGain(); this.music.gain.value=.7;
+    this.sfx=this.ctx.createGain(); this.sfx.gain.value=.9;
+    this.music.connect(comp); this.sfx.connect(comp); comp.connect(this.master); this.master.connect(this.ctx.destination);
+    const len=this.ctx.sampleRate*0.5, buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1; this.noise=buf;
+  },
+  note(semi){ return 110*Math.pow(2,semi/12); },
+  /* --- instrumentos --- */
+  kick(t,v=1){ const c=this.ctx,o=c.createOscillator(),g=c.createGain();
+    o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(38,t+.22);
+    g.gain.setValueAtTime(.9*v,t); g.gain.exponentialRampToValueAtTime(.001,t+.26);
+    o.connect(g).connect(this.music); o.start(t); o.stop(t+.3); },
+  hat(t,v=1){ const c=this.ctx,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+    s.buffer=this.noise; f.type='highpass'; f.frequency.value=7000;
+    g.gain.setValueAtTime(.16*v,t); g.gain.exponentialRampToValueAtTime(.001,t+.05);
+    s.connect(f).connect(g).connect(this.music); s.start(t); s.stop(t+.06); },
+  clap(t,v=1){ const c=this.ctx,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+    s.buffer=this.noise; f.type='bandpass'; f.frequency.value=1800; f.Q.value=1.2;
+    g.gain.setValueAtTime(.28*v,t); g.gain.exponentialRampToValueAtTime(.001,t+.14);
+    s.connect(f).connect(g).connect(this.music); s.start(t); s.stop(t+.16); },
+  bass(t,semi,dur,v=1){ const c=this.ctx,o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();
+    o.type='sawtooth'; o.frequency.value=this.note(semi)/2;
+    f.type='lowpass'; f.frequency.setValueAtTime(900,t); f.frequency.exponentialRampToValueAtTime(180,t+dur);
+    g.gain.setValueAtTime(.30*v,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(f).connect(g).connect(this.music); o.start(t); o.stop(t+dur+.02); },
+  padChord(t,chord,root,dur,v=1){ const c=this.ctx;
+    for(const s of chord){ const o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();
+      const fr=this.note(root-45+s+12); o.type='triangle'; o2.type='triangle';
+      o.frequency.value=fr; o2.frequency.value=fr*1.004;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.05*v,t+dur*.3);
+      g.gain.linearRampToValueAtTime(.0001,t+dur);
+      o.connect(g); o2.connect(g); g.connect(this.music); o.start(t); o2.start(t); o.stop(t+dur); o2.stop(t+dur); } },
+  pluck(t,semi,v=1){ const c=this.ctx,o=c.createOscillator(),g=c.createGain();
+    o.type='sine'; o.frequency.value=this.note(semi+24);
+    g.gain.setValueAtTime(.10*v,t); g.gain.exponentialRampToValueAtTime(.001,t+.18);
+    o.connect(g).connect(this.music); o.start(t); o.stop(t+.2); },
+  /* --- secuenciador con lookahead --- */
+  play(track){ this.ensure(); if(!this.ctx) return; this.stop();
+    this.track=track; this.startTime=this.ctx.currentTime+.08; this.stepIdx=0; this.nextStep=this.startTime;
+    this.timer=setInterval(()=>this.schedule(),25); this.schedule(); },
+  schedule(){ const tr=this.track; if(!tr) return;
+    const stepDur=60/tr.bpm/4;
+    while(this.nextStep < this.ctx.currentTime+.15){
+      const t=this.nextStep, i=this.stepIdx%16, bar=Math.floor(this.stepIdx/16);
+      if(tr.kick[i]) this.kick(t);
+      if(tr.hat[i])  this.hat(t, .8+((i%4===0)?.3:0));
+      if(tr.clap && (i===4||i===12)) this.clap(t,.8);
+      const b=tr.bass[i]; if(b>=0) this.bass(t, tr.root-33+b, stepDur*1.8, tr.intensity);
+      if(i===0 && bar%2===0) this.padChord(t, tr.pad[(bar/2)%tr.pad.length], tr.root, stepDur*32*0.95, 1);
+      if((tr.arp||this.layersBoost>0) && i%2===0){
+        const sc=tr.scale; this.pluck(t, tr.root-33+sc[(bar+i/2)%sc.length]+12, .6+this.layersBoost*.3);
+      }
+      this.nextStep+=stepDur; this.stepIdx++;
+    } },
+  stop(){ if(this.timer){clearInterval(this.timer); this.timer=null;} this.track=null; },
+  menuLoop(){ this.play({ id:'menu', bpm:72, root:45, scale:[0,3,5,7,10],
+    pad:[[0,3,7],[5,8,12]], kick:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    hat:[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], bass:[0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    arp:false, clap:false, intensity:.4 }); },
+  /* --- SFX --- */
+  chime(grade){ if(!this.ctx) return; const t=this.ctx.currentTime, base= grade==='perfect'?880: grade==='good'?660:520;
+    [[0,1],[grade==='perfect'?7:5,.6],[12,.4]].forEach(([s,v],k)=>{
+      const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+      o.frequency.value=base*Math.pow(2,s/12); o.type='sine';
+      g.gain.setValueAtTime(.22*v,t+k*.02); g.gain.exponentialRampToValueAtTime(.001,t+.5+k*.05);
+      o.connect(g).connect(this.sfx); o.start(t+k*.02); o.stop(t+.6); }); },
+  hurt(){ if(!this.ctx) return; const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type='square'; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(50,t+.3);
+    g.gain.setValueAtTime(.3,t); g.gain.exponentialRampToValueAtTime(.001,t+.32);
+    o.connect(g).connect(this.sfx); o.start(t); o.stop(t+.35); },
+  stinger(){ if(!this.ctx) return; const t=this.ctx.currentTime, sc=[0,7,12,16,19,24];
+    sc.forEach((s,k)=>{ const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+      o.frequency.value=this.note(12+s); o.type='triangle';
+      g.gain.setValueAtTime(.18,t+k*.09); g.gain.exponentialRampToValueAtTime(.001,t+k*.09+.9);
+      o.connect(g).connect(this.sfx); o.start(t+k*.09); o.stop(t+k*.09+1); }); },
+  flowMax(){ if(!this.ctx) return; const t=this.ctx.currentTime;
+    [0,4,7,12].forEach((s,k)=>{ const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+      o.frequency.value=this.note(19+s); g.gain.setValueAtTime(.16,t+k*.05);
+      g.gain.exponentialRampToValueAtTime(.001,t+1.1); o.connect(g).connect(this.sfx); o.start(t+k*.05); o.stop(t+1.2); }); }
+};
+
+/* ---------------------------------------------------------------
+   §5 RHYTHM DIRECTOR (consume beatmaps: File Analyzer adaptado)
+---------------------------------------------------------------- */
+const Rhythm = {
+  bpm:120, beatDur:.5, lastBeat:-1, lastBar:-1, onBar:null, onBeat:null,
+  bind(track){ this.bpm=track.bpm; this.beatDur=60/track.bpm; this.lastBeat=-1; this.lastBar=-1; },
+  now(){ return Audio.ctx ? Audio.ctx.currentTime - Audio.startTime : 0; },
+  beatIndex(){ return Math.floor(this.now()/this.beatDur); },
+  /* distancia (s) al beat más cercano → calificación de timing */
+  grade(){ const t=this.now(); if(t<0) return 'off';
+    const ph=t%this.beatDur, d=Math.min(ph, this.beatDur-ph);
+    if(d<=CFG.onbeat.perfect) return 'perfect';
+    if(d<=CFG.onbeat.good) return 'good';
+    return 'off'; },
+  pulse(){ const t=this.now(); if(t<0) return 0;
+    const ph=(t%this.beatDur)/this.beatDur; return Math.pow(1-ph,2); },
+  update(){ if(!Audio.track) return; const bi=this.beatIndex();
+    if(bi!==this.lastBeat){ this.lastBeat=bi; if(this.onBeat) this.onBeat(bi);
+      const bar=Math.floor(bi/4); if(bar!==this.lastBar){ this.lastBar=bar; if(this.onBar) this.onBar(bar); } } }
+};
+
+/* ---------------------------------------------------------------
+   §6 VOZ (TTS adaptado: Web Speech API) — Guardián + locutor + Vacío
+---------------------------------------------------------------- */
+const Voice = {
+  ok:('speechSynthesis' in window), voices:[], lastCallout:0,
+  init(){ if(!this.ok) return; const load=()=>{this.voices=speechSynthesis.getVoices();};
+    load(); speechSynthesis.onvoiceschanged=load; },
+  pick(lang, femaleHint=true){
+    const ll=lang.split('-')[0];
+    const cand=this.voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith(ll));
+    if(!cand.length) return null;
+    if(femaleHint){ const f=cand.find(v=>/female|mónica|monica|paulina|helena|elvira|lucia|sabina|conchita|samantha|victoria|zira|huihui|xiaoxiao/i.test(v.name));
+      if(f) return f; }
+    return cand[0];
+  },
+  speak(text, role='guardian'){
+    if(!this.ok || !text) return; try{
+      const u=new SpeechSynthesisUtterance(text);
+      const v=this.pick(LANG); if(v) u.voice=v; u.lang=LANG;
+      if(role==='guardian'){ u.rate=.92; u.pitch=1.12; u.volume=.95; }
+      else if(role==='callout'){ u.rate=1.15; u.pitch=1.25; u.volume=1; }
+      else if(role==='void'){ u.rate=.78; u.pitch=.35; u.volume=1; }
+      speechSynthesis.speak(u);
+    }catch(e){}
+  },
+  callout(text){ const n=performance.now(); if(n-this.lastCallout<2200) return;
+    this.lastCallout=n; if(!REDUCED) this.speak(text,'callout'); },
+  narrate(text){ try{speechSynthesis&&speechSynthesis.cancel();}catch(e){} this.speak(text,'guardian');
+    UI.subtitle(text); },
+  stopAll(){ try{speechSynthesis&&speechSynthesis.cancel();}catch(e){} }
+};
+
+/* ---------------------------------------------------------------
+   §7 LA MENTE DEL VACÍO (adaptador LLM: endpoint opcional + fallback local)
+---------------------------------------------------------------- */
+const VoidMind = {
+  cache:{}, pending:false,
+  async line(event){
+    if(this.cache[event] && Math.random()<.5) return this.cache[event];
+    if(CFG.llmEndpoint && !this.pending){
+      this.pending=true;
+      try{
+        const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),1200);
+        const r=await fetch(CFG.llmEndpoint,{method:'POST',signal:ctrl.signal,
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({event, lang:LANG, persona:'El Vacío: entidad de entropía, críptica, breve (≤9 palabras), mayúsculas.'})});
+        clearTimeout(to);
+        if(r.ok){ const j=await r.json(); const txt=(j.text||'').trim();
+          if(txt){ this.cache[event]=txt; this.pending=false; return txt; } }
+      }catch(e){}
+      this.pending=false;
+    }
+    const pool=L.voidLines[event]||L.voidLines.taunt;
+    const txt=pool[(Math.random()*pool.length)|0]; this.cache[event]=txt; return txt;
+  },
+  async say(event){
+    const txt=await this.line(event);
+    UI.bossline(txt); Voice.speak(txt,'void');
+  }
+};
+
+/* ---------------------------------------------------------------
+   §8 FUNDICIÓN DE ASSETS (adaptación de Image Pro: sprites procedurales
+   pre-renderizados a canvas offscreen; determinista por semilla)
+---------------------------------------------------------------- */
+const Assets = { manifest:[], luma:{}, statica:[], flowers:[], voidBoss:null, bg:[] };
+function makeCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+function buildLuma(){
+  const states=['normal','fast','hurt','bloom'];
+  for(const st of states){
+    const c=makeCanvas(96,96), g=c.getContext('2d'), cx=48, cy=48;
+    const core = st==='hurt' ? '#ffd9e8' : '#ffffff';
+    const halo = st==='hurt' ? '#ff6f9c' : st==='bloom' ? '#ffb45e' : '#7df0dd';
+    let grd=g.createRadialGradient(cx,cy,0,cx,cy,44);
+    grd.addColorStop(0,core); grd.addColorStop(.25,halo); grd.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=grd; g.beginPath(); g.arc(cx,cy,44,0,TAU); g.fill();
+    g.fillStyle=core; g.beginPath(); g.arc(cx,cy,8,0,TAU); g.fill();
+    // alas-pétalo
+    g.strokeStyle=halo; g.globalAlpha=.85; g.lineWidth=2;
+    for(const s of [-1,1]){ g.beginPath(); g.moveTo(cx,cy);
+      g.quadraticCurveTo(cx+18*s, cy-22, cx+6*s, cy-34); g.stroke(); }
+    if(st==='bloom'){ g.globalAlpha=.7; g.strokeStyle='#ffb45e'; g.lineWidth=3;
+      g.beginPath(); g.arc(cx,cy,30,0,TAU); g.stroke(); }
+    Assets.luma[st]=c;
+    Assets.manifest.push({type:'sprite', name:'luma_'+st, generator:'AssetFoundry(procedural radial-glow)', size:'96×96'});
+  }
+}
+function buildStatica(){
+  const variants=4;
+  for(let v=0; v<variants; v++){
+    const frames=[];
+    for(let f=0; f<3; f++){
+      const c=makeCanvas(72,72), g=c.getContext('2d'), R=mulberry32(v*31+f*7+5), cx=36, cy=36;
+      // blob irregular de entropía
+      g.beginPath();
+      const n=9, pts=[];
+      for(let i=0;i<n;i++){ const a=i/n*TAU, r=16+R()*12;
+        pts.push([cx+Math.cos(a)*r, cy+Math.sin(a)*r]); }
+      g.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<=n;i++){ const p=pts[i%n], q=pts[(i+1)%n];
+        g.quadraticCurveTo(p[0],p[1],(p[0]+q[0])/2,(p[1]+q[1])/2); }
+      g.closePath();
+      const grd=g.createRadialGradient(cx,cy,2,cx,cy,30);
+      grd.addColorStop(0,'#2b0f2e'); grd.addColorStop(.7,'#120618'); grd.addColorStop(1,'#05060c');
+      g.fillStyle=grd; g.fill();
+      g.strokeStyle='rgba(232,107,208,.55)'; g.lineWidth=1.5; g.stroke();
+      // ruido de estática (glitch)
+      g.strokeStyle='rgba(255,255,255,.35)';
+      for(let i=0;i<10;i++){ const y=8+R()*56, x=8+R()*40, w=4+R()*16;
+        g.globalAlpha=.15+R()*.3; g.beginPath(); g.moveTo(x,y); g.lineTo(x+w,y); g.stroke(); }
+      g.globalAlpha=1;
+      // núcleo
+      g.fillStyle = v===2 ? '#ff5d7e' : '#e86bd0';
+      g.beginPath(); g.arc(cx,cy,4.5,0,TAU); g.fill();
+      frames.push(c);
+    }
+    Assets.statica.push(frames);
+    Assets.manifest.push({type:'sprite', name:'statica_v'+v, generator:'AssetFoundry(seeded entropy blob ×3 frames)', size:'72×72×3'});
+  }
+  // El Vacío
+  const c=makeCanvas(260,260), g=c.getContext('2d'), cx=130, cy=130;
+  let grd=g.createRadialGradient(cx,cy,10,cx,cy,120);
+  grd.addColorStop(0,'#000000'); grd.addColorStop(.55,'#0c0312'); grd.addColorStop(.85,'#26063a'); grd.addColorStop(1,'rgba(38,6,58,0)');
+  g.fillStyle=grd; g.beginPath(); g.arc(cx,cy,120,0,TAU); g.fill();
+  g.strokeStyle='rgba(139,123,240,.8)'; g.lineWidth=2;
+  for(let i=0;i<3;i++){ g.globalAlpha=.5-i*.12; g.beginPath(); g.arc(cx,cy,72+i*16,0,TAU); g.stroke(); }
+  const R=mulberry32(99);
+  g.globalAlpha=.9; g.strokeStyle='#e86bd0'; g.lineWidth=2;
+  for(let i=0;i<10;i++){ const a=R()*TAU; g.beginPath(); g.moveTo(cx+Math.cos(a)*60, cy+Math.sin(a)*60);
+    g.quadraticCurveTo(cx+Math.cos(a+.5)*95, cy+Math.sin(a+.5)*95, cx+Math.cos(a+.2)*118, cy+Math.sin(a+.2)*118); g.stroke(); }
+  g.globalAlpha=1;
+  Assets.voidBoss=c;
+  Assets.manifest.push({type:'sprite', name:'void_boss', generator:'AssetFoundry(layered void rings + tendrils)', size:'260×260'});
+}
+function buildFlowers(){
+  for(let v=0; v<6; v++){
+    const c=makeCanvas(84,84), g=c.getContext('2d'), R=mulberry32(v*53+11), cx=42, cy=42;
+    const pal=PALETTES[v%PALETTES.length].flora;
+    const petals=5+(v%3), pr=14+R()*8;
+    for(let i=0;i<petals;i++){ const a=i/petals*TAU + R()*.2;
+      g.save(); g.translate(cx,cy); g.rotate(a);
+      const grd=g.createLinearGradient(0,0,0,-pr*1.9);
+      grd.addColorStop(0,pal[0]); grd.addColorStop(1,pal[2]);
+      g.fillStyle=grd; g.globalAlpha=.92;
+      g.beginPath(); g.ellipse(0,-pr,pr*.42,pr,0,0,TAU); g.fill(); g.restore(); }
+    g.globalAlpha=1; g.fillStyle='#fff6df';
+    g.beginPath(); g.arc(cx,cy,5+R()*2,0,TAU); g.fill();
+    g.fillStyle='rgba(255,180,94,.85)'; g.beginPath(); g.arc(cx,cy,3,0,TAU); g.fill();
+    Assets.flowers.push(c);
+    Assets.manifest.push({type:'sprite', name:'flower_v'+v, generator:'AssetFoundry(bioluminescent rosette)', size:'84×84'});
+  }
+}
+/* Fondos por Movimiento: 2 capas parallax × 2 estados (apagado / revelado) */
+function buildBackgrounds(){
+  const W=1280, H=720;
+  for(let m=0; m<5; m++){
+    const pal=PALETTES[m], R=mulberry32(m*977+3);
+    const layers={};
+    for(const state of ['dim','lit']){
+      // capa lejana: cielo + colinas
+      const far=makeCanvas(W,H), g=far.getContext('2d');
+      const sky=g.createLinearGradient(0,0,0,H);
+      if(state==='lit'){ sky.addColorStop(0,pal.sky[0]); sky.addColorStop(1,pal.sky[1]); }
+      else { sky.addColorStop(0,'#04050a'); sky.addColorStop(1,'#0a0c18'); }
+      g.fillStyle=sky; g.fillRect(0,0,W,H);
+      // estrellas/esporas
+      for(let i=0;i<90;i++){ g.globalAlpha=(state==='lit'?.5:.22)*R();
+        g.fillStyle= state==='lit'?pal.flora[2]:'#5a608c';
+        g.beginPath(); g.arc(R()*W, R()*H*.7, R()*1.6+.3, 0, TAU); g.fill(); }
+      g.globalAlpha=1;
+      // colinas
+      for(let h=0; h<2; h++){ const base=H*(.62+h*.16);
+        g.fillStyle = state==='lit' ? `rgba(${h?14:10},${h?22:16},${h?46:36},.9)` : `rgba(8,9,18,${.85})`;
+        g.beginPath(); g.moveTo(0,H);
+        for(let x=0;x<=W;x+=40) g.lineTo(x, base + Math.sin(x*.008+m*2+h*5)*26 + Math.sin(x*.02+h)*10);
+        g.lineTo(W,H); g.closePath(); g.fill(); }
+      layers['far_'+state]=far;
+      // capa cercana: flora silueta
+      const near=makeCanvas(W,H), n=near.getContext('2d'); const R2=mulberry32(m*431+9);
+      for(let i=0;i<26;i++){
+        const x=R2()*W, base=H*(.8+R2()*.2), hgt=60+R2()*180, sway=(R2()-.5)*70;
+        n.strokeStyle = state==='lit' ? pal.flora[(i%3)] : '#171a30';
+        n.globalAlpha = state==='lit' ? .55+R2()*.35 : .8;
+        n.lineWidth = 1.6+R2()*1.6; n.beginPath(); n.moveTo(x,base);
+        n.quadraticCurveTo(x+sway*.4, base-hgt*.55, x+sway, base-hgt); n.stroke();
+        // cabeza floral
+        const fx=x+sway, fy=base-hgt;
+        if(state==='lit'){ n.fillStyle=pal.flora[(i+1)%3]; n.globalAlpha=.85;
+          for(let p=0;p<5;p++){ const a=p/5*TAU;
+            n.beginPath(); n.ellipse(fx+Math.cos(a)*7, fy+Math.sin(a)*7, 5,9, a, 0, TAU); n.fill(); }
+          n.fillStyle='#fff3da'; n.beginPath(); n.arc(fx,fy,2.6,0,TAU); n.fill();
+        } else { n.fillStyle='#1d2038'; n.globalAlpha=.9;
+          n.beginPath(); n.arc(fx,fy,5+R2()*4,0,TAU); n.fill(); }
+      }
+      n.globalAlpha=1;
+      layers['near_'+state]=near;
+    }
+    Assets.bg.push(layers);
+    Assets.manifest.push({type:'background', name:'garden_mov'+(m+1), generator:'AssetFoundry(seeded parallax garden, dim+lit ×2 layers)', size:'1280×720×4'});
+  }
+}
+
+/* ---------------------------------------------------------------
+   §9 PARTÍCULAS (pool, cero asignaciones en hot path)
+---------------------------------------------------------------- */
+const P_MAX=700;
+const Part={ x:new Float32Array(P_MAX), y:new Float32Array(P_MAX), vx:new Float32Array(P_MAX),
+  vy:new Float32Array(P_MAX), life:new Float32Array(P_MAX), max:new Float32Array(P_MAX),
+  size:new Float32Array(P_MAX), rot:new Float32Array(P_MAX), vr:new Float32Array(P_MAX),
+  kind:new Uint8Array(P_MAX), color:new Array(P_MAX), head:0,
+  spawn(x,y,vx,vy,life,size,kind,color){ const i=this.head; this.head=(this.head+1)%P_MAX;
+    this.x[i]=x; this.y[i]=y; this.vx[i]=vx; this.vy[i]=vy; this.life[i]=life; this.max[i]=life;
+    this.size[i]=size; this.kind[i]=kind; this.color[i]=color; this.rot[i]=rand(TAU); this.vr[i]=rand(-3,3); },
+  burst(x,y,n,color,spd=130,kind=1){ for(let k=0;k<n;k++){ const a=rand(TAU), s=rand(.3,1)*spd;
+    this.spawn(x,y,Math.cos(a)*s,Math.sin(a)*s, rand(.6,1.4), rand(3,7), kind, color); } },
+  update(dt){ for(let i=0;i<P_MAX;i++){ if(this.life[i]<=0) continue;
+    this.life[i]-=dt; this.x[i]+=this.vx[i]*dt; this.y[i]+=this.vy[i]*dt;
+    this.vx[i]*=.985; this.vy[i]=this.vy[i]*.985 + (this.kind[i]===1? 26*dt : -14*dt);
+    this.rot[i]+=this.vr[i]*dt; } },
+  draw(g){ for(let i=0;i<P_MAX;i++){ if(this.life[i]<=0) continue;
+    const a=clamp(this.life[i]/this.max[i],0,1); g.globalAlpha=a*.95; g.fillStyle=this.color[i];
+    if(this.kind[i]===1){ // pétalo
+      g.save(); g.translate(this.x[i],this.y[i]); g.rotate(this.rot[i]);
+      g.beginPath(); g.ellipse(0,0,this.size[i]*.5,this.size[i],0,0,TAU); g.fill(); g.restore();
+    } else { g.beginPath(); g.arc(this.x[i],this.y[i],this.size[i]*.6*a+.6,0,TAU); g.fill(); } }
+    g.globalAlpha=1; }
+};
+
+/* ---------------------------------------------------------------
+   §10 ENTIDADES
+---------------------------------------------------------------- */
+const E_MAX=64;
+const Enemies={ active:new Uint8Array(E_MAX), x:new Float32Array(E_MAX), y:new Float32Array(E_MAX),
+  px:new Float32Array(E_MAX), py:new Float32Array(E_MAX), vx:new Float32Array(E_MAX), vy:new Float32Array(E_MAX),
+  type:new Uint8Array(E_MAX), variant:new Uint8Array(E_MAX), r:new Float32Array(E_MAX),
+  phase:new Float32Array(E_MAX), count:0,
+  reset(){ this.active.fill(0); this.count=0; },
+  spawn(type){ for(let i=0;i<E_MAX;i++){ if(this.active[i]) continue;
+    const side=(Math.random()*4)|0, W=View.w, H=View.h; let x,y;
+    if(side===0){x=rand(W);y=-30;} else if(side===1){x=W+30;y=rand(H);}
+    else if(side===2){x=rand(W);y=H+30;} else {x=-30;y=rand(H);}
+    this.active[i]=1; this.x[i]=this.px[i]=x; this.y[i]=this.py[i]=y;
+    this.type[i]=type; this.variant[i]=(Math.random()*Assets.statica.length)|0;
+    this.r[i]=13; this.phase[i]=rand(TAU); this.vx[i]=0; this.vy[i]=0; this.count++; return i; }
+    return -1; },
+  kill(i){ if(this.active[i]){ this.active[i]=0; this.count--; } }
+};
+const F_MAX=90;
+const Flowers={ active:new Uint8Array(F_MAX), x:new Float32Array(F_MAX), y:new Float32Array(F_MAX),
+  v:new Uint8Array(F_MAX), born:new Float32Array(F_MAX), head:0,
+  reset(){ this.active.fill(0); this.head=0; },
+  plant(x,y){ const i=this.head; this.head=(this.head+1)%F_MAX; this.active[i]=1;
+    this.x[i]=x; this.y[i]=y; this.v[i]=(Math.random()*Assets.flowers.length)|0; this.born[i]=Game.time; }
+};
+const Luma={ x:0,y:0,px:0,py:0,tx:0,ty:0,vx:0,vy:0, lives:3, invuln:0, squash:0, state:'normal',
+  reset(){ this.x=this.px=this.tx=View.w/2; this.y=this.py=this.ty=View.h*.65;
+    this.vx=this.vy=0; this.lives=CFG.luma.lives; this.invuln=0; this.state='normal'; }
+};
+const Boss={ on:false, x:0,y:0,px:0,py:0, hp:5, r:62, phase:0, dashT:0, hurtT:0,
+  reset(){ this.on=false; this.hp=5; this.x=this.px=View.w/2; this.y=this.py=View.h*.35;
+    this.phase=0; this.dashT=4; this.hurtT=0; }
+};
+
+/* ---------------------------------------------------------------
+   §11 ESTELA + GEOMETRÍA DE LAZO (Qix rítmico)
+---------------------------------------------------------------- */
+const T_MAX=240;
+const Trail={ x:new Float32Array(T_MAX), y:new Float32Array(T_MAX), t:new Float32Array(T_MAX),
+  n:0, drawing:false, hit:{x:0,y:0}, poly:new Float32Array(T_MAX*2), flashPoly:null, flashT:0,
+  clear(){ this.n=0; },
+  push(x,y,now){
+    if(this.n>0){ const dx=x-this.x[this.n-1], dy=y-this.y[this.n-1];
+      if(dx*dx+dy*dy < CFG.trail.minSeg*CFG.trail.minSeg) return; }
+    if(this.n>=T_MAX){ this.x.copyWithin(0,1); this.y.copyWithin(0,1); this.t.copyWithin(0,1); this.n--; }
+    this.x[this.n]=x; this.y[this.n]=y; this.t[this.n]=now; this.n++;
+    if(this.n>=4) this.checkLoop();
+  },
+  prune(now){ let k=0; while(k<this.n && now-this.t[k]>CFG.trail.maxAge) k++;
+    if(k>0){ this.x.copyWithin(0,k); this.y.copyWithin(0,k); this.t.copyWithin(0,k); this.n-=k; } },
+  checkLoop(){
+    const n=this.n, ax=this.x[n-2], ay=this.y[n-2], bx=this.x[n-1], by=this.y[n-1];
+    for(let j=0; j<n-3; j++){
+      if(segHit(this.x[j],this.y[j],this.x[j+1],this.y[j+1], ax,ay,bx,by, this.hit)){
+        // polígono: punto de cruce + pts[j+1 .. n-2]
+        let m=0; this.poly[m*2]=this.hit.x; this.poly[m*2+1]=this.hit.y; m++;
+        for(let i=j+1;i<=n-2;i++){ this.poly[m*2]=this.x[i]; this.poly[m*2+1]=this.y[i]; m++; }
+        if(m>=3 && polyArea(this.poly,m) >= CFG.trail.minLoopArea) Game.onLoop(this.poly, m);
+        this.clear(); return;
+      }
+    }
+  }
+};
+
+/* ---------------------------------------------------------------
+   §12 UI / HUD
+---------------------------------------------------------------- */
+const UI = {
+  subT:0, bossT:0,
+  petals(){ const w=$('petals'); w.innerHTML='';
+    for(let i=0;i<CFG.luma.lives;i++){ const d=document.createElement('div'); d.className='petal';
+      d.innerHTML=`<svg viewBox="0 0 26 26"><path d="M13 2 C19 7 21 13 13 24 C5 13 7 7 13 2 Z" fill="#e86bd0" opacity=".9"/><circle cx="13" cy="9" r="2.4" fill="#fff" opacity=".8"/></svg>`;
+      w.appendChild(d); } },
+  setLives(n){ const ps=$('petals').children;
+    for(let i=0;i<ps.length;i++) ps[i].classList.toggle('lost', i>=n); },
+  score(v){ $('score').textContent=Math.round(v).toLocaleString(LANG); },
+  multi(flow, floracion){ const m=$('multi'); const mult=(1+flow)*(floracion?2:1);
+    m.textContent='×'+mult.toFixed(1); m.classList.toggle('hot', floracion||flow>.8); },
+  flow(v, floracion){ $('stemFill').style.strokeDashoffset = String(220*(1-clamp(v,0,1)));
+    $('stemBud').setAttribute('opacity', floracion? '1' : String(clamp((v-.85)*6,0,0.9))); },
+  garden(pct){ $('gardenPct').textContent = `${L.garden} ${Math.round(pct*100)}%`; },
+  movement(i){ $('movLabel').textContent = `${L.movement} ${L.movNames[i]}`; },
+  subtitle(text, dur=5.2){ const s=$('subtitle'); if(!text){s.classList.remove('on'); return;}
+    s.textContent=text; s.classList.add('on'); clearTimeout(this.subT);
+    this.subT=setTimeout(()=>s.classList.remove('on'), dur*1000); },
+  bossline(text){ const b=$('bossline'); b.textContent=text; b.classList.add('on');
+    clearTimeout(this.bossT); this.bossT=setTimeout(()=>b.classList.remove('on'), 3600); },
+  callout(text){ const c=$('callout'); c.textContent=text;
+    c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); },
+  show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+    if(id) $(id).classList.remove('hidden'); },
+};
+
+/* Floaters de puntuación (pool) */
+const FL_MAX=24;
+const Floaters={ txt:new Array(FL_MAX), x:new Float32Array(FL_MAX), y:new Float32Array(FL_MAX),
+  life:new Float32Array(FL_MAX), color:new Array(FL_MAX), head:0,
+  add(x,y,txt,color){ const i=this.head; this.head=(this.head+1)%FL_MAX;
+    this.txt[i]=txt; this.x[i]=x; this.y[i]=y; this.life[i]=1.1; this.color[i]=color; },
+  draw(g,dt){ g.textAlign='center'; g.font='600 22px Cormorant Garamond, Georgia, serif';
+    for(let i=0;i<FL_MAX;i++){ if(this.life[i]<=0) continue; this.life[i]-=dt;
+      const a=clamp(this.life[i],0,1); g.globalAlpha=a; g.fillStyle=this.color[i];
+      g.fillText(this.txt[i], this.x[i], this.y[i]-(1.1-this.life[i])*46); }
+    g.globalAlpha=1; }
+};
+
+/* ---------------------------------------------------------------
+   §13 VISTA + RENDER
+---------------------------------------------------------------- */
+const View={ canvas:$('game'), g:null, w:0,h:0, dpr:1,
+  resize(){ this.dpr=clamp(window.devicePixelRatio||1,1,2);
+    this.w=window.innerWidth; this.h=window.innerHeight;
+    this.canvas.width=this.w*this.dpr; this.canvas.height=this.h*this.dpr;
+    this.g=this.canvas.getContext('2d'); this.g.setTransform(this.dpr,0,0,this.dpr,0,0); }
+};
+View.resize(); addEventListener('resize',()=>View.resize());
+
+const Juice={ trauma:0, freeze:0,
+  shake(v){ if(!REDUCED) this.trauma=Math.min(1,this.trauma+v); },
+  hitstop(s){ if(!REDUCED) this.freeze=Math.max(this.freeze,s); },
+  offset(){ const t=this.trauma*this.trauma;
+    return [rand(-1,1)*14*t, rand(-1,1)*10*t]; }
+};
+
+function drawBackground(g){
+  const m=Game.mov, layers=Assets.bg[m], pct=Game.restorePct(), W=View.w, H=View.h;
+  const beat=Rhythm.pulse()* (Game.state==='PLAY'?1:0);
+  // cover-fit
+  const sc=Math.max(W/1280, H/720), bw=1280*sc, bh=720*sc;
+  const ox=(W-bw)/2 + (Luma.x-W/2)*-0.015, oy=(H-bh)/2 + (Luma.y-H/2)*-0.01;
+  const ox2=(W-bw)/2 + (Luma.x-W/2)*-0.035, oy2=(H-bh)/2 + (Luma.y-H/2)*-0.022;
+  g.drawImage(layers.far_dim, ox,oy,bw,bh);
+  if(pct>0){ g.globalAlpha=smooth(pct); g.drawImage(layers.far_lit, ox,oy,bw,bh); g.globalAlpha=1; }
+  // latido ambiental al beat
+  if(beat>0.02){ g.globalAlpha=beat*.08*(0.4+pct); g.fillStyle=PALETTES[m].glow;
+    g.fillRect(0,0,W,H); g.globalAlpha=1; }
+  g.drawImage(layers.near_dim, ox2,oy2,bw,bh);
+  if(pct>0){ g.globalAlpha=smooth(pct); g.drawImage(layers.near_lit, ox2,oy2,bw,bh); g.globalAlpha=1; }
+}
+function drawFlowers(g){
+  for(let i=0;i<F_MAX;i++){ if(!Flowers.active[i]) continue;
+    const age=Game.time-Flowers.born[i], s=smooth(clamp(age/.6,0,1))*(1+Math.sin(Game.time*2+i)*.04);
+    const spr=Assets.flowers[Flowers.v[i]], sz=46*s;
+    g.save(); g.translate(Flowers.x[i],Flowers.y[i]); g.rotate(Math.sin(Game.time*.8+i)*.08);
+    g.globalAlpha=.95; g.drawImage(spr,-sz/2,-sz/2,sz,sz); g.restore(); }
+  g.globalAlpha=1;
+}
+function drawTrail(g,now){
+  if(Trail.n<2 && !Trail.flashPoly) return;
+  g.lineCap='round'; g.lineJoin='round';
+  for(let i=1;i<Trail.n;i++){
+    const a=clamp(1-(now-Trail.t[i])/CFG.trail.maxAge,0,1);
+    g.strokeStyle=`rgba(125,240,221,${a*.85})`; g.lineWidth=2+a*3.4;
+    g.shadowColor='#7df0dd'; g.shadowBlur=12*a;
+    g.beginPath(); g.moveTo(Trail.x[i-1],Trail.y[i-1]); g.lineTo(Trail.x[i],Trail.y[i]); g.stroke();
+  }
+  g.shadowBlur=0;
+  if(Trail.flashPoly && Trail.flashT>0){
+    const a=Trail.flashT/.35; g.globalAlpha=a*.4; g.fillStyle='#ffb45e';
+    g.beginPath(); const p=Trail.flashPoly;
+    g.moveTo(p[0],p[1]); for(let i=1;i<p.length/2;i++) g.lineTo(p[i*2],p[i*2+1]);
+    g.closePath(); g.fill(); g.globalAlpha=1;
+  }
+}
+function drawEnemies(g,alpha){
+  const fr=(Game.time*9|0)%3;
+  for(let i=0;i<E_MAX;i++){ if(!Enemies.active[i]) continue;
+    const x=lerp(Enemies.px[i],Enemies.x[i],alpha), y=lerp(Enemies.py[i],Enemies.y[i],alpha);
+    const spr=Assets.statica[Enemies.variant[i]][fr];
+    const s=(1+Math.sin(Game.time*5+Enemies.phase[i])*.08) * (Enemies.type[i]===3 ? (Rhythm.pulse()*.35+1):1);
+    g.save(); g.translate(x,y); g.rotate(Math.sin(Game.time+Enemies.phase[i])*.4);
+    g.drawImage(spr, -36*s*.5, -36*s*.5, 36*s, 36*s); g.restore(); }
+}
+function drawBoss(g,alpha){
+  if(!Boss.on) return;
+  const x=lerp(Boss.px,Boss.x,alpha), y=lerp(Boss.py,Boss.y,alpha);
+  const s=(1+Rhythm.pulse()*.06+Math.sin(Game.time*1.4)*.03) * (Boss.hurtT>0?.92:1);
+  const sz=Boss.r*2.6*s;
+  g.save(); g.translate(x,y); g.rotate(Game.time*.18);
+  if(Boss.hurtT>0){ g.globalAlpha=.75; }
+  g.drawImage(Assets.voidBoss,-sz/2,-sz/2,sz,sz); g.restore(); g.globalAlpha=1;
+}
+function drawLuma(g,alpha,now){
+  const x=lerp(Luma.px,Luma.x,alpha), y=lerp(Luma.py,Luma.y,alpha);
+  if(Luma.invuln>0 && ((now*12|0)%2===0)) return; // parpadeo
+  const sp=Math.hypot(Luma.vx,Luma.vy);
+  const st = Luma.invuln>0?'hurt' : sp>620?'fast':'normal';
+  const stretch=clamp(sp/900,0,.45), ang=Math.atan2(Luma.vy,Luma.vx);
+  g.save(); g.translate(x,y); g.rotate(ang);
+  g.scale(1+stretch, 1-stretch*.7); g.rotate(-ang);
+  const sz=44*(1+Rhythm.pulse()*.05);
+  g.drawImage(Assets.luma[st],-sz/2,-sz/2,sz,sz); g.restore();
+}
+function drawVignette(g){
+  const pct=Game.restorePct(), W=View.w, H=View.h;
+  const grd=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.35, W/2,H/2, Math.max(W,H)*.75);
+  grd.addColorStop(0,'rgba(0,0,0,0)');
+  grd.addColorStop(1,`rgba(3,4,9,${.55-.3*pct})`);
+  g.fillStyle=grd; g.fillRect(0,0,W,H);
+  if(Game.floracion>0){ g.globalAlpha=.10+Rhythm.pulse()*.08; g.fillStyle='#ffb45e';
+    g.fillRect(0,0,W,H); g.globalAlpha=1; }
+}
+
+/* ---------------------------------------------------------------
+   §14 JUEGO — estados, bucle fijo, oleadas rítmicas
+---------------------------------------------------------------- */
+const Game = {
+  state:'BOOT', mov:0, blooms:0, score:0, flow:0, floracion:0, chain:0, chainT:0,
+  time:0, acc:0, lastT:0, runScore:0, introT:0, revealT:0, pendingFlow:0,
+  restorePct(){ const q=MOVS[this.mov].quota;
+    return MOVS[this.mov].boss ? clamp((5-Boss.hp)/5,0,1) : clamp(this.blooms/q,0,1); },
+
+  startMovement(m){
+    this.mov=m; this.blooms=0; this.flow=0; this.floracion=0; this.chain=0;
+    Enemies.reset(); Flowers.reset(); Trail.clear(); Boss.reset(); Luma.reset();
+    UI.setLives(Luma.lives); UI.movement(m); UI.garden(0); UI.flow(0,false); UI.score(this.score);
+    Audio.layersBoost=0;
+    const tr=TRACKS[m]; Audio.play(tr); Rhythm.bind(tr);
+    Rhythm.onBar=bar=>this.onBar(bar); Rhythm.onBeat=b=>this.onBeat(b);
+    if(MOVS[m].boss){ Boss.on=true; setTimeout(()=>VoidMind.say('taunt'), 2500); }
+    this.state='PLAY'; $('hud').classList.add('on'); $('pauseBtn').classList.add('on');
+    UI.show(null);
+    Voice.narrate(L.narration.mov[m]);
+  },
+
+  /* Oleadas: spawn EXACTO en compases/beats derivados del beatmap */
+  onBar(bar){
+    if(this.state!=='PLAY') return;
+    const M=MOVS[this.mov];
+    if(bar % M.spawnBars !== 0) return;
+    const ramp = 1 + this.restorePct()*1.2;
+    let n=Math.round(M.perWave*ramp);
+    if(M.boss) n=Math.min(n, 8-Enemies.count>0? n : 0);
+    for(let k=0;k<n;k++) this.spawnByWeight(M.types);
+    if(M.boss && bar%4===0 && Math.random()<.5) VoidMind.say('taunt');
+  },
+  onBeat(b){
+    if(this.state!=='PLAY') return;
+    const M=MOVS[this.mov];
+    if(M.syncopate && b%4===2 && Math.random()<.6) this.spawnByWeight(M.types); // contratiempo
+  },
+  spawnByWeight(w){ const r=Math.random(); let acc=0, t=0;
+    const keys=['mote','weaver','seeker','pulsar'];
+    for(let i=0;i<4;i++){ acc+=w[keys[i]]; if(r<=acc){ t=i; break; } }
+    Enemies.spawn(t);
+  },
+
+  /* Cierre de lazo: corazón del juego */
+  onLoop(poly, m){
+    let captured=0, capturedBoss=false;
+    const grade=Rhythm.grade();
+    for(let i=0;i<E_MAX;i++){ if(!Enemies.active[i]) continue;
+      if(pointInPoly(Enemies.x[i],Enemies.y[i],poly,m)){
+        this.bloomEnemy(i, grade); captured++; } }
+    if(Boss.on && Boss.hurtT<=0 && pointInPoly(Boss.x,Boss.y,poly,m)){
+      capturedBoss=true; this.hitBoss(grade);
+    }
+    if(captured===0 && !capturedBoss) return;
+    Trail.flashPoly=poly.slice(0,m*2); Trail.flashT=.35;
+
+    const timingMult = grade==='perfect'?3 : grade==='good'?2 : 1;
+    const flowMult = (1+this.flow)*(this.floracion>0?2:1);
+    const sizeBonus = 1 + 0.25*Math.max(0,captured-1);
+    const pts = Math.round(100*captured*timingMult*flowMult*sizeBonus) + (capturedBoss?1500*timingMult:0);
+    this.score+=pts; UI.score(this.score);
+
+    // flujo + cadena
+    const gain=CFG.flow.perBloom*captured*(grade==='perfect'?CFG.flow.perfectBonus:1);
+    if(this.floracion<=0){ this.flow=clamp(this.flow+gain,0,1);
+      if(this.flow>=1){ this.floracion=CFG.flow.floracionDur; Audio.flowMax();
+        UI.callout(L.maxflow); Voice.callout(L.maxflow); Audio.layersBoost=1; } }
+    this.chain++; this.chainT=2.4;
+    if(this.chain===4){ UI.callout(L.chain); Voice.callout(L.chain); }
+    if(captured>=4){ UI.callout(L.bigloop); Voice.callout(L.bigloop); }
+
+    // juice
+    const cx=poly[0], cy=poly[1];
+    Floaters.add(cx,cy,'+'+pts.toLocaleString(LANG), grade==='perfect'?'#ffb45e':'#7df0dd');
+    if(grade==='perfect'){ Juice.hitstop(.07); Juice.shake(.28);
+      Floaters.add(cx,cy-26,L.perfect,'#ffb45e'); Audio.chime('perfect'); }
+    else if(grade==='good'){ Juice.shake(.16); Floaters.add(cx,cy-26,L.good,'#9ef7e6'); Audio.chime('good'); }
+    else { Juice.shake(.08); Audio.chime('off'); }
+    if(this.chain>2) Juice.shake(.06*this.chain);
+
+    UI.multi(this.flow,this.floracion>0); UI.flow(this.flow||(this.floracion>0?1:0),this.floracion>0);
+    UI.garden(this.restorePct());
+    // ¿cuota cumplida?
+    const M=MOVS[this.mov];
+    if(!M.boss && this.blooms>=M.quota) this.startReveal();
+  },
+  bloomEnemy(i, grade){
+    const x=Enemies.x[i], y=Enemies.y[i];
+    Enemies.kill(i); Flowers.plant(x,y); this.blooms++;
+    const pal=PALETTES[this.mov];
+    Part.burst(x,y, grade==='perfect'?22:14, pal.flora[(Math.random()*3)|0], 150, 1);
+    Part.burst(x,y, 8, '#ffffff', 90, 0);
+  },
+  hitBoss(grade){
+    Boss.hp--; Boss.hurtT=1.2; Juice.hitstop(.08); Juice.shake(.5);
+    Part.burst(Boss.x,Boss.y,40,'#e86bd0',260,1); Part.burst(Boss.x,Boss.y,20,'#ffb45e',180,0);
+    Audio.chime(grade); Audio.stinger&&null;
+    if(Boss.hp<=0){ VoidMind.say('death'); this.startReveal(); }
+    else VoidMind.say('hit');
+    UI.garden(this.restorePct());
+  },
+  damageLuma(){
+    if(Luma.invuln>0 || this.state!=='PLAY') return;
+    Luma.lives--; Luma.invuln=CFG.luma.invuln;
+    UI.setLives(Luma.lives); Audio.hurt(); Juice.shake(.6); Juice.hitstop(.05);
+    Part.burst(Luma.x,Luma.y,18,'#ff6f9c',220,0);
+    this.flow=Math.max(0,this.flow-.25); this.chain=0; UI.flow(this.flow,false); UI.multi(this.flow,false);
+    Trail.clear();
+    if(Boss.on) VoidMind.say('hurt');
+    if(Luma.lives<=0){ this.gameOver(); }
+  },
+
+  startReveal(){
+    this.state='REVEAL'; this.revealT=0; Audio.stop(); Audio.stinger();
+    // florecen todos los enemigos restantes
+    for(let i=0;i<E_MAX;i++) if(Enemies.active[i]){ const x=Enemies.x[i],y=Enemies.y[i];
+      Enemies.kill(i); Flowers.plant(x,y);
+      Part.burst(x,y,10,PALETTES[this.mov].flora[1],120,1); }
+    Boss.on=false;
+    const line=L.narration.reveal[this.mov]; if(line) Voice.narrate(line);
+    UI.garden(1);
+    if(this.mov+1 > Save.data.unlocked && this.mov+1<5){ Save.data.unlocked=this.mov+1+0; }
+    Save.data.unlocked=Math.max(Save.data.unlocked, Math.min(this.mov+2,5)); Save.write();
+  },
+  finishReveal(){
+    if(this.mov>=4){ this.victory(); return; }
+    const next=this.mov+1;
+    $('intMeta').textContent=`${L.movement}`;
+    $('intTitle').textContent=L.movNames[next];
+    $('intSub').textContent=L.movSubs[next];
+    $('intGo').onclick=()=>{ this.startMovement(next); };
+    this.state='INTERLUDE'; UI.show('interlude'); $('pauseBtn').classList.remove('on');
+  },
+  gameOver(){
+    this.state='GAMEOVER'; Audio.stop(); Voice.stopAll();
+    $('goScore').textContent=Math.round(this.score).toLocaleString(LANG);
+    UI.show('gameover'); $('hud').classList.remove('on'); $('pauseBtn').classList.remove('on');
+  },
+  victory(){
+    this.state='VICTORY'; Audio.stop(); Audio.stinger();
+    Voice.narrate(L.narration.final);
+    const rank=Save.submitScore(Math.round(this.score));
+    $('vScore').textContent=Math.round(this.score).toLocaleString(LANG);
+    $('vRank').textContent=L.rankOf(rank, Save.data.leaderboard.length);
+    UI.show('victory'); $('hud').classList.remove('on'); $('pauseBtn').classList.remove('on');
+  },
+
+  /* ----- simulación a paso fijo ----- */
+  step(dt){
+    this.time+=dt;
+    Rhythm.update();
+    if(this.floracion>0){ this.floracion-=dt; if(this.floracion<=0){ this.flow=.3; Audio.layersBoost=0;
+      UI.flow(this.flow,false); UI.multi(this.flow,false);} }
+    else { this.flow=Math.max(0,this.flow-CFG.flow.decay*dt); }
+    if(this.chainT>0){ this.chainT-=dt; if(this.chainT<=0) this.chain=0; }
+    if((this.time*60|0)%8===0){ UI.flow(this.floracion>0?1:this.flow,this.floracion>0); }
+
+    // luma: muelle hacia el puntero
+    Luma.px=Luma.x; Luma.py=Luma.y;
+    const k=CFG.luma.spring;
+    Luma.vx += (Luma.tx-Luma.x)*k*dt*10; Luma.vy += (Luma.ty-Luma.y)*k*dt*10;
+    Luma.vx*=Math.pow(.0015,dt); Luma.vy*=Math.pow(.0015,dt);
+    Luma.x+=Luma.vx*dt; Luma.y+=Luma.vy*dt;
+    Luma.x=clamp(Luma.x,8,View.w-8); Luma.y=clamp(Luma.y,8,View.h-8);
+    if(Luma.invuln>0) Luma.invuln-=dt;
+    if(Trail.drawing) Trail.push(Luma.x,Luma.y,this.time);
+    Trail.prune(this.time);
+    if(Trail.flashT>0) Trail.flashT-=dt;
+
+    // enemigos
+    const M=MOVS[this.mov], spd=M.speed, W=View.w, H=View.h, gx=W/2, gy=H*.62;
+    for(let i=0;i<E_MAX;i++){ if(!Enemies.active[i]) continue;
+      Enemies.px[i]=Enemies.x[i]; Enemies.py[i]=Enemies.y[i];
+      const t=Enemies.type[i]; let ax=0, ay=0;
+      if(t===0){ ax=gx-Enemies.x[i]; ay=gy-Enemies.y[i]; }                 // mote → centro
+      else if(t===1){ ax=gx-Enemies.x[i]; ay=gy-Enemies.y[i];              // weaver → sinuoso
+        const a=Math.atan2(ay,ax)+Math.PI/2, s=Math.sin(this.time*3+Enemies.phase[i])*60;
+        ax+=Math.cos(a)*s; ay+=Math.sin(a)*s; }
+      else if(t===2){ ax=Luma.x-Enemies.x[i]; ay=Luma.y-Enemies.y[i]; }    // seeker → luma
+      else { // pulsar: salta en el beat
+        const p=Rhythm.pulse(); ax=(Luma.x-Enemies.x[i]); ay=(Luma.y-Enemies.y[i]);
+        const d=Math.hypot(ax,ay)||1; const v=(p>.7? 240:30)*spd;
+        Enemies.vx[i]=ax/d*v; Enemies.vy[i]=ay/d*v;
+        Enemies.x[i]+=Enemies.vx[i]*dt; Enemies.y[i]+=Enemies.vy[i]*dt; continue; }
+      const d=Math.hypot(ax,ay)||1, base=(t===2?58:44)*spd;
+      Enemies.vx[i]=lerp(Enemies.vx[i], ax/d*base, .04);
+      Enemies.vy[i]=lerp(Enemies.vy[i], ay/d*base, .04);
+      Enemies.x[i]+=Enemies.vx[i]*dt; Enemies.y[i]+=Enemies.vy[i]*dt;
+    }
+    // colisiones con luma
+    const lr=CFG.luma.r;
+    for(let i=0;i<E_MAX;i++){ if(!Enemies.active[i]) continue;
+      const dx=Enemies.x[i]-Luma.x, dy=Enemies.y[i]-Luma.y, rr=Enemies.r[i]+lr;
+      if(dx*dx+dy*dy < rr*rr) this.damageLuma(); }
+    // jefe
+    if(Boss.on){
+      Boss.px=Boss.x; Boss.py=Boss.y; Boss.phase+=dt; if(Boss.hurtT>0) Boss.hurtT-=dt;
+      Boss.dashT-=dt;
+      const tx=W/2+Math.cos(Boss.phase*.5)*W*.22, ty=H*.4+Math.sin(Boss.phase*.37)*H*.18;
+      Boss.x=lerp(Boss.x,tx,.012); Boss.y=lerp(Boss.y,ty,.012);
+      if(Boss.dashT<=0){ Boss.dashT=5.5;
+        const dx=Luma.x-Boss.x, dy=Luma.y-Boss.y, d=Math.hypot(dx,dy)||1;
+        Boss.x+=dx/d*60; Boss.y+=dy/d*60; }
+      const dx=Boss.x-Luma.x, dy=Boss.y-Luma.y, rr=Boss.r*.8+lr;
+      if(dx*dx+dy*dy<rr*rr) this.damageLuma();
+    }
+    Part.update(dt);
+    if(this.state==='REVEAL'){ this.revealT+=dt;
+      if(this.revealT>3.4) this.finishReveal(); }
+  }
+};
+
+/* ---------------------------------------------------------------
+   §15 INTRO CINEMÁTICA (adaptación de Motion Pro: timeline procedural 7 s)
+---------------------------------------------------------------- */
+const Intro={ t:0, dur:7.5, sparks:[],
+  start(){ this.t=0; this.sparks.length=0;
+    const R=mulberry32(7);
+    for(let i=0;i<40;i++) this.sparks.push({x:R()*View.w, y:R()*View.h*.8, p:R()*TAU});
+    Game.state='INTRO'; UI.show(null); $('skipBtn').textContent=L.skip; $('skipBtn').classList.add('on');
+    Voice.narrate(L.narration.intro);
+  },
+  draw(g,dt){
+    this.t+=dt; const t=this.t, W=View.w, H=View.h;
+    // jardín en color que se apaga
+    const fade = clamp((t-1.5)/3.2, 0, 1); // 0=color, 1=apagado
+    const layers=Assets.bg[0];
+    const sc=Math.max(W/1280,H/720), bw=1280*sc, bh=720*sc, ox=(W-bw)/2, oy=(H-bh)/2;
+    g.drawImage(layers.far_lit,ox,oy,bw,bh); g.drawImage(layers.near_lit,ox,oy,bw,bh);
+    g.globalAlpha=smooth(fade); g.drawImage(layers.far_dim,ox,oy,bw,bh);
+    g.drawImage(layers.near_dim,ox,oy,bw,bh); g.globalAlpha=1;
+    // estática invadiendo
+    if(t>2 && t<6){ const n=clamp((t-2)/2,0,1)*30;
+      const fr=(t*8|0)%3;
+      for(let i=0;i<n;i++){ const s=this.sparks[i];
+        const x=s.x+Math.sin(t*2+s.p)*20, y=s.y+Math.cos(t*1.4+s.p)*14;
+        g.globalAlpha=.8; g.drawImage(Assets.statica[i%4][fr], x-16,y-16,32,32); } g.globalAlpha=1; }
+    // luciérnagas apagándose, una queda
+    for(let i=0;i<this.sparks.length;i++){ const s=this.sparks[i];
+      const alive = i===0 ? 1 : clamp(1-(t-1-i*.1)/1.2,0,1);
+      if(alive<=0) continue;
+      g.globalAlpha=alive; const r=i===0? 5+Math.sin(t*6)*1.5 : 3;
+      g.fillStyle='#aefcef'; g.shadowColor='#7df0dd'; g.shadowBlur=14;
+      g.beginPath(); g.arc(s.x+Math.sin(t+s.p)*8, s.y+Math.cos(t*.7+s.p)*6, r,0,TAU); g.fill(); }
+    g.shadowBlur=0; g.globalAlpha=1;
+    // oscurecimiento final → arranque
+    if(t>6){ g.globalAlpha=clamp((t-6)/1.2,0,.92); g.fillStyle='#04050a'; g.fillRect(0,0,W,H); g.globalAlpha=1; }
+    if(t>=this.dur) this.end();
+  },
+  end(){ $('skipBtn').classList.remove('on'); Game.score=0; Game.startMovement(Game.pendingMov||0); }
+};
+
+/* ---------------------------------------------------------------
+   §16 ESCENA DE MENÚ (la luma sigue al cursor)
+---------------------------------------------------------------- */
+const MenuScene={ mx:0,my:0, lx:0,ly:0, t:0,
+  draw(g,dt){ this.t+=dt; const W=View.w,H=View.h;
+    const layers=Assets.bg[0], sc=Math.max(W/1280,H/720), bw=1280*sc, bh=720*sc;
+    g.drawImage(layers.far_dim,(W-bw)/2,(H-bh)/2,bw,bh);
+    g.globalAlpha=.28+Math.sin(this.t*.6)*.06; g.drawImage(layers.far_lit,(W-bw)/2,(H-bh)/2,bw,bh);
+    g.globalAlpha=1; g.drawImage(layers.near_dim,(W-bw)/2,(H-bh)/2,bw,bh);
+    this.lx=lerp(this.lx,this.mx||W/2,.06); this.ly=lerp(this.ly,this.my||H*.7,.06);
+    if(Math.random()<.25) Part.spawn(this.lx,this.ly,rand(-14,14),rand(-26,-6),rand(.8,1.6),rand(1.5,3),0,'#7df0dd');
+    Part.update(dt); Part.draw(g);
+    g.fillStyle='#fff'; g.shadowColor='#7df0dd'; g.shadowBlur=18;
+    g.beginPath(); g.arc(this.lx,this.ly,5+Math.sin(this.t*5)*1.4,0,TAU); g.fill(); g.shadowBlur=0;
+  }
+};
+
+/* ---------------------------------------------------------------
+   §17 BUCLE PRINCIPAL — fixed timestep + interpolación
+---------------------------------------------------------------- */
+const FIXED=1/CFG.logicHz;
+function frame(ts){
+  requestAnimationFrame(frame);
+  const g=View.g; if(!g) return;
+  const now=ts/1000;
+  let dt=Math.min(now-(Game.lastT||now), .1); Game.lastT=now;
+
+  if(Juice.freeze>0){ Juice.freeze-=dt; dt=0; }     // hit-stop
+  Juice.trauma=Math.max(0,Juice.trauma-2.2*(ts/1000-(frame.pt||now))); frame.pt=now;
+
+  let alpha=1;
+  if(Game.state==='PLAY'||Game.state==='REVEAL'){
+    Game.acc+=dt;
+    let guard=0;
+    while(Game.acc>=FIXED && guard++<8){ Game.step(FIXED); Game.acc-=FIXED; }
+    alpha=Game.acc/FIXED;
+  }
+
+  // render
+  g.fillStyle='#05060c'; g.fillRect(0,0,View.w,View.h);
+  const [sx,sy]=Juice.offset();
+  g.save(); g.translate(sx,sy);
+
+  if(Game.state==='MENU'||Game.state==='BOOT'){ MenuScene.draw(g, Math.min(dt,.05)); }
+  else if(Game.state==='INTRO'){ Intro.draw(g, Math.min(dt,.05)); }
+  else if(Game.state==='PLAY'||Game.state==='REVEAL'||Game.state==='PAUSE'
+        ||Game.state==='GAMEOVER'||Game.state==='VICTORY'||Game.state==='INTERLUDE'){
+    drawBackground(g);
+    drawFlowers(g);
+    drawBoss(g,alpha);
+    drawEnemies(g,alpha);
+    Part.draw(g);
+    drawTrail(g, Game.time);
+    if(Game.state!=='GAMEOVER') drawLuma(g,alpha,now);
+    Floaters.draw(g, Math.min(dt,.05));
+    drawVignette(g);
+    if(Game.state==='REVEAL'){ const a=smooth(clamp(Game.revealT/1.2,0,1))*.25;
+      g.globalAlpha=a*(1-clamp((Game.revealT-2)/1.4,0,1)); g.fillStyle='#ffffff';
+      g.fillRect(0,0,View.w,View.h); g.globalAlpha=1; }
+  }
+  g.restore();
+}
+requestAnimationFrame(frame);
+
+/* ---------------------------------------------------------------
+   §18 INPUT (touch-first; estela mientras se mantiene pulsado)
+---------------------------------------------------------------- */
+const canvas=View.canvas;
+function ptr(e){ const t=e.touches? e.touches[0] : e; return [t.clientX, t.clientY]; }
+function onDown(e){ Audio.ensure();
+  const [x,y]=ptr(e);
+  if(Game.state==='MENU'){ MenuScene.mx=x; MenuScene.my=y; return; }
+  if(Game.state==='INTRO') return;
+  if(Game.state!=='PLAY') return;
+  Luma.tx=x; Luma.ty=y; Trail.drawing=true; Trail.clear();
+  e.preventDefault();
+}
+function onMove(e){ const [x,y]=ptr(e);
+  if(Game.state==='MENU'){ MenuScene.mx=x; MenuScene.my=y; return; }
+  if(Game.state!=='PLAY') return;
+  Luma.tx=x; Luma.ty=y;
+  if(e.touches) e.preventDefault();
+}
+function onUp(){ Trail.drawing=false; Trail.clear(); }
+canvas.addEventListener('mousedown',onDown); canvas.addEventListener('mousemove',onMove);
+addEventListener('mouseup',onUp);
+canvas.addEventListener('touchstart',onDown,{passive:false});
+canvas.addEventListener('touchmove',onMove,{passive:false});
+addEventListener('touchend',onUp); addEventListener('touchcancel',onUp);
+addEventListener('keydown',e=>{ if(e.key==='Escape'||e.key==='p') togglePause(); });
+
+/* ---------------------------------------------------------------
+   §19 NAVEGACIÓN / MENÚS
+---------------------------------------------------------------- */
+let selectedMov=0;
+function buildMovRow(){
+  const row=$('movRow'); row.innerHTML='';
+  for(let i=0;i<5;i++){ const b=document.createElement('button');
+    b.className='pill'+(i<Save.data.unlocked?'':' locked')+(i===selectedMov?' on':'');
+    b.textContent=L.movNames[i].split('·')[0].trim();
+    b.title=L.movNames[i];
+    if(i<Save.data.unlocked) b.onclick=()=>{ selectedMov=i; buildMovRow(); };
+    row.appendChild(b); }
+}
+function showTitle(){
+  Game.state='MENU'; Audio.stop(); Voice.stopAll();
+  $('hud').classList.remove('on'); $('pauseBtn').classList.remove('on'); $('skipBtn').classList.remove('on');
+  UI.show('title'); buildMovRow();
+  setTimeout(()=>{ if(Game.state==='MENU') Audio.ctx && Audio.menuLoop(); }, 200);
+}
+function startRun(){
+  Audio.ensure(); Audio.stop();
+  Game.score=0; Game.pendingMov=selectedMov;
+  Save.data.name=$('nameInput').value.trim(); Save.write();
+  if(selectedMov===0) Intro.start();
+  else { UI.show(null); Game.startMovement(selectedMov); }
+}
+function togglePause(){
+  if(Game.state==='PLAY'){ Game.state='PAUSE'; Audio.master&&(Audio.master.gain.value=.15);
+    UI.show('pause'); }
+  else if(Game.state==='PAUSE'){ Game.state='PLAY'; Audio.master&&(Audio.master.gain.value=.8);
+    UI.show(null); Game.lastT=performance.now()/1000; Game.acc=0; }
+}
+function renderLb(){
+  const list=$('lbList'); list.innerHTML='';
+  const lb=Save.data.leaderboard;
+  if(!lb.length){ const d=document.createElement('div'); d.className='lbrow';
+    d.innerHTML=`<span class="nm" style="color:var(--dim)">—</span>`; list.appendChild(d); return; }
+  lb.forEach((e,i)=>{ const d=document.createElement('div');
+    d.className='lbrow'+((e.n===(Save.data.name||L.anon))?' me':'');
+    d.innerHTML=`<span class="rank">${i+1}</span><span class="nm"></span><span class="sc">${e.s.toLocaleString(LANG)}</span>`;
+    d.querySelector('.nm').textContent=e.n; list.appendChild(d); });
+}
+$('playBtn').onclick=startRun;
+$('lbBtn').onclick=()=>{ renderLb(); UI.show('lb'); };
+$('lbBack').onclick=()=>showTitle();
+$('pauseBtn').onclick=togglePause;
+$('resumeBtn').onclick=togglePause;
+$('quitBtn').onclick=()=>{ Game.state='MENU'; showTitle(); };
+$('retryBtn').onclick=()=>{ Game.score=Math.round(Game.score*.5); UI.show(null); Game.startMovement(Game.mov); };
+$('goTitleBtn').onclick=showTitle;
+$('vTitleBtn').onclick=showTitle;
+$('vLbBtn').onclick=()=>{ renderLb(); UI.show('lb'); };
+$('skipBtn').onclick=()=>{ if(Game.state==='INTRO'){ Voice.stopAll(); Intro.end(); } };
+$('intGo').onclick=()=>{}; // se asigna en finishReveal
+document.querySelectorAll('.pill.lang').forEach(p=>p.onclick=()=>setLang(p.dataset.lang));
+$('nameInput').addEventListener('change',()=>{ Save.data.name=$('nameInput').value.trim(); Save.write(); });
+
+/* ---------------------------------------------------------------
+   §20 ARRANQUE
+---------------------------------------------------------------- */
+function boot(){
+  buildLuma(); buildStatica(); buildFlowers(); buildBackgrounds();
+  UI.petals(); Voice.init();
+  setLang(Save.data.lang || ((navigator.language||'es').startsWith('es')?'es-ES':
+          (navigator.language||'').startsWith('zh')?'zh-CN':'en-US'));
+  $('nameInput').value=Save.data.name||'';
+  // expone manifiesto de assets para inspección (criterio: nada placeholder)
+  window.NOCTURNA_ASSET_MANIFEST=Assets.manifest;
+  showTitle();
+}
+boot();
+
+})();
+</script>
+</body>
+</html>

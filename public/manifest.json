@@ -1,0 +1,25 @@
+{
+    "name": "Windows App Center",
+    "short_name": "Win95 App",
+    "description": "Retro Windows 95 desktop simulator with games, apps, and a ragdoll pet.",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#008080",
+    "theme_color": "#c0c0c0",
+    "categories": ["games", "entertainment"],
+    "lang": "en",
+    "icons": [
+        {
+            "src": "/assets/icons/pwa_icon_512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/favicon.ico",
+            "sizes": "32x32",
+            "type": "image/x-icon"
+        }
+    ]
+}

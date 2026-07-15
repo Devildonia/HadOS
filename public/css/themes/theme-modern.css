@@ -1,0 +1,181 @@
+/* ===== MODERN (FLUENT) THEME ===== */
+
+body.theme-modern {
+    /* Fonts */
+    --os-font-family: 'Segoe UI', Inter, Roboto, sans-serif;
+    --os-font-size: 13px;
+    --os-font-weight-bold: 600;
+
+    /* Backgrounds */
+    --os-bg-color: #1a1a1a;
+    --os-text-color: #202020;
+    --os-text-color-inverted: #ffffff;
+    --accent-color: #0078D7;
+
+    /* Global Legacy Overrides to force modern look */
+    --win-gray: #f3f3f3;
+    --border-light: transparent;
+    --border-dark: #e5e5e5;
+    --border-darkest: #d1d1d1;
+
+    /* Taskbar */
+    --taskbar-bg: rgba(243, 243, 243, 0.85);
+    /* Acrylic */
+    --taskbar-height: 48px;
+    --taskbar-border-top: 1px solid rgba(0, 0, 0, 0.1);
+    --taskbar-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+
+    /* Start Menu */
+    --start-menu-bg: rgba(243, 243, 243, 0.9);
+    --start-menu-border: 1px solid;
+    --start-menu-border-color: rgba(0, 0, 0, 0.1);
+    --start-menu-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    --start-sidebar-bg: var(--accent-color);
+
+    /* Windows */
+    --window-bg: #ffffff;
+    --window-content-bg: #ffffff;
+    --window-border: 1px solid;
+    --window-border-color: rgba(0, 0, 0, 0.1);
+    --window-border-radius: 8px;
+    --window-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+
+    /* Window Header */
+    --window-header-bg: #ffffff;
+    --window-header-color: #202020;
+    --window-header-height: 32px;
+
+    /* Dialogs */
+    --dialog-bg: #ffffff;
+    --dialog-border: 1px solid;
+    --dialog-border-color: rgba(0, 0, 0, 0.1);
+    --dialog-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+
+    /* Controls (Buttons) */
+    --control-bg: #f9f9f9;
+    --control-border: 1px solid;
+    --control-border-color: #d1d1d1;
+    --control-shadow: none;
+    --control-active-border-color: var(--accent-color);
+    --control-active-shadow: none;
+}
+
+/* Specific component overrides that require extra CSS for modern look */
+body.theme-modern .win95-window,
+body.theme-modern .win95-dialog {
+    border-radius: var(--window-border-radius);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(25px) saturate(120%);
+    -webkit-backdrop-filter: blur(25px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1) !important;
+}
+
+body.theme-modern #start-menu,
+body.theme-modern .submenu {
+    border-radius: var(--window-border-radius);
+}
+
+/* Acrylic effect on taskbar and start menu/submenu */
+body.theme-modern #taskbar,
+body.theme-modern #start-menu,
+body.theme-modern .submenu {
+    backdrop-filter: blur(25px) saturate(120%);
+    -webkit-backdrop-filter: blur(25px) saturate(120%);
+    background: rgba(243, 243, 243, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+body.theme-modern .submenu {
+    box-shadow: var(--start-menu-shadow);
+}
+
+/* Window Header tweaks */
+body.theme-modern .window-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.theme-modern .window-btn {
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    transition: background 0.2s;
+}
+
+body.theme-modern .window-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.theme-modern .window-btn.close-btn:hover {
+    background: #e81123;
+    color: white;
+}
+
+/* Start Button Modernization */
+body.theme-modern #start-button {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    height: 100%;
+    transition: background 0.2s, transform 0.1s;
+    border-radius: 4px;
+    margin: 4px;
+}
+
+body.theme-modern #start-button:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.theme-modern #start-button:active {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(0.96);
+}
+
+body.theme-modern #start-button .start-icon rect {
+    /* Make the 4 squares the accent color instead of multi-color for a sleek modern look */
+    fill: var(--accent-color);
+}
+
+body.theme-modern #start-button .start-text {
+    font-weight: 600;
+    font-size: 14px;
+    margin-left: 8px;
+    /* Optional: Hide text for a pure icon look by adding display: none, but keeping it is fine */
+}
+
+/* Sticky Notes (Modern Post-it) */
+body.theme-modern .sticky-note {
+    background-color: rgba(243, 243, 243, 0.65);
+    /* Acrylic backdrop */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-radius: var(--window-border-radius);
+    transform: none !important;
+    /* Stop rotation */
+    font-family: var(--os-font-family);
+    color: var(--os-text-color);
+    padding: 20px;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+body.theme-modern .sticky-note:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+body.theme-modern .sticky-note.dragging {
+    transform: scale(1.02) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    cursor: grabbing;
+}
+
+body.theme-modern .sticky-note p:first-child {
+    font-size: 15px;
+    color: var(--accent-color);
+}

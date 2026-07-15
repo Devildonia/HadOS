@@ -1,0 +1,274 @@
+/* ===== REBIRTH DASHBOARD & KARMA SHOP STYLES - New Game+ v5.0 ===== */
+
+.rebirth-dashboard {
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Karma Earned Card */
+.karma-earned-card {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    animation: slideInUp 0.6s ease-out;
+}
+
+.karma-earned-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    animation: float 3s ease-in-out infinite;
+}
+
+.karma-earned-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.karma-earned-value {
+    font-size: 4rem;
+    font-weight: 900;
+    margin: var(--spacing-md) 0;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.karma-formula {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    50% {
+        text-shadow: 0 0 40px rgba(255, 255, 255, 1), 0 0 60px rgba(236, 72, 153, 0.8);
+    }
+}
+
+/* Karma Shop Section */
+.karma-shop-section {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.karma-shop-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--navy-dark);
+    margin: 0 0 var(--spacing-sm) 0;
+    text-align: center;
+}
+
+.karma-shop-subtitle {
+    font-size: 1rem;
+    color: var(--gray-600);
+    text-align: center;
+    margin: 0 0 var(--spacing-xl) 0;
+}
+
+.karma-balance {
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--navy-dark);
+    margin-bottom: var(--spacing-xl);
+}
+
+.karma-balance-value {
+    color: var(--primary-purple);
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+/* Karma Shop Grid */
+.karma-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Upgrade Card */
+.upgrade-card {
+    background: linear-gradient(135deg, #FFFFFF, #F9FAFB);
+    border: 3px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    text-align: center;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.upgrade-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.6s;
+}
+
+.upgrade-card:hover::before {
+    left: 100%;
+}
+
+.upgrade-card:hover {
+    border-color: var(--primary-purple);
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
+    transform: translateY(-4px);
+}
+
+.upgrade-icon {
+    font-size: 3.5rem;
+    margin-bottom: var(--spacing-md);
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+.upgrade-card h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--navy-dark);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.upgrade-card p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.upgrade-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
+    border-top: 2px dashed var(--gray-200);
+    border-bottom: 2px dashed var(--gray-200);
+}
+
+.upgrade-level,
+.upgrade-bonus {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.upgrade-bonus {
+    color: var(--primary-mint);
+    font-weight: 700;
+}
+
+.upgrade-cost {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: var(--spacing-md);
+}
+
+.cost-value {
+    color: var(--primary-purple);
+    font-size: 1.125rem;
+}
+
+.upgrade-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.upgrade-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+
+.upgrade-btn:active {
+    transform: scale(0.98);
+}
+
+.upgrade-btn:disabled {
+    background: var(--gray-300);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* New Game+ Stats */
+.new-game-plus-stats {
+    background: linear-gradient(135deg, #F3E8FF, #FCE7F3);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .karma-shop-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .karma-earned-value {
+        font-size: 3rem;
+    }
+
+    .karma-shop-title {
+        font-size: 1.5rem;
+    }
+}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TETRIS TRYHARD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=139">
+  <link rel="manifest" href="manifest.json?v=139">
+</head>
+
+<body>
+  <!-- Subsystem Canvases -->
+  <canvas id="bgBufferCanvas"></canvas>
+  <canvas id="arcadeBackground"></canvas>
+  <canvas id="celebrationCanvas"></canvas>
+  <!-- Special Tetris Effect Layer -->
+  <canvas id="tetrisShaderCanvas"></canvas>
+
+  <div class="game-wrapper">
+
+    <!-- ── Main Menu Screen ─────────────────────────────────────────────── -->
+    <div id="mainMenu" class="overlay flex">
+      <div class="overlay-panel">
+        <h1 id="i18n-title" class="game-title neon-glow">TETRIS<br>TRYHARD</h1>
+        <div class="menu-buttons">
+          <button id="menuPlayBtn" class="btn btn--lime btn--xl">JUGAR</button>
+          <button id="menuScoresBtn" class="btn btn--yellow btn--xl">RÉCORDS</button>
+          <div class="lang-row">
+            <button id="langEs" data-active="true">ESP</button>
+            <button id="langEn" data-active="false">ENG</button>
+          </div>
+          <p class="copyright">HaDeS (A.K.A. DeViLDoNia 2026)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── High Scores Screen ───────────────────────────────────────────── -->
+    <div id="highScoresScreen" class="overlay hidden">
+      <div class="overlay-panel overlay-panel--narrow">
+        <h2 id="i18n-hallOfFame" class="section-title neon-glow text--yellow">SALÓN DE LA FAMA</h2>
+        <div id="leaderboardFullDisplay" class="lb-full-list"></div>
+        <button id="scoresBackBtn" class="btn btn--cyan btn--lg mt-lg">VOLVER AL MENÚ</button>
+      </div>
+    </div>
+
+    <!-- Main Layout -->
+
+    <!-- ── Main Layout ──────────────────────────────────────────────────── -->
+    <div class="layout">
+
+      <!-- Left Sidebar -->
+      <aside class="sidebar stat-box">
+        <!-- HOLD: hidden on mobile -->
+        <div class="sidebar-hold">
+          <p id="i18n-holdLabel" class="stat-label">HOLD</p>
+          <canvas id="holdCanvas" class="next-canvas" width="120" height="120"></canvas>
+        </div>
+
+        <!-- Score / Lines / Level -->
+        <div class="stats-row">
+          <div class="stat-item">
+            <p id="i18n-scoreLabel" class="stat-label">SCR</p>
+            <p id="score" class="stat-value text--yellow">0</p>
+          </div>
+          <div class="stat-item">
+            <p id="i18n-linesLabel" class="stat-label">LNS</p>
+            <p id="lines" class="stat-value text--magenta">0</p>
+          </div>
+          <div class="stat-item">
+            <p id="i18n-levelLabel" class="stat-label">LVL</p>
+            <p id="level" class="stat-value text--lime">1</p>
+            <p id="rankName" class="rank-name">Novato</p>
+          </div>
+        </div>
+
+        <!-- Gravity badge -->
+        <div id="gravityBadge" class="gravity-badge hidden">
+          🔃 INVERTIDA
+        </div>
+
+        <!-- TOP 5: hidden on mobile -->
+        <div class="sidebar-top5">
+          <p id="i18n-top5Label" class="stat-label">🏆 TOP 5</p>
+          <div id="leaderboardDisplay" class="lb-mini"></div>
+        </div>
+      </aside>
+
+      <!-- Game Canvas -->
+      <div class="game-area">
+        <canvas id="gameCanvas" width="432" height="1008"></canvas>
+
+        <!-- Game Over overlay -->
+        <div id="gameOver" class="overlay hidden" style="z-index:100;">
+          <div class="overlay-panel">
+            <p id="i18n-gameOverLabel" class="gameover-title neon-glow">GAME OVER</p>
+            <p class="gameover-score"><span id="i18n-finalScoreLabel">SCORE</span>: <span id="finalScore">0</span></p>
+
+            <!-- Integrated High Score Entry (shown inside Game Over if needed) -->
+            <div id="highScoreEntry" class="hidden mt-lg">
+              <p id="i18n-newRecordLabel" class="record-title neon-glow" style="font-size: 1.4rem;">¡NUEVO RÉCORD!</p>
+              <p id="i18n-enterNameLabel" class="stat-label mt-md">INTRODUCE TU NOMBRE</p>
+              <input id="playerName" type="text" maxlength="6" placeholder="      " class="name-input"
+                autocomplete="off" style="font-size: 1.5rem; padding: 10px; margin-bottom: 20px;" />
+              <button id="saveHighScore" class="btn btn--lime btn--lg" style="width: 100%;">GUARDAR SCORE</button>
+            </div>
+
+            <div id="gameOverActions" class="gameover-btns mt-lg">
+              <button id="restartBtn" class="btn btn--lime btn--lg">REINTENTAR</button>
+              <button id="backToMenuBtn" class="btn btn--cyan-ghost btn--md">VOLVER AL INICIO</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gravity Flip Warning Overlay -->
+        <div id="gravityWarningOverlay" class="gravity-warning hidden">
+          <div class="gravity-warning__inner">
+            <div class="gravity-warning__icon">🔃</div>
+            <div class="gravity-warning__text">¡GRAVEDAD<br>INVERTIDA!</div>
+          </div>
+        </div>
+
+        <!-- Bonus Message Overlay -->
+        <div id="bonusMessageOverlay" class="bonus-message hidden">PERFECT CLEAR!</div>
+
+      </div>
+
+      <!-- Right Sidebar -->
+      <aside class="sidebar stat-box">
+        <!-- Next pieces: hidden on mobile -->
+        <div class="sidebar-next stat-box">
+          <p id="i18n-nextLabel" class="stat-label">NEXT</p>
+          <canvas id="nextCanvas" class="next-canvas" width="120" height="360"></canvas>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-panel stat-box">
+          <div class="btn-row">
+            <button id="pauseBtn" class="btn btn--yellow flex-1" disabled>PAUSA</button>
+            <button id="resetBtn" class="btn btn--red    flex-1">RESET</button>
+          </div>
+          <!-- Audio: desktop -->
+          <div class="audio-btns">
+            <button id="muteBtn" class="btn btn--ghost btn--sm">
+              <span id="muteIcon">🔊</span> <span id="muteText">MUSIC ON</span>
+            </button>
+            <button id="sfxBtn" class="btn btn--ghost btn--sm">
+              <span id="sfxIcon">🔊</span> <span id="sfxText">SFX ON</span>
+            </button>
+          </div>
+          <!-- Audio: mobile -->
+          <div class="audio-btns-mobile">
+            <button id="muteBtn-m" class="btn btn--ghost btn--sm">
+              <span id="muteIcon-m">🔊</span><span id="muteText-m">MUS</span>
+            </button>
+            <button id="sfxBtn-m" class="btn btn--ghost btn--sm">
+              <span id="sfxIcon-m">🔊</span><span id="sfxText-m">SFX</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls: desktop -->
+        <div class="controls-panel stat-box">
+          <p id="i18n-controlsLabel" class="stat-label">CONTROLES</p>
+          <div id="i18n-controlsList" class="controls-list">
+            <p>← → Move Area</p>
+            <p>↑ Rotate Piece</p>
+            <p>↓ Soft Drop</p>
+            <p>SPACE Hard Drop</p>
+            <p>C / SHIFT Hold</p>
+            <p>Z / X CCW/CW</p>
+          </div>
+        </div>
+      </aside>
+    </div><!-- /layout -->
+  </div><!-- /game-wrapper -->
+
+  <!-- Launch Modular Engine -->
+  <script type="module">
+    import { TetrisEngine } from './js/engine.js?v=139';
+    import { TetrisRender } from './js/render.js?v=139';
+    import { TetrisAudio } from './js/audio.js?v=139';
+    import { UIController } from './js/ui.js?v=139';
+    import { GameController } from './js/Game.js?v=139';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const engine = new TetrisEngine();
+      const render = new TetrisRender(
+        document.getElementById('arcadeBackground'),
+        document.getElementById('gameCanvas'),
+        document.getElementById('nextCanvas'),
+        document.getElementById('holdCanvas'),
+        document.getElementById('celebrationCanvas'),
+        document.getElementById('tetrisShaderCanvas'),
+        document.getElementById('bgBufferCanvas')
+      );
+      const audio = new TetrisAudio();
+      const ui = new UIController(render, audio);
+      const game = new GameController(engine, render, audio, ui);
+      ui.bindGame(game);
+
+      // Expose for debugging
+      window.game = game;
+    });
+  </script>
+</body>
+
+</html>
