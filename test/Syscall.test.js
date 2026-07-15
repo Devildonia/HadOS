@@ -74,9 +74,9 @@ describe('Syscalls + permission consent (Fase 2/3)', () => {
     it('confines fs.* to the process fsRoot even when granted', async () => {
         const { host, guest } = connect({ fsRoot: 'C:\\DOCUMENTS' });
         await host.ready;
-        await expect(guest.syscall('fs.write', { path: 'C:\\WINDOWS\\SYSTEM', name: 'evil', content: 'x' }))
+        await expect(guest.syscall('fs.write', { path: 'C:\\HADOS\\SYSTEM', name: 'evil', content: 'x' }))
             .rejects.toThrow('fs access denied');
-        expect(VFS.resolve('C:\\WINDOWS\\SYSTEM\\evil')).toBeNull();
+        expect(VFS.resolve('C:\\HADOS\\SYSTEM\\evil')).toBeNull();
     });
 
     it('supports both directions without id collision (host->guest and guest->host)', async () => {

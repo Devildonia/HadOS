@@ -5,8 +5,8 @@
  */
 
 const CACHE_VERSION = '1.0.0';
-const CACHE_NAME = `win95-app-center-v${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `win95-dynamic-v${CACHE_VERSION}`;
+const CACHE_NAME = `hados-v${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `hados-dynamic-v${CACHE_VERSION}`;
 const MAX_DYNAMIC_ITEMS = 80;
 
 // Core shell — always cached on install, dynamically resolved from manifest

@@ -65,7 +65,7 @@ describe('SessionManager (Fase 5)', () => {
         Kernel.launch('alpha');
 
         SessionManager.saveNow();
-        expect(VFS.readFile('C:\\WINDOWS\\SYSTEM\\session.json')).toContain('alpha');
+        expect(VFS.readFile('C:\\HADOS\\SYSTEM\\session.json')).toContain('alpha');
 
         const read = SessionManager.read();
         expect(read.windows[0].geometry.left).toBe(5);
@@ -98,11 +98,11 @@ describe('SessionManager (Fase 5)', () => {
     });
 
     it('ignores a corrupted or wrong-version session file', async () => {
-        VFS.mkdir('C:\\WINDOWS', 'SYSTEM');
-        VFS.writeFile('C:\\WINDOWS\\SYSTEM', 'session.json', '{ not json');
+        VFS.mkdir('C:\\HADOS', 'SYSTEM');
+        VFS.writeFile('C:\\HADOS\\SYSTEM', 'session.json', '{ not json');
         expect(SessionManager.read()).toBeNull();
 
-        VFS.writeFile('C:\\WINDOWS\\SYSTEM', 'session.json', JSON.stringify({ version: 99, windows: [] }));
+        VFS.writeFile('C:\\HADOS\\SYSTEM', 'session.json', JSON.stringify({ version: 99, windows: [] }));
         expect(SessionManager.read()).toBeNull();
         expect(await SessionManager.restore()).toBe(0);
     });

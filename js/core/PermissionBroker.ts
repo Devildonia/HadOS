@@ -16,7 +16,7 @@ import { Utils } from '../utils';
 export type Decision = 'granted' | 'denied';
 export type ConsentPrompt = (appId: string, capability: string) => Promise<Decision>;
 
-const GRANTS_DIR = 'C:\\WINDOWS\\SYSTEM';
+const GRANTS_DIR = 'C:\\HADOS\\SYSTEM';
 const GRANTS_NAME = 'permissions.json';
 const GRANTS_PATH = `${GRANTS_DIR}\\${GRANTS_NAME}`;
 
@@ -130,7 +130,7 @@ export const PermissionBroker = (() => {
     }
 
     function persist(): void {
-        VFS.mkdir('C:\\WINDOWS', 'SYSTEM'); // idempotent; ensures the dir exists
+        VFS.mkdir('C:\\HADOS', 'SYSTEM'); // idempotent; ensures the dir exists
         VFS.writeFile(GRANTS_DIR, GRANTS_NAME, JSON.stringify(grants));
         void VFS.flush();
     }

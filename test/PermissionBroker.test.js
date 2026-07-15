@@ -42,7 +42,7 @@ describe('PermissionBroker (Fase 3)', () => {
         expect(PermissionBroker.peek('appA', 'fs:write')).toBe('granted');
         expect(PermissionBroker.peek('appA', 'notify')).toBe('denied');
         // And the store lives in the VFS.
-        expect(VFS.readFile('C:\\WINDOWS\\SYSTEM\\permissions.json')).toContain('fs:write');
+        expect(VFS.readFile('C:\\HADOS\\SYSTEM\\permissions.json')).toContain('fs:write');
     });
 
     it('treats a denied prompt (or throw) as denied', async () => {

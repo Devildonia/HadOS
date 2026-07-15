@@ -18,7 +18,7 @@ import {
     type AppManifest, type AppPackage,
 } from './AppPackage';
 
-const REGISTRY_DIR = 'C:\\WINDOWS\\SYSTEM';
+const REGISTRY_DIR = 'C:\\HADOS\\SYSTEM';
 const REGISTRY_NAME = 'packages.json';
 const REGISTRY_PATH = `${REGISTRY_DIR}\\${REGISTRY_NAME}`;
 const APPS_ROOT = 'C:\\APPS';

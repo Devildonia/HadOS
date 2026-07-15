@@ -1,7 +1,7 @@
 /**
- * WINDOWS 95 APP CENTER - VFS (Virtual File System)
- * Hierarchical data management with localStorage persistence
- * Version: 3.1 (ES Modules)
+ * HadOS — VFS (Virtual File System)
+ * Hierarchical tree kept in memory, persisted asynchronously to IndexedDB
+ * (see VFSStore) with binary content stored out-of-tree in OPFS (VFSBlobStore).
  */
 
 import { Utils } from '../utils';
@@ -75,8 +75,8 @@ export const VFS: IVFS = (() => {
         name: 'C:',
         type: 'dir',
         children: {
-            'WINDOWS': {
-                name: 'WINDOWS', type: 'dir', children: {
+            'HADOS': {
+                name: 'HADOS', type: 'dir', children: {
                     'SYSTEM': { name: 'SYSTEM', type: 'dir', children: {} },
                     'DESKTOP': {
                         name: 'DESKTOP',
@@ -189,6 +189,27 @@ export const VFS: IVFS = (() => {
         return initPromise;
     }
 
+    /**
+     * Renames the legacy `WINDOWS` system directory to `HADOS` in a tree loaded
+     * from storage (the HadOS rename). Idempotent and non-destructive: if a HADOS
+     * directory somehow already exists, the legacy one is left untouched rather
+     * than merged, so nothing is silently overwritten.
+     */
+    function migrateSystemDirName(): void {
+        if (!root?.children) return;
+        const legacy = root.children['WINDOWS'];
+        if (!legacy) return;
+        if (root.children['HADOS']) {
+            Utils.Logger.warn('VFS: both WINDOWS and HADOS exist; leaving the legacy dir in place');
+            return;
+        }
+        legacy.name = 'HADOS';
+        root.children['HADOS'] = legacy;
+        delete root.children['WINDOWS'];
+        Utils.Logger.log('VFS: migrated C:\\WINDOWS -> C:\\HADOS');
+        save();
+    }
+
     async function hydrate(): Promise<void> {
         const saved = await VFSStore.load();
         let needsReset = false;
@@ -203,6 +224,12 @@ export const VFS: IVFS = (() => {
                     throw new Error('invalid VFS schema');
                 }
                 root = parsed;
+
+                // HadOS rename: a tree written before the rename keeps its system
+                // directory under C:\WINDOWS. Move it to C:\HADOS so existing files
+                // (crash logs, permissions, packages, session, desktop shortcuts)
+                // survive. Runs once — afterwards there is no WINDOWS node left.
+                migrateSystemDirName();
 
                 // v1.0.7.5: Check if GAMES and DESKTOP are properly populated
                 const gamesFolder = root?.children ? root.children['GAMES'] : null;
@@ -255,11 +282,11 @@ export const VFS: IVFS = (() => {
                         });
                     }
 
-                    // Populate C:\WINDOWS\DESKTOP\GAMES
-                    let windows = root.children['WINDOWS'];
+                    // Populate C:\HADOS\DESKTOP\GAMES
+                    let windows = root.children['HADOS'];
                     if (!windows) {
-                        root.children['WINDOWS'] = { name: 'WINDOWS', type: 'dir', children: {} };
-                        windows = root.children['WINDOWS'];
+                        root.children['HADOS'] = { name: 'HADOS', type: 'dir', children: {} };
+                        windows = root.children['HADOS'];
                     }
                     if (windows && windows.children) {
                         let winDesktop = windows.children['DESKTOP'];
@@ -362,7 +389,7 @@ export const VFS: IVFS = (() => {
 
     /**
      * Resolves a path string to a VFS node
-     * @param {string} path - Absolute path (e.g. "C:\WINDOWS\SYSTEM")
+     * @param {string} path - Absolute path (e.g. "C:\HADOS\SYSTEM")
      */
     function resolve(path: string): IVFSNode | null {
         if (!path || path === 'C:' || path === 'C:\\') return root;

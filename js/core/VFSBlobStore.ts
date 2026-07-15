@@ -13,9 +13,12 @@
 
 type BlobBackend = 'opfs' | 'indexeddb' | 'memory';
 
-const BLOB_DB_NAME = 'win95-vfs-blobs';
+const BLOB_DB_NAME = 'hados-vfs-blobs';
 const BLOB_DB_VERSION = 1;
 const BLOB_STORE = 'blobs';
+
+/** Pre-HadOS blob store. Blobs are migrated lazily — see get(). */
+const LEGACY_BLOB_DB_NAME = 'win95-vfs-blobs';
 
 function opfsAvailable(): boolean {
     try {
@@ -68,21 +71,48 @@ async function opfsDelete(id: string): Promise<void> {
 // ── IndexedDB backend ─────────────────────────────────────────────────────────
 let blobDbPromise: Promise<IDBDatabase> | null = null;
 
+function openNamedBlobDB(name: string): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(name, BLOB_DB_VERSION);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(BLOB_STORE)) {
+                db.createObjectStore(BLOB_STORE);
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
 function openBlobDB(): Promise<IDBDatabase> {
-    if (!blobDbPromise) {
-        blobDbPromise = new Promise((resolve, reject) => {
-            const req = indexedDB.open(BLOB_DB_NAME, BLOB_DB_VERSION);
-            req.onupgradeneeded = () => {
-                const db = req.result;
-                if (!db.objectStoreNames.contains(BLOB_STORE)) {
-                    db.createObjectStore(BLOB_STORE);
-                }
-            };
-            req.onsuccess = () => resolve(req.result);
+    if (!blobDbPromise) blobDbPromise = openNamedBlobDB(BLOB_DB_NAME);
+    return blobDbPromise;
+}
+
+/**
+ * Looks a blob up in the pre-HadOS store. Blobs are migrated LAZILY (on the first
+ * read that misses) rather than copied wholesale at boot: a library of images
+ * could be hundreds of MB, and paying that on one startup to rename a database
+ * would be a poor trade.
+ */
+async function legacyIdbGetRaw(id: string): Promise<StoredBlob | null> {
+    try {
+        if (typeof indexedDB.databases === 'function') {
+            const names = (await indexedDB.databases()).map(d => d.name);
+            if (!names.includes(LEGACY_BLOB_DB_NAME)) return null;
+        }
+        const db = await openNamedBlobDB(LEGACY_BLOB_DB_NAME);
+        const rec = await new Promise<StoredBlob | null>((resolve, reject) => {
+            const req = db.transaction(BLOB_STORE, 'readonly').objectStore(BLOB_STORE).get(id);
+            req.onsuccess = () => resolve((req.result as StoredBlob | undefined) ?? null);
             req.onerror = () => reject(req.error);
         });
+        db.close();
+        return rec;
+    } catch {
+        return null;
     }
-    return blobDbPromise;
 }
 
 // Store as { buffer, type } rather than a raw Blob: ArrayBuffers structured-clone
@@ -103,15 +133,25 @@ async function idbPut(id: string, data: Blob): Promise<void> {
     });
 }
 
-function idbGet(id: string): Promise<Blob | null> {
-    return openBlobDB().then(db => new Promise<Blob | null>((resolve, reject) => {
+function idbGetRaw(id: string): Promise<StoredBlob | null> {
+    return openBlobDB().then(db => new Promise<StoredBlob | null>((resolve, reject) => {
         const req = db.transaction(BLOB_STORE, 'readonly').objectStore(BLOB_STORE).get(id);
-        req.onsuccess = () => {
-            const rec = req.result as StoredBlob | undefined;
-            resolve(rec ? new Blob([rec.buffer], { type: rec.type }) : null);
-        };
+        req.onsuccess = () => resolve((req.result as StoredBlob | undefined) ?? null);
         req.onerror = () => reject(req.error);
     }));
+}
+
+async function idbGet(id: string): Promise<Blob | null> {
+    const rec = await idbGetRaw(id);
+    if (rec) return new Blob([rec.buffer], { type: rec.type });
+
+    // Miss: the blob may predate the HadOS rename. Adopt it on the way out so the
+    // next read hits the new store and the legacy one drains over time.
+    const legacy = await legacyIdbGetRaw(id);
+    if (!legacy) return null;
+    const blob = new Blob([legacy.buffer], { type: legacy.type });
+    try { await idbPut(id, blob); } catch { /* keep serving the read regardless */ }
+    return blob;
 }
 
 function idbDelete(id: string): Promise<void> {

@@ -15,13 +15,13 @@ describe('Terminal CLI', () => {
         
         // Mock VFS implementation
         vi.spyOn(VFS, 'resolve').mockImplementation((path) => {
-            if (path === 'C:\\WINDOWS\\DESKTOP') {
+            if (path === 'C:\\HADOS\\DESKTOP') {
                 return { name: 'DESKTOP', type: 'dir', children: {} };
             }
-            if (path === 'C:\\WINDOWS\\DESKTOP\\test') {
+            if (path === 'C:\\HADOS\\DESKTOP\\test') {
                 return { name: 'test', type: 'dir', children: {} };
             }
-            if (path === 'C:\\WINDOWS\\DESKTOP\\test.txt') {
+            if (path === 'C:\\HADOS\\DESKTOP\\test.txt') {
                 return { name: 'test.txt', type: 'file', content: 'hello world' };
             }
             return null;
@@ -43,7 +43,7 @@ describe('Terminal CLI', () => {
         const term = new Terminal();
         const html = mockBody.innerHTML;
         expect(html).toContain('HadOS');
-        expect(html).toContain('C:\\WINDOWS\\DESKTOP&gt;');
+        expect(html).toContain('C:\\HADOS\\DESKTOP&gt;');
         term.terminate();
     });
 
@@ -55,7 +55,7 @@ describe('Terminal CLI', () => {
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
         const html = mockBody.innerHTML;
-        expect(html).toContain('C:\\WINDOWS\\DESKTOP\\test&gt;');
+        expect(html).toContain('C:\\HADOS\\DESKTOP\\test&gt;');
         term.terminate();
     });
 

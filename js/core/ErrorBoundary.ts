@@ -65,7 +65,7 @@ function _buildBSODContent(message: string, source: string, line: number | strin
 
         <div class="bsod-footer">
             <p>Press any key to restart, or wait 10 seconds for automatic reload.</p>
-            <p style="font-size:10px; opacity:0.6; margin-top:8px;">Crash details saved to C:\\WINDOWS\\SYSTEM\\crash.log</p>
+            <p style="font-size:10px; opacity:0.6; margin-top:8px;">Crash details saved to C:\\HADOS\\SYSTEM\\crash.log</p>
         </div>
     `;
 }
@@ -102,7 +102,7 @@ function showBSOD(message: string = 'Unknown error', source: string = '', line: 
 
     // Write crash details to simulated log best-effort
     try {
-        const crashLogPath = 'C:\\WINDOWS\\SYSTEM\\crash.log';
+        const crashLogPath = 'C:\\HADOS\\SYSTEM\\crash.log';
         const timestamp = new Date().toISOString();
         const divider = '----------------------------------------';
         const newEntry = `[${timestamp}] ${message}\nSource: ${source}:${line}\nStack: ${stack || 'N/A'}\n${divider}\n`;
@@ -122,7 +122,7 @@ function showBSOD(message: string = 'Unknown error', source: string = '', line: 
             fullLog = truncated;
         }
         
-        VFS.writeFile('C:\\WINDOWS\\SYSTEM', 'crash.log', fullLog);
+        VFS.writeFile('C:\\HADOS\\SYSTEM', 'crash.log', fullLog);
     } catch (e) {
         console.error('[ErrorBoundary] Failed to write crash log to VFS:', e);
     }

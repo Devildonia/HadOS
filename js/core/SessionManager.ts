@@ -14,7 +14,7 @@ import { Utils } from '../utils';
 import { Kernel } from './Kernel';
 import { Services } from './ServiceContainer';
 
-const SESSION_DIR = 'C:\\WINDOWS\\SYSTEM';
+const SESSION_DIR = 'C:\\HADOS\\SYSTEM';
 const SESSION_NAME = 'session.json';
 const SESSION_PATH = `${SESSION_DIR}\\${SESSION_NAME}`;
 const SESSION_VERSION = 1;
@@ -69,7 +69,7 @@ export const SessionManager = (() => {
     function saveNow(): void {
         if (restoring) return; // never clobber the session while replaying it
         const state = capture();
-        VFS.mkdir('C:\\WINDOWS', 'SYSTEM');
+        VFS.mkdir('C:\\HADOS', 'SYSTEM');
         VFS.writeFile(SESSION_DIR, SESSION_NAME, JSON.stringify(state));
         void VFS.flush();
     }

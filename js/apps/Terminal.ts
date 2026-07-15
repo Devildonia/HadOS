@@ -13,7 +13,7 @@ export class Terminal implements IWindowsApp {
     private promptEl: HTMLElement | null = null;
     private inputEl: HTMLInputElement | null = null;
 
-    private cwd: string = 'C:\\WINDOWS\\DESKTOP';
+    private cwd: string = 'C:\\HADOS\\DESKTOP';
     private history: string[] = [];
     private historyIndex: number = -1;
 

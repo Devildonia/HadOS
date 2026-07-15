@@ -63,7 +63,7 @@ describe('ErrorBoundary — showBSOD()', () => {
     describe('VFS logging', () => {
         it('saves crash log to VFS', () => {
             showBSOD('VFS Error message', 'test_vfs.js', 99, 'Dummy Stack');
-            const logContent = VFS.readFile('C:\\WINDOWS\\SYSTEM\\crash.log');
+            const logContent = VFS.readFile('C:\\HADOS\\SYSTEM\\crash.log');
             expect(logContent).not.toBeNull();
             expect(logContent).toContain('VFS Error message');
             expect(logContent).toContain('test_vfs.js:99');
@@ -76,18 +76,18 @@ describe('ErrorBoundary — showBSOD()', () => {
             __resetErrorBoundaryState();
             showBSOD('Second error', 'file2.js', 20, 'Stack 2');
 
-            const logContent = VFS.readFile('C:\\WINDOWS\\SYSTEM\\crash.log');
+            const logContent = VFS.readFile('C:\\HADOS\\SYSTEM\\crash.log');
             expect(logContent).toContain('First error');
             expect(logContent).toContain('Second error');
         });
 
         it('truncates log if it exceeds 50KB', () => {
             const padding = 'a'.repeat(52 * 1024); // 52KB (exceeds 50KB limit)
-            VFS.writeFile('C:\\WINDOWS\\SYSTEM', 'crash.log', padding);
+            VFS.writeFile('C:\\HADOS\\SYSTEM', 'crash.log', padding);
 
             showBSOD('Triggers truncation', 'file.js', 30, 'Stack trace');
 
-            const logContent = VFS.readFile('C:\\WINDOWS\\SYSTEM\\crash.log');
+            const logContent = VFS.readFile('C:\\HADOS\\SYSTEM\\crash.log');
             expect(logContent.length).toBeLessThan(51 * 1024);
             expect(logContent).toContain('Triggers truncation');
         });

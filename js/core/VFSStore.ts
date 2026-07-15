@@ -13,11 +13,18 @@
  * cleared. Phase 0.1 of the Web OS roadmap — see docs/webos-roadmap.
  */
 
-const LEGACY_KEY = 'win95_vfs_root';
-const DB_NAME = 'win95-vfs';
+const DB_NAME = 'hados-vfs';
 const DB_VERSION = 1;
 const STORE_NAME = 'kv';
 const ROOT_KEY = 'root';
+
+/**
+ * Pre-HadOS storage, read once and adopted so an existing install keeps its files
+ * across the rename. Ordered oldest-last: the IndexedDB tree superseded the
+ * localStorage one, which itself predates the IndexedDB migration.
+ */
+const LEGACY_DB_NAME = 'win95-vfs';        // Windows App Center ≤ v1.6.7
+const LEGACY_KEY = 'win95_vfs_root';       // even older: localStorage tree
 
 function idbAvailable(): boolean {
     try {
@@ -27,9 +34,9 @@ function idbAvailable(): boolean {
     }
 }
 
-function openDB(): Promise<IDBDatabase> {
+function openDB(name: string = DB_NAME): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        const req = indexedDB.open(name, DB_VERSION);
         req.onupgradeneeded = () => {
             const db = req.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -39,6 +46,25 @@ function openDB(): Promise<IDBDatabase> {
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
     });
+}
+
+/**
+ * Reads the tree from the pre-rename IndexedDB without creating it if absent.
+ * Opening a missing DB would otherwise materialise an empty one and leave litter.
+ */
+async function readLegacyDB(): Promise<string | null> {
+    try {
+        if (typeof indexedDB.databases === 'function') {
+            const names = (await indexedDB.databases()).map(d => d.name);
+            if (!names.includes(LEGACY_DB_NAME)) return null;
+        }
+        const db = await openDB(LEGACY_DB_NAME);
+        const value = await idbGet(db, ROOT_KEY);
+        db.close();
+        return value;
+    } catch {
+        return null;
+    }
 }
 
 function idbGet(db: IDBDatabase, key: string): Promise<string | null> {
@@ -60,6 +86,18 @@ function idbPut(db: IDBDatabase, key: string, value: string): Promise<void> {
     });
 }
 
+/** Drops a whole database (used to retire a legacy store once adopted). */
+function deleteDatabase(name: string): Promise<void> {
+    return new Promise((resolve) => {
+        try {
+            const req = indexedDB.deleteDatabase(name);
+            req.onsuccess = () => resolve();
+            req.onerror = () => resolve();   // best-effort: never block boot
+            req.onblocked = () => resolve();
+        } catch { resolve(); }
+    });
+}
+
 function idbDelete(db: IDBDatabase, key: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -76,6 +114,8 @@ export interface IVFSStore {
     save(data: string): Promise<void>;
     /** Removes the stored tree (reset). */
     clear(): Promise<void>;
+    /** Closes the cached connection (tests: an open handle blocks deleteDatabase). */
+    __closeForTesting(): Promise<void>;
     /** True when the durable backend is IndexedDB (false = localStorage fallback). */
     usingIndexedDB(): boolean;
 }
@@ -98,12 +138,22 @@ export const VFSStore: IVFSStore = (() => {
             const existing = await idbGet(db, ROOT_KEY);
             if (existing !== null) return existing;
 
-            // One-time migration from the legacy localStorage store.
-            const legacy = localStorage.getItem(LEGACY_KEY);
-            if (legacy !== null) {
-                await idbPut(db, ROOT_KEY, legacy);
+            // Nothing under the HadOS name yet — adopt an older store, newest first,
+            // so an install from before the rename keeps its files. Adopted data is
+            // written under the new name and the old source is cleared, so this runs
+            // exactly once.
+            const legacyDb = await readLegacyDB();
+            if (legacyDb !== null) {
+                await idbPut(db, ROOT_KEY, legacyDb);
+                await deleteDatabase(LEGACY_DB_NAME);
+                return legacyDb;
+            }
+
+            const legacyLocal = localStorage.getItem(LEGACY_KEY);
+            if (legacyLocal !== null) {
+                await idbPut(db, ROOT_KEY, legacyLocal);
                 localStorage.removeItem(LEGACY_KEY);
-                return legacy;
+                return legacyLocal;
             }
             return null;
         } catch {
@@ -135,5 +185,15 @@ export const VFSStore: IVFSStore = (() => {
         } catch { /* ignore */ }
     }
 
-    return { load, save, clear, usingIndexedDB: () => useIDB };
+    /**
+     * Drops the cached connection. Only for tests: an open IndexedDB handle blocks
+     * `deleteDatabase`, and the pending delete then stalls every later open().
+     */
+    async function __closeForTesting(): Promise<void> {
+        if (!dbPromise) return;
+        try { (await dbPromise).close(); } catch { /* already gone */ }
+        dbPromise = null;
+    }
+
+    return { load, save, clear, usingIndexedDB: () => useIDB, __closeForTesting };
 })();

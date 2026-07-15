@@ -16,15 +16,15 @@ describe('VFS (Virtual File System)', () => {
         const root = VFS.getRoot();
         expect(root).toBeDefined();
         expect(root.name).toBe('C:');
-        expect(root.children.WINDOWS).toBeDefined();
+        expect(root.children.HADOS).toBeDefined();
     });
 
     it('should resolve absolute paths correctly', () => {
-        const windowsNode = VFS.resolve('C:\\WINDOWS');
-        expect(windowsNode).toBeDefined();
-        expect(windowsNode.name).toBe('WINDOWS');
+        const systemDirNode = VFS.resolve('C:\\HADOS');
+        expect(systemDirNode).toBeDefined();
+        expect(systemDirNode.name).toBe('HADOS');
 
-        const systemNode = VFS.resolve('C:\\WINDOWS\\SYSTEM');
+        const systemNode = VFS.resolve('C:\\HADOS\\SYSTEM');
         expect(systemNode).toBeDefined();
         expect(systemNode.name).toBe('SYSTEM');
     });
@@ -35,10 +35,10 @@ describe('VFS (Virtual File System)', () => {
     });
 
     it('should be able to create directories', () => {
-        const success = VFS.mkdir('C:\\WINDOWS', 'TEMP');
+        const success = VFS.mkdir('C:\\HADOS', 'TEMP');
         expect(success).toBe(true);
 
-        const tempNode = VFS.resolve('C:\\WINDOWS\\TEMP');
+        const tempNode = VFS.resolve('C:\\HADOS\\TEMP');
         expect(tempNode).toBeDefined();
         expect(tempNode.type).toBe('dir');
     });
@@ -114,6 +114,6 @@ describe('VFS (Virtual File System)', () => {
         await VFS.init();
         const root = VFS.getRoot();
         expect(root.name).toBe('C:');
-        expect(root.children.WINDOWS).toBeDefined();
+        expect(root.children.HADOS).toBeDefined();
     });
 });

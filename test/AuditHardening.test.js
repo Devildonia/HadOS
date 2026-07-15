@@ -32,7 +32,7 @@ describe('Audit v1.6.6 — path safety helpers (M2)', () => {
         expect(Utils.isSafeRelativePath('assets/data.txt')).toBe(true);
         expect(Utils.isSafeRelativePath('index.html')).toBe(true);
         expect(Utils.isSafeRelativePath('../escape.txt')).toBe(false);
-        expect(Utils.isSafeRelativePath('C:\\WINDOWS\\evil')).toBe(false);
+        expect(Utils.isSafeRelativePath('C:\\HADOS\\evil')).toBe(false);
         expect(Utils.isSafeRelativePath('/etc/passwd')).toBe(false);
         expect(Utils.isSafeRelativePath('\\abs')).toBe(false);
         expect(Utils.isSafeRelativePath('')).toBe(false);
@@ -55,13 +55,13 @@ describe('Audit v1.6.6 — syscall hardening (M2, B2)', () => {
         await expect(guest.syscall('fs.write', {
             path: 'C:\\APPS\\test\\..\\..\\WINDOWS\\SYSTEM', name: 'evil', content: 'x',
         })).rejects.toThrow(/path traversal/);
-        expect(VFS.resolve('C:\\WINDOWS\\SYSTEM\\evil')).toBeNull();
+        expect(VFS.resolve('C:\\HADOS\\SYSTEM\\evil')).toBeNull();
     });
 
     it('M2: still rejects a plain outside-root path', async () => {
         const { host, guest } = connect({ fsRoot: 'C:\\APPS\\test' });
         await host.ready;
-        await expect(guest.syscall('fs.read', { path: 'C:\\WINDOWS\\SYSTEM\\crash.log' }))
+        await expect(guest.syscall('fs.read', { path: 'C:\\HADOS\\SYSTEM\\crash.log' }))
             .rejects.toThrow(/denied outside/);
     });
 
@@ -176,11 +176,11 @@ describe('Audit v1.6.6 — packaging (M2, O1)', () => {
         const res = await PackageManager.install(pkg({ 'index.html': 'x', '../../WINDOWS/evil.txt': 'pwn' }));
         expect(res.ok).toBe(false);
         expect(res.error).toMatch(/unsafe file path/);
-        expect(VFS.resolve('C:\\WINDOWS\\evil.txt')).toBeNull();
+        expect(VFS.resolve('C:\\HADOS\\evil.txt')).toBeNull();
     });
 
     it('M2: rejects a package with an absolute file key', async () => {
-        expect(validatePackage(pkg({ 'index.html': 'x', 'C:\\WINDOWS\\evil': 'pwn' })).error).toMatch(/unsafe file path/);
+        expect(validatePackage(pkg({ 'index.html': 'x', 'C:\\HADOS\\evil': 'pwn' })).error).toMatch(/unsafe file path/);
         expect(validatePackage(pkg({ 'index.html': 'x', '/etc/passwd': 'pwn' })).error).toMatch(/unsafe file path/);
     });
 

@@ -27,8 +27,8 @@ export interface IGameDef {
 const FOLDER_DEFS: IFolderDef[] = [
     {
         id: 'win-games-folder',
-        title: 'C:\\WINDOWS\\DESKTOP\\GAMES',
-        address: 'C:\\WINDOWS\\DESKTOP\\GAMES',
+        title: 'C:\\HADOS\\DESKTOP\\GAMES',
+        address: 'C:\\HADOS\\DESKTOP\\GAMES',
         icons: [
             { id: 'icon-vlrs-folder', name: 'Virtual Life Restart Simulator', emoji: '📂' },
             { id: 'icon-flappy-folder', name: 'Flappy Neon', emoji: '📂' },
