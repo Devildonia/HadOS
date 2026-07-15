@@ -9,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-5-%23646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r183-000000.svg?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
 [![PWA](https://img.shields.io/badge/PWA-offline--ready-5A0FC8.svg?style=flat&logo=pwa&logoColor=white)](https://vite-pwa-org.netlify.app/)
-[![Tests](https://img.shields.io/badge/tests-667%20passing-brightgreen.svg?style=flat)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-704%20passing-brightgreen.svg?style=flat)](#-testing)
 [![CI Status](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml)
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ---
 
-HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and a 667-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
+HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and a 704-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
 
 > [!NOTE]
 > HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/). See the [CHANGELOG](CHANGELOG.md).
@@ -56,8 +56,8 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🧠 **Real OS primitives, not a mockup.** A process `Kernel` that spawns genuinely **isolated processes** (Web Worker / sandboxed iframe) over an authenticated per-process IPC channel — a `while(true)` in an app can't freeze the desktop, and a watchdog kills it. Apps reach the system only through **mediated syscalls** gated by **user-consented capabilities**, and are confined to their own home directory.
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
-- ✅ **667 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
-- 🎨 **Intentional aesthetics.** Pixel-accurate Win95 chrome plus a "Modern" theme, driven by a token-based theme engine — no AI-default look.
+- ✅ **704 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
+- 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, acrylic and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
 - 🧩 **Built to be extended.** Auto-registering apps, a scaffolder (`npm run generate:app`), and a runtime plugin API.
 
 ---
@@ -91,7 +91,7 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - **Native Window Manager** — drag, resize, minimize, maximize, z-index focus, **Aero-style edge snapping**, and deterministic teardown.
 - **Session resume** — the desktop remembers which apps are open and their layout, and restores them on reload.
 - **Resource Manager** — owner-scoped registry (WebGL, audio, listeners, timers) with LIFO disposal for leak-free cleanup.
-- **Theme Engine** — switch between *Classic Win95* and *Modern* live; all UI is token-driven.
+- **Theme Engine** — switch between *HadOS* and *Modern* live; all UI is token-driven.
 - **Plugin API** — validate and register/unregister third-party apps at runtime through the Kernel.
 - **♿ Accessibility** — ARIA roles, Alt+Tab window switcher, focus management, and an `aria-live` screen-reader announcer.
 
@@ -101,13 +101,13 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - **Workshop** — customize skins, scale, and behavior.
 
 ### 🛠️ Built-in Applications
-📝 Notepad (VFS save/load, find & replace, multi-window) · 🎨 Paint (tools, color pickers, undo/redo) · 📂 File Explorer · 🌐 Internet Explorer (history + URL safety filter) · 📻 Webamp · ⚙️ Control Panel & Settings (HDR, wallpapers, themes, language) · 🖥️ **MS-DOS Prompt** (VFS-backed shell) · 📊 **Task Manager** (live process monitor) · 🧩 **Plugin Manager**.
+📝 Notepad (VFS save/load, find & replace, multi-window) · 🎨 Paint (tools, color pickers, undo/redo) · 📂 File Explorer · 🌐 Internet Explorer (history + URL safety filter) · 📻 Webamp · ⚙️ Control Panel & Settings (HDR, wallpapers, themes, language) · 🖥️ **Terminal** (VFS-backed shell) · 📊 **Task Manager** (live process monitor) · 🧩 **Plugin Manager**.
 
 ### 🕹️ Games Arcade
 Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life Restart Sim · 🐦 Flappy Neon · ⚽ Football Rush · 🔫 Ultimate DOOM · 🧱 Tetris Tryhard · 🔴 Chapas Prime (Three.js) · 🌙 Nocturna (Web Audio rhythm) · 👾 H.I.P. Game Boy (3D WebGL).
 
 ### 🌈 Advanced Visuals
-- **GLSL Wallpaper Engine** — multi-pass shaders for dynamic backgrounds.
+- **GLSL Wallpaper Engine** — multi-pass shaders for dynamic backgrounds, including a raymarched HadOS mark drawn entirely in GLSL.
 - **HDR Support** — detection and toggling of High Dynamic Range rendering.
 - **BIOS & Boot** — POST screen that reports your real hardware (CPU, GPU, memory, storage quota), then a splash whose progress bar waits on the actual boot.
 
@@ -183,7 +183,7 @@ Use `↑` / `↓` to navigate command history.
 
 ## ✅ Testing
 
-**667 tests across 58 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
+**704 tests across 60 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
 ```bash
 npm test              # watch mode

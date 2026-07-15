@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-15
+
+The release where HadOS stops wearing Windows. The Start button, the window chrome, the taskbar,
+the wallpaper and the boot screen were all still Microsoft's — by logo, by palette, or by
+pretending to be a 1995 Pentium. All four are now the system's own.
+
 ### Added
 
 - **A wallpaper of our own.** `SHADER_HADOS` raymarches the HadOS mark: two uprights and a
