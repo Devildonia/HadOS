@@ -666,7 +666,7 @@ class Notepad {
 
     private _showAbout(): void {
         const notify = Services.get('Notify') as INotify | undefined;
-        const msg = 'Notepad v5.0 — Windows App Center';
+        const msg = 'Notepad v5.0 — HadOS';
         if (notify) notify.info(msg);
         else Utils.Logger.log('[Notepad]', msg);
     }

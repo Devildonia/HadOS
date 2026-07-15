@@ -30,7 +30,7 @@ export class Terminal implements IWindowsApp {
 
     private init(): void {
         this.windowId = WindowFactory.create({
-            title: 'MS-DOS Prompt',
+            title: 'Terminal',
             width: 560,
             height: 360,
             resizable: true,
@@ -43,8 +43,8 @@ export class Terminal implements IWindowsApp {
 
         this.setupLayout();
         
-        this.writeOutput('Microsoft(R) Windows 95');
-        this.writeOutput('(C)Copyright Microsoft Corp 1981-1995.');
+        this.writeOutput('HadOS');
+        this.writeOutput(`(C) ${new Date().getFullYear()} HaDeS (DeViLDoNia). MIT licensed.`);
         this.writeOutput('');
 
         this.updatePrompt();
@@ -234,8 +234,8 @@ export class Terminal implements IWindowsApp {
             this.writeOutput('  ver          - Print version info');
             this.writeOutput('  help         - Show this help menu');
         } else if (cmd === 'ver') {
-            this.writeOutput('MS-DOS Prompt [Version 4.00.950]');
-            this.writeOutput(`Windows App Center version: ${CONFIG.APP?.VERSION || '1.6.7'}`);
+            this.writeOutput(`HadOS Terminal [Version ${CONFIG.APP?.VERSION || '1.0.0'}]`);
+            this.writeOutput(`HadOS version: ${CONFIG.APP?.VERSION || '1.0.0'}`);
         } else if (cmd === 'cls' || cmd === 'clear') {
             if (this.outputContainer) this.outputContainer.innerHTML = '';
         } else if (cmd === 'cd') {
@@ -368,7 +368,7 @@ export class Terminal implements IWindowsApp {
 
 // Auto-register
 Kernel.registerApp('terminal', Terminal, {
-    name: 'MS-DOS Prompt',
+    name: 'Terminal',
     icon: '🖥️',
     description: 'Command line interface.',
     singleton: false

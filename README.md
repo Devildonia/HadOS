@@ -1,33 +1,33 @@
 <div align="center">
 
-# 🖥️ Windows App Center
+# 🖥️ HadOS
 
-**A high-fidelity Windows 95/98 desktop simulator & modular prototyping lab, built for the modern web.**
+**A Web OS with a retro-90s soul: isolated processes, mediated syscalls and consented capabilities — running entirely in your browser.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-%23646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r183-000000.svg?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
 [![PWA](https://img.shields.io/badge/PWA-offline--ready-5A0FC8.svg?style=flat&logo=pwa&logoColor=white)](https://vite-pwa-org.netlify.app/)
-[![Tests](https://img.shields.io/badge/tests-464%20passing-brightgreen.svg?style=flat)](#-testing)
-[![CI Status](https://github.com/DeViLDoNia/windows-app-center/actions/workflows/ci.yml/badge.svg)](https://github.com/DeViLDoNia/windows-app-center/actions/workflows/ci.yml)
-
-### ▶️ **[Live Demo](https://hades-aka-devildonia.itch.io/windows-app-centre)**
+[![Tests](https://img.shields.io/badge/tests-667%20passing-brightgreen.svg?style=flat)](#-testing)
+[![CI Status](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml)
 
 <p align="center">
-  <a href="https://hades-aka-devildonia.itch.io/windows-app-centre">
-    <img src="docs/screenshots/hero.gif" alt="Windows App Center — dragging the 3D physics ragdoll around the Win95 desktop" width="760">
-  </a>
+  <img src="docs/screenshots/hero.gif" alt="HadOS — dragging the 3D physics ragdoll around the desktop" width="760">
 </p>
+
+<sub>No HadOS demo is published yet. Its predecessor, **Windows App Center** (v1.6.7), is playable at
+<a href="https://hades-aka-devildonia.itch.io/windows-app-centre">itch.io</a> and archived at
+<a href="https://github.com/Devildonia/windows-app-center">Devildonia/windows-app-center</a>.</sub>
 
 </div>
 
 ---
 
-Windows App Center is a fully functional desktop environment that runs entirely in the browser — but under the retro Win95 chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes**, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and a 626-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
+HadOS is a fully functional desktop environment that runs entirely in the browser — but under the retro chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and a 667-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
 
 > [!NOTE]
-> Audited for stability, security, and performance (July 2026) — all findings remediated with regression tests. Since v1.6.6 the system follows a 6-phase **Web OS** architecture; per-phase design notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/). See the [CHANGELOG](CHANGELOG.md) for the full version history.
+> HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/). See the [CHANGELOG](CHANGELOG.md).
 
 ## 📋 Table of Contents
 - [Why this exists](#-why-this-exists)
@@ -56,7 +56,7 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🧠 **Real OS primitives, not a mockup.** A process `Kernel` that spawns genuinely **isolated processes** (Web Worker / sandboxed iframe) over an authenticated per-process IPC channel — a `while(true)` in an app can't freeze the desktop, and a watchdog kills it. Apps reach the system only through **mediated syscalls** gated by **user-consented capabilities**, and are confined to their own home directory.
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
-- ✅ **660 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
+- ✅ **667 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
 - 🎨 **Intentional aesthetics.** Pixel-accurate Win95 chrome plus a "Modern" theme, driven by a token-based theme engine — no AI-default look.
 - 🧩 **Built to be extended.** Auto-registering apps, a scaffolder (`npm run generate:app`), and a runtime plugin API.
 
@@ -64,11 +64,11 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 
 ## 📸 Screenshots
 
-| Classic Win95 | Modern (Windows UI) |
+| Classic theme | Modern theme (HadOS UI) |
 |:---:|:---:|
-| ![Classic Win95 desktop](docs/screenshots/desktop-win95.png) | ![Modern Windows UI desktop](docs/screenshots/desktop-modern.png) |
-| **Start Menu** | **Multitasking — Task Manager & MS-DOS Prompt** |
-| ![Start Menu](docs/screenshots/start-menu-win95.png) | ![Task Manager and MS-DOS Prompt windows](docs/screenshots/apps-win95.png) |
+| ![Classic Win95 desktop](docs/screenshots/desktop-win95.png) | ![Modern HadOS UI desktop](docs/screenshots/desktop-modern.png) |
+| **Start Menu** | **Multitasking — Task Manager & Terminal** |
+| ![Start Menu](docs/screenshots/start-menu-win95.png) | ![Task Manager and Terminal windows](docs/screenshots/apps-win95.png) |
 | **3D Physics Ragdoll** | **Games Arcade (sandboxed)** |
 | ![3D physics ragdoll pet on the desktop](docs/screenshots/ragdoll-3d.png) | ![Chapas Prime game running in a sandboxed window](docs/screenshots/games-arcade.png) |
 
@@ -133,8 +133,8 @@ Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life 
 ### Installation
 ```bash
 # 1. Clone
-git clone https://github.com/DeViLDoNia/windows-app-center.git
-cd windows-app-center
+git clone https://github.com/Devildonia/HadOS.git
+cd HadOS
 
 # 2. Install
 npm install
@@ -179,7 +179,7 @@ Use `↑` / `↓` to navigate command history.
 
 ## ✅ Testing
 
-**660 tests across 57 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
+**667 tests across 58 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
 ```bash
 npm test              # watch mode
@@ -252,7 +252,7 @@ confined to the app's home directory.
 ## 📁 Project Structure
 
 ```text
-windows-app-center/
+HadOS/
 ├─ js/
 │  ├─ core/        # Kernel, EventBus, Store, Service Container, Ragdoll3D core…
 │  │  ├─ ipc/      # versioned process IPC protocol

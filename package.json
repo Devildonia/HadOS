@@ -1,8 +1,8 @@
 {
-  "name": "windows-app-center",
-  "version": "1.6.7",
+  "name": "hados",
+  "version": "1.0.0",
   "type": "module",
-  "description": "Windows 95 style simulator and prototyping environment. A sandbox for developing modular features (VFS, 3D Physics) ported to other projects.",
+  "description": "HadOS — a Web OS in the browser: isolated processes, mediated syscalls, user-consented capabilities, packaged apps and an async IndexedDB/OPFS file system.",
   "main": "main.ts",
   "scripts": {
     "dev": "vite",

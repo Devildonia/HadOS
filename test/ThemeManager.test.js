@@ -101,13 +101,13 @@ describe('ThemeManager', () => {
 
             // Modern theme text
             themeManager.applyTheme('modern');
-            expect(startMenuTitle.textContent).toBe('Windows UI');
-            expect(welcomeText.textContent).toBe('Welcome to Windows UI App Center v1.6.7!');
+            expect(startMenuTitle.textContent).toBe('HadOS UI');
+            expect(welcomeText.textContent).toBe('Welcome to HadOS UI v1.0.0!');
 
             // Win95 theme text
             themeManager.applyTheme('win95');
-            expect(startMenuTitle.textContent).toBe('Windows 95');
-            expect(welcomeText.textContent).toBe('Welcome to Windows App Center v1.6.7!');
+            expect(startMenuTitle.textContent).toBe('HadOS');
+            expect(welcomeText.textContent).toBe('Welcome to HadOS v1.0.0!');
         });
     });
 });

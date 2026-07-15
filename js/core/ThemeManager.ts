@@ -72,7 +72,7 @@ export class ThemeManager {
         // Update Start Menu Text
         const startMenuTitle = document.getElementById('start-menu-title');
         if (startMenuTitle) {
-            startMenuTitle.textContent = themeName === 'modern' ? 'Windows UI' : 'Windows 95';
+            startMenuTitle.textContent = themeName === 'modern' ? 'HadOS UI' : 'HadOS';
         }
 
         // Update Sticky Note Text

@@ -46,7 +46,7 @@ function _buildBSODContent(message: string, source: string, line: number | strin
         : '    (no stack trace available)';
 
     return `
-        <h1>Windows App Center</h1>
+        <h1>HadOS</h1>
 
         <p>A fatal exception <strong>0E</strong> has occurred at <strong>${safe(source)}:${safe(line)}</strong>.</p>
         <p>The current application will be terminated.</p>

@@ -39,7 +39,7 @@ global.fetch = vi.fn((url) => {
 // Mock CONFIG
 // ============================================
 global.CONFIG = {
-    APP: { VERSION: '1.6.7', NAME: 'Windows App Center', LANGUAGE: 'en' },
+    APP: { VERSION: '1.0.0', NAME: 'HadOS', LANGUAGE: 'en' },
     DEBUG: {
         ENABLED: true,
         LOG_EVENTS: true,

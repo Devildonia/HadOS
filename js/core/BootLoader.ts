@@ -45,7 +45,7 @@ const BootLoader: IBootLoader = (() => {
             'Keyboard... Detected',
             'Mouse... Detected',
             '',
-            `Windows App Center v${CONFIG.APP.VERSION}`,
+            `HadOS v${CONFIG.APP.VERSION}`,
             'Copyright (C) 2026 HaDeS (A.K.A. DeViLDoNia)',
             '',
             'Press DEL to enter SETUP, ESC to skip POST',

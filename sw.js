@@ -4,7 +4,7 @@
  * v2.0 — Fase 4 Refactor
  */
 
-const CACHE_VERSION = '1.6.7';
+const CACHE_VERSION = '1.0.0';
 const CACHE_NAME = `win95-app-center-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `win95-dynamic-v${CACHE_VERSION}`;
 const MAX_DYNAMIC_ITEMS = 80;

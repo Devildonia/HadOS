@@ -10,7 +10,7 @@ import pkg from '../package.json';
 const CONFIG = {
     // Application metadata
     APP: {
-        NAME: 'Windows App Center',
+        NAME: 'HadOS',
         VERSION: pkg.version,  // ← única fuente de verdad (antes hardcodeado '1.3.0')
         LANGUAGE: 'en'
     } as const,

@@ -42,7 +42,7 @@ describe('Terminal CLI', () => {
     it('should boot and show welcome text and prompt', () => {
         const term = new Terminal();
         const html = mockBody.innerHTML;
-        expect(html).toContain('Microsoft(R) Windows 95');
+        expect(html).toContain('HadOS');
         expect(html).toContain('C:\\WINDOWS\\DESKTOP&gt;');
         term.terminate();
     });
