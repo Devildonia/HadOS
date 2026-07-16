@@ -152,7 +152,7 @@
 /* v1.0.7.5: Fix double color in explorer windows */
 .window-body.explorer-window {
     padding: 0;
-    background: white;
+    background: var(--window-content-bg);
 }
 
 /* Toolbar and Address bar = gray (Windows 95 authentic) */

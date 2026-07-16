@@ -211,15 +211,15 @@ export function buildDynamicFolderWindows(): void {
 
         const bodyHtml = `
             <div class="explorer-window" style="height: 100%; display: flex; flex-direction: column;">
-                <div class="explorer-toolbar" style="display: flex; align-items: center; background: #c0c0c0; padding: 4px; border-bottom: 1px solid #808080;">
+                <div class="explorer-toolbar" style="display: flex; align-items: center;">
                     ${backBtnHtml}
                     <span style="padding: 2px 5px; font-size: 11px; margin-left: 10px;" data-i18n="folder.menu">📁 File 📝 Edit 👁️ View ❓ Help</span>
                 </div>
-                <div class="explorer-address" style="display: flex; align-items: center; padding: 4px; background: #c0c0c0; border-bottom: 1px solid #808080;">
+                <div class="explorer-address" style="display: flex; align-items: center;">
                     <span style="font-weight: bold; margin-right: 5px; font-size: 11px;" data-i18n="folder.address">Address:</span>
-                    <input type="text" value="${def.address}" readonly style="flex: 1; border: 1px solid #808080; padding: 2px 4px; font-family: 'MS Sans Serif', Arial; font-size: 11px;">
+                    <input type="text" value="${def.address}" readonly>
                 </div>
-                <div class="explorer-content" style="flex: 1; background: white; padding: 10px; display: flex; flex-wrap: wrap; gap: 20px; overflow-y: auto; align-content: flex-start;">
+                <div class="explorer-content" style="flex: 1; display: flex; flex-wrap: wrap; overflow-y: auto;">
                     ${iconsHtml}
                 </div>
             </div>

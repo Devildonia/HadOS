@@ -565,6 +565,110 @@ body.theme-hados .icon:hover .icon-box {
     border-radius: 8px;
 }
 
+/* ===== LEGACY APP SURFACES =====
+ * These apps predate the HadOS palette and still carry Windows 95 colours in
+ * their component styles (and, for the workshop, generated inline markup).
+ * Keep their layouts, but make every surrounding surface use the same dark
+ * hierarchy as FileX.
+ */
+body.theme-hados .explorer-toolbar,
+body.theme-hados .explorer-address {
+    background: var(--window-bg);
+    border-color: var(--hados-line);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .explorer-content {
+    background: var(--window-content-bg);
+}
+
+body.theme-hados .explorer-icon {
+    color: var(--os-text-color);
+}
+
+body.theme-hados .explorer-icon:hover {
+    background: rgba(59, 155, 240, 0.16);
+}
+
+body.theme-hados .ie-toolbar,
+body.theme-hados .ie-button-bar {
+    background: var(--window-bg);
+    border-color: var(--hados-line);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .ie-btn {
+    background: var(--control-bg);
+    color: var(--os-text-color);
+    border: 1px solid var(--hados-line);
+    border-radius: 6px;
+}
+
+body.theme-hados .ie-btn:active {
+    border-color: var(--accent-color);
+    transform: none;
+}
+
+body.theme-hados .ie-address-bar input,
+body.theme-hados .ie-content {
+    background: var(--window-content-bg);
+    border-color: var(--hados-line);
+    color: var(--os-text-color);
+}
+
+body.theme-hados .ie-menu-bar span:hover {
+    background: var(--hados-blue-deep);
+}
+
+body.theme-hados .paint-body,
+body.theme-hados .paint-toolbar,
+body.theme-hados .paint-canvas-container,
+body.theme-hados .paint-color-bar {
+    background: var(--window-bg);
+    border-color: var(--hados-line);
+}
+
+body.theme-hados #win-paint .paint-tool-btn {
+    background: var(--control-bg);
+    color: var(--os-text-color);
+    border: 1px solid var(--hados-line);
+    border-radius: 4px;
+}
+
+body.theme-hados .workshop-tabs,
+body.theme-hados #win-ragdoll-skins .window-body {
+    background: var(--window-bg) !important;
+    border-color: var(--hados-line) !important;
+    color: var(--os-text-color);
+}
+
+body.theme-hados #win-ragdoll-skins .tab-btn {
+    background: var(--control-bg) !important;
+    border-color: var(--hados-line) !important;
+    color: var(--os-text-color);
+}
+
+body.theme-hados #win-ragdoll-skins .tab-btn.active {
+    background: #243044 !important;
+    border-bottom-color: #243044 !important;
+}
+
+body.theme-hados #win-ragdoll-skins .drop-zone,
+body.theme-hados #win-ragdoll-skins .skin-grid + div,
+body.theme-hados #win-ragdoll-skins [style*="background: #fff"] {
+    background: var(--window-content-bg) !important;
+    border-color: var(--hados-line) !important;
+    color: var(--os-text-color);
+}
+
+body.theme-hados #win-ragdoll-skins [style*="#808080"] {
+    border-color: var(--hados-line) !important;
+}
+
+body.theme-hados #win-ragdoll-skins #selected-part-label {
+    color: var(--hados-blue-light) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     body.theme-hados .hados-btn,

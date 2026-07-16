@@ -67,7 +67,9 @@
     text-align: center;
     word-wrap: break-word;
     max-width: 100px;
-    color: #000000;
+    /* Folder labels must follow the active surface. A hardcoded black value
+       made every name disappear against HadOS's dark file pane. */
+    color: var(--os-text-color);
 }
 
 /* ===== README CONTENT ===== */
@@ -88,7 +90,7 @@
 /* ===== EXPLORER STYLES ===== */
 .explorer-address input {
     flex: 1;
-    border: 1px solid #808080;
+    border: 1px solid var(--border-dark);
     padding: 2px 4px;
     font-family: 'MS Sans Serif', Arial;
     font-size: 11px;
