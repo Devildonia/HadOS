@@ -15,17 +15,29 @@ Nothing here is speculative: every claim was measured or read out of the running
 
 ## Visual — leftover Windows 95 in the HadOS theme
 
-### 1. The tray toggles turn Windows 95 grey when active
+### 1. ~~The tray toggles turn Windows 95 grey when active~~ — FIXED
 
-**Evidence:** measured, `states-class` baseline — `#ragdollToggle.active` computes to
-`background-color: rgb(176, 176, 176)` with `border-width: 2px` / `border-color: rgb(255,255,255)`.
+`theme-hados.css` now styles `.ragdoll-pet-btn.active` (accent wash plus the underline the taskbar
+uses for a running app) and the momentary `:active` press separately. Verified: the toggled-on
+state went from `rgb(176,176,176)` with a 2px inset white border to the accent, and nothing else
+moved.
 
-Turn the pet or HDR on and the button becomes `#b0b0b0` with an inset white border, sitting on the
-dark taskbar. `.ragdoll-pet-btn.active` scores (0,2,0) and beats the theme's background source,
-`button:not(.window-btn)` at (0,1,1) — so unlike the rest of that block, this one is *live*.
+### 1b. Disabled text is near-invisible in the modern theme
 
-**Where:** [`css/chrome/tray-buttons.css`](../css/chrome/tray-buttons.css) · fix belongs in
-`theme-hados.css`, which currently styles `.ragdoll-text` but not the button's active state.
+**Evidence:** measured — removing `.ragdoll-pet-btn.disabled { color: #808080 }` made
+`#hdr-toggle` compute to `color: rgb(229,229,229)` under `theme-modern`, on a `#f9f9f9` button.
+
+`chrome/controls.css` styles disabled buttons with `color: var(--border-dark)` — a **border** token
+used as **text**. Under Win95 that token was `#808080`, which passed for grey disabled text by
+accident; `theme-modern` maps it to `#e5e5e5` and the label disappears. `theme-hados` is unaffected
+(it sets its own `button:disabled` colour).
+
+This is why the tray button still hardcodes `color: #808080`: it is the only thing keeping that
+label readable in modern. The real fix is a proper disabled-text token, which is part of the
+modern-theme work.
+
+**Where:** [`css/chrome/controls.css`](../css/chrome/controls.css),
+[`public/css/themes/theme-modern.css`](../public/css/themes/theme-modern.css) (`--border-dark`).
 
 ### 2. The in-app menu bar is still Win95 underneath
 
@@ -56,16 +68,12 @@ the whole `winui/` set for modern. Being replaced gradually, by decision.
 
 ## Dead code
 
-### 5. Most of `.ragdoll-pet-btn` never applies
+### 5. ~~Most of `.ragdoll-pet-btn` never applies~~ — PRUNED
 
-**Evidence:** measured — the button's real background, colour, border, padding and font all come
-from the theme. `button:not(.window-btn)` in `chrome/controls.css` scores (0,1,1) and beats the
-class's (0,1,0). Only `height`, `margin` and `gap` survive from that partial.
-
-Kept verbatim on purpose during the consolidation: pruning is a behaviour change and should be
-judged against the baseline in its own commit, not smuggled into a file move.
-
-**Where:** [`css/chrome/tray-buttons.css`](../css/chrome/tray-buttons.css).
+The Windows 95 background, border, font, padding and hover tint are gone; the partial is layout
+only. Two declarations that *looked* dead were kept because the baseline proved they are not:
+`transition: none` is live under `theme-modern` (which sets no transition of its own), and
+`color: #808080` on `.disabled` is the only thing keeping that label readable there — see **1b**.
 
 ### 6. The pet button's mobile padding has never applied
 

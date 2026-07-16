@@ -460,6 +460,29 @@ body.theme-hados .ragdoll-text {
     font-size: 12px;
 }
 
+/* ===== TRAY TOGGLES (HDR, pet) =====
+ * chrome/tray-buttons.css still dresses these in Windows 95 for their pressed and
+ * toggled-on states, and unlike the rest of that partial those two declarations
+ * are live: `.ragdoll-pet-btn.active` scores (0,2,0) and outranks the (0,1,1)
+ * that supplies the button's normal look. Switching the pet on turned the button
+ * #b0b0b0 with an inset white border, on a dark taskbar.
+ *
+ * Toggled-on borrows the taskbar's language for a running app — accent wash plus
+ * an underline — so "this is on" reads the same everywhere in the system.
+ */
+body.theme-hados .ragdoll-pet-btn.active {
+    background: rgba(59, 155, 240, 0.16);
+    border: 1px solid var(--accent-color);
+    color: var(--os-text-color);
+    box-shadow: inset 0 -2px 0 var(--accent-color);
+}
+
+/* Momentary press, distinct from toggled-on. */
+body.theme-hados .ragdoll-pet-btn:active:not(.active) {
+    background: rgba(127, 210, 255, 0.2);
+    border: 1px solid var(--hados-line-strong);
+}
+
 body.theme-hados .notepad-menu-label {
     font-size: 12px;
     padding: 3px 8px;

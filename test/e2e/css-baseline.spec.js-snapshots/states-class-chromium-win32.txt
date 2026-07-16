@@ -5,7 +5,7 @@
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 135.516px
+  width: 133.516px
   height: 24px
   min-height: 24px
   max-height: none
@@ -16,13 +16,13 @@
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgb(176, 176, 176)
+  background-color: rgba(59, 155, 240, 0.16)
   background-image: none
-  border-width: 2px
-  border-style: inset
-  border-color: rgb(255, 255, 255)
+  border-width: 1px
+  border-style: solid
+  border-color: rgb(59, 155, 240)
   border-radius: 6px
-  box-shadow: none
+  box-shadow: rgb(59, 155, 240) 0px -2px 0px 0px inset
   outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
   font-size: 13px
@@ -97,7 +97,7 @@
   overflow: visible
   visibility: visible
   opacity: 0.6
-  width: 116.406px
+  width: 114.406px
   height: 24px
   min-height: 24px
   max-height: none
@@ -108,13 +108,13 @@
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgb(176, 176, 176)
+  background-color: rgba(59, 155, 240, 0.16)
   background-image: none
-  border-width: 2px
-  border-style: inset
-  border-color: rgb(255, 255, 255)
+  border-width: 1px
+  border-style: solid
+  border-color: rgb(59, 155, 240)
   border-radius: 6px
-  box-shadow: none
+  box-shadow: rgb(59, 155, 240) 0px -2px 0px 0px inset
   outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
   font-size: 13px

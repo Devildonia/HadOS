@@ -2,52 +2,40 @@
  * The buttons in the system tray: the HDR toggle and the pet toggle. The class
  * says "ragdoll-pet-btn", but both wear it and neither is the pet.
  *
- * This is the consolidation of three copies that accumulated over time — one in
- * system/ragdoll.css, one in the tray/clock section, one here. They disagreed
- * with each other (gap 5px vs 6px, hover #d4d4d4 vs #d0d0d0, three different
- * borders); this partial sits last in the manifest, so its values were the ones
- * that won. What follows is exactly that resolved state, so the merge changes
- * nothing that was rendering.
+ * This partial once carried three copies of a full Windows 95 button — greys,
+ * MS Sans Serif, outset/inset borders, hover tints. Almost none of it applied:
+ * `button:not(.window-btn)` in chrome/controls.css scores (0,1,1) and beats this
+ * selector's (0,1,0), so the theme has been supplying the background, colour,
+ * border, padding and font all along. Everything dead was removed; what is left
+ * is what the baseline shows actually reaching the element.
  *
- * Most of it is already dead: `button:not(.window-btn)` in chrome/controls.css
- * scores (0,1,1) and beats this selector's (0,1,0), so the theme supplies the
- * real background, colour, border, padding and font. Only height, margin and gap
- * survive from here. They are kept verbatim rather than pruned, because pruning
- * is a behaviour change that deserves its own commit judged against the baseline,
- * not something smuggled into a file move.
+ * Layout, not looks: the appearance belongs to the theme. Putting a colour back
+ * here means fighting controls.css on specificity, which is exactly how the pet
+ * toggle ended up rendering as a Windows 95 button on a dark taskbar.
  */
 .ragdoll-pet-btn {
     display: flex;
     align-items: center;
     gap: 6px;
     height: 24px;
-    padding: 2px 8px;
     margin: 2px;
-    background: #c0c0c0;
-    border: 2px outset #ffffff;
     cursor: pointer;
-    font-family: 'MS Sans Serif', 'Tahoma', Arial, sans-serif;
-    font-size: 11px;
-    /* From the ragdoll.css copy; nothing later overrode either. */
-    transition: none;
     user-select: none;
-}
-
-.ragdoll-pet-btn:hover {
-    background: #d0d0d0;
-}
-
-/* :active and .active resolve identically today. The `border` shorthand here
-   overrides the border-color the older copies set, and their padding survives
-   because nothing later touches it. */
-.ragdoll-pet-btn:active,
-.ragdoll-pet-btn.active {
-    border: 2px inset #ffffff;
-    background: #b0b0b0;
-    padding: 4px 7px 2px 9px;
+    /* Dead under theme-hados, which sets its own. Live under theme-modern, which
+       sets none — so removing it would let these buttons animate there. */
+    transition: none;
 }
 
 .ragdoll-pet-btn.disabled {
+    /* HDRManager adds .disabled (and the disabled attribute) when the display
+       cannot do HDR.
+       This colour looks like another Win95 leftover and is not: under
+       theme-modern it is the only thing keeping the label readable. Dropping it
+       falls through to chrome/controls.css's `button:disabled { color:
+       var(--border-dark) }`, and modern maps --border-dark to #e5e5e5 — a border
+       colour used as text, which renders near-white on a near-white button.
+       That is the real bug; see docs/known-issues.md. Until it is fixed, this
+       stays. */
     color: #808080;
     cursor: not-allowed;
     opacity: 0.6;

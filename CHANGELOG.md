@@ -6,7 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The tray toggles turned Windows 95 grey when switched on.** Enabling the pet or HDR painted the
+  button `#b0b0b0` with an inset white border, on a dark taskbar: `.ragdoll-pet-btn.active` scores
+  (0,2,0) and outranked the (0,1,1) rule that supplies the button's normal look. The theme now owns
+  that state — an accent wash plus the same underline the taskbar uses for a running app — and
+  distinguishes the momentary `:active` press from being toggled on.
+- **A disabled button no longer lights up on hover.** The theme's hover rule excludes
+  `:disabled`, but the Windows 95 one did not, so hovering the HDR toggle on a display without HDR
+  still tinted it.
+
 ### Changed
+
+- **`.ragdoll-pet-btn` is layout only now.** The Win95 background, border, font, padding and hover
+  tint are gone — none of them ever reached the element, because `button:not(.window-btn)` outranks
+  the class. Two declarations that looked equally dead were kept, because the baseline proved they
+  are not: `transition: none` is live under the modern theme, and `color: #808080` on `.disabled`
+  is the only thing keeping that label readable there — modern styles disabled text with
+  `var(--border-dark)`, a *border* token that maps to `#e5e5e5`. Recorded in
+  [`docs/known-issues.md`](docs/known-issues.md).
 
 - **The browser no longer parses the stylesheet twice.** `index.html` linked `/style.css` while
   `main.ts` also imported it, so development loaded **422 rules** it did not need — Tailwind's
