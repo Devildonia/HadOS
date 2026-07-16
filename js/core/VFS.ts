@@ -107,7 +107,7 @@ export const VFS: IVFS = (() => {
             },
             'DOCUMENTS': {
                 name: 'DOCUMENTS', type: 'dir', children: {
-                    'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS v1.0.1' }
+                    'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS v1.0.2' }
                 }
             },
             'GAMES': {
@@ -250,7 +250,7 @@ export const VFS: IVFS = (() => {
                     // Update README.txt version if needed
                     const docs = root.children['DOCUMENTS'];
                     if (docs && docs.children && docs.children['README.txt']) {
-                        docs.children['README.txt'].content = 'Welcome to HadOS v1.0.1';
+                        docs.children['README.txt'].content = 'Welcome to HadOS v1.0.2';
                     }
 
                     // Populate C:\GAMES

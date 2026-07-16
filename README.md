@@ -185,6 +185,8 @@ Use `↑` / `↓` to navigate command history.
 
 **704 tests across 60 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
+**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.js`](test/e2e/css-baseline.spec.js)). None of those 704 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
+
 ```bash
 npm test              # watch mode
 npm run test:run      # single run (verbose)

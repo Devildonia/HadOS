@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-16
+
+A cleanup release. The stylesheet was one 2507-line file that no test could see; it is now 34
+partials behind a Playwright baseline that pins the parsed CSSOM, the computed styles of every
+chrome surface in two themes and at two viewports, and the rendered pixels.
+
+That baseline is the point. Refactoring CSS here used to be unfalsifiable — jsdom does not load
+stylesheets, so `style.css` could be deleted outright and all 704 unit tests would still pass.
+Every change below was accepted or rejected on what it measured, and the measurements repeatedly
+disagreed with the reasoning: a "safe" split silently emitted a stylesheet with none of the OS in
+it, two duplicate selectors turned out to be two live bugs, and `!important`s that looked
+load-bearing were cargo while others were the only correct tool.
+
 ### Changed
 
 - **`.win95-window` / `.win95-btn` / `.win95-dialog` are now `.hados-*`**, across 37 files, along
