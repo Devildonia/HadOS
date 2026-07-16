@@ -82,7 +82,7 @@ class InternetExplorerApp extends WindowApp {
         if (!wf) return;
         wf.create({
             id: this.windowId,
-            title: 'The Internet',
+            title: 'Navea',
             width: 800,
             height: 600,
             icon: '🌐'
@@ -221,8 +221,8 @@ window.navigateIE = (url: string): void => {
 
 // ─── Kernel registration ──────────────────────────────────────────────────────
 Kernel.registerApp('internet-explorer', InternetExplorerApp, {
-    name: 'Internet Explorer',
-    icon: 'assets/icons/iexplorer.webp',
+    name: 'Navea',
+    icon: 'assets/icons/navea.webp',
     singleton: true
 });
 

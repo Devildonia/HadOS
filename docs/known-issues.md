@@ -50,12 +50,27 @@ flag removed from the wallpaper — we just have not gotten to it.
 **Where:** [`public/css/themes/theme-modern.css`](../public/css/themes/theme-modern.css),
 `public/assets/themes/winui/`, `ThemeManager.swapIcons`.
 
-### 4. Desktop icons are Microsoft product icons
+### 4. Desktop icons are Microsoft product icons — mostly replaced
 
-`ms-dos.webp`, `iexplorer.webp`, `task_manager.webp`, `Display.webp` in the HadOS icon set, plus
-the whole `winui/` set for modern. Being replaced gradually, by decision.
+The HadOS theme's icons are now HadOS's own: `ms-dos.webp` → `shell_core.webp` (app **Shell Core**),
+`task_manager.webp` → `task_pilot.webp` (**Task Pilot**), `iexplorer.webp` → `navea.webp` (**Navea**),
+`ragdoll_skins.webp` → `ragdoll_workshop.webp`, plus new marks for My Computer (`mi_pc.webp`), the
+Recycle Bin (`eco_bin_empty.webp`, renamed **Eco Bin**), the Games folder (`games.webp`) and the
+Plugin Manager (`plugin_manager.webp`). The four orphaned Microsoft icons in `assets/icons/` were
+deleted.
+
+Still Microsoft: `Display.webp` and `winamp_icon.webp` in the HadOS set, and the whole `winui/` set
+the **modern** theme uses (which is why, under modern, an icon still reads as MS-DOS while its label
+now says "Shell Core" — part of the deferred modern-theme work).
 
 **Where:** `ThemeManager.swapIcons` in [`js/core/ThemeManager.ts`](../js/core/ThemeManager.ts).
+
+### 4b. The Recycle Bin has no empty/full state yet
+
+`eco_bin_full.webp` is shipped and the icon system shows `eco_bin_empty.webp`, but nothing flips
+between them: deletes go straight through `VFS.deleteNode` with no trash to fill. The user chose a
+**real** recycle bin (route deletes to a restorable trash, list/restore/empty in the dialog, "full"
+= has contents) — a subsystem of its own, tracked as the next piece of this work.
 
 ---
 

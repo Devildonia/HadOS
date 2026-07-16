@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The HadOS desktop icons are its own now, and four apps are renamed.** `ms-dos.webp` →
+  `shell_core.webp` with the app renamed **Shell Core**; `task_manager.webp` → `task_pilot.webp`,
+  **Task Pilot**; `iexplorer.webp` → `navea.webp`, **Navea**; `ragdoll_skins.webp` →
+  `ragdoll_workshop.webp`. My Computer, the Recycle Bin (now **Eco Bin**), the Games folder and the
+  Plugin Manager also gained real icons in place of emoji. The names are brand names — identical in
+  all 40 locales, like *Winamp* — and cover the app registry, window titles, `aria-label`s and the
+  Start menu. The four orphaned Microsoft icons in `assets/icons/` were deleted. The **modern** theme
+  is unchanged, so under it an icon can still read as MS-DOS while its label says "Shell Core";
+  that is part of the deferred modern-theme work.
+
+### Fixed
+
+- **A latent flake in the desktop screenshot baseline.** It captured the taskbar clock, which ticks
+  each minute, so a run crossing a minute boundary from the baseline differed by ~750px. The clock
+  is now masked in the full-page screenshots.
+
 ### Removed
 
 - **Two entirely dead stylesheet partials.** `css/effects/glitch.css` (133 lines: `.glitch-active`

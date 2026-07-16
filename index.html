@@ -70,13 +70,17 @@
         <!-- System Icons (left side) -->
         <div id="system-icons">
             <div class="icon" id="icon-mycomputer" role="button" tabindex="0" aria-label="My Computer">
-                <div class="icon-box">🖥️</div>
+                <div class="icon-box" style="display: flex; align-items: center; justify-content: center;"><img
+                        src="assets/icons/mi_pc.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">
+                </div>
                 <span data-i18n="app.mycomputer">My Computer</span>
             </div>
 
-            <div class="icon" id="icon-recyclebin" role="button" tabindex="0" aria-label="Recycle Bin">
-                <div class="icon-box">🗑️</div>
-                <span data-i18n="app.recyclebin">Recycle Bin</span>
+            <div class="icon" id="icon-recyclebin" role="button" tabindex="0" aria-label="Eco Bin">
+                <div class="icon-box" style="display: flex; align-items: center; justify-content: center;"><img
+                        src="assets/icons/eco_bin_empty.webp" alt=""
+                        style="width: 48px; height: 48px; object-fit: contain;"></div>
+                <span data-i18n="app.recyclebin">Eco Bin</span>
             </div>
         </div>
 
@@ -85,7 +89,9 @@
             <!-- Main Apps -->
             <div class="icon main-app" id="icon-games-folder" role="button" tabindex="0" aria-label="Games Folder"
                 data-launch="games-folder">
-                <div class="icon-box">📂</div>
+                <div class="icon-box" style="display: flex; align-items: center; justify-content: center;"><img
+                        src="assets/icons/games.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">
+                </div>
                 <span data-i18n="app.games_folder">Games</span>
             </div>
             <div class="icon" id="icon-notepad" role="button" tabindex="0" aria-label="Notepad" data-launch="notepad">
@@ -101,13 +107,13 @@
                 <div class="icon-box">🗂️</div>
                 <span data-i18n="app.explorer">Explorer</span>
             </div>
-            <div class="icon" id="icon-internet" role="button" tabindex="0" aria-label="Internet Explorer"
+            <div class="icon" id="icon-internet" role="button" tabindex="0" aria-label="Navea"
                 data-launch="internet-explorer">
                 <div class="icon-box" style="display: flex; align-items: center; justify-content: center;">
-                    <img src="assets/icons/iexplorer.webp" alt="IE"
+                    <img src="assets/icons/navea.webp" alt="Navea"
                         style="width: 48px; height: 48px; object-fit: contain;">
                 </div>
-                <span data-i18n="app.internet">Internet Explorer</span>
+                <span data-i18n="app.internet">Navea</span>
             </div>
 
             <!-- Other Apps moved here for structure -->
@@ -123,7 +129,7 @@
             <div class="icon" id="icon-ragdoll-skins" role="button" tabindex="0" aria-label="Ragdoll Workshop"
                 data-launch="ragdoll-skins">
                 <div class="icon-box" style="display: flex; align-items: center; justify-content: center;">
-                    <img src="assets/icons/ragdoll_skins.webp" draggable="false"
+                    <img src="assets/icons/ragdoll_workshop.webp" draggable="false"
                         style="width: 48px; height: 48px; object-fit: contain;">
                 </div>
                 <span data-i18n="app.ragdoll_workshop">Ragdoll Workshop</span>
@@ -138,16 +144,22 @@
                 </div>
                 <span data-i18n="app.winamp">Winamp</span>
             </div>
-            <div class="icon" id="icon-terminal" role="button" tabindex="0" aria-label="Terminal" data-launch="terminal">
-                <div class="icon-box">🖥️</div>
-                <span data-i18n="app.terminal">Terminal</span>
+            <div class="icon" id="icon-terminal" role="button" tabindex="0" aria-label="Shell Core" data-launch="terminal">
+                <div class="icon-box" style="display: flex; align-items: center; justify-content: center;"><img
+                        src="assets/icons/shell_core.webp" alt="Shell Core"
+                        style="width: 48px; height: 48px; object-fit: contain;"></div>
+                <span data-i18n="app.terminal">Shell Core</span>
             </div>
-            <div class="icon" id="icon-taskmanager" role="button" tabindex="0" aria-label="Task Manager" data-launch="taskmanager">
-                <div class="icon-box">📊</div>
-                <span data-i18n="app.taskmanager">Task Manager</span>
+            <div class="icon" id="icon-taskmanager" role="button" tabindex="0" aria-label="Task Pilot" data-launch="taskmanager">
+                <div class="icon-box" style="display: flex; align-items: center; justify-content: center;"><img
+                        src="assets/icons/task_pilot.webp" alt="Task Pilot"
+                        style="width: 48px; height: 48px; object-fit: contain;"></div>
+                <span data-i18n="app.taskmanager">Task Pilot</span>
             </div>
             <div class="icon" id="icon-pluginmanager" role="button" tabindex="0" aria-label="Plugin Manager" data-launch="pluginmanager">
-                <div class="icon-box">🧩</div>
+                <div class="icon-box" style="display: flex; align-items: center; justify-content: center;"><img
+                        src="assets/icons/plugin_manager.webp" alt=""
+                        style="width: 48px; height: 48px; object-fit: contain;"></div>
                 <span data-i18n="app.pluginmanager">Plugin Manager</span>
             </div>
             <div class="icon" id="icon-primelab" role="button" tabindex="0" aria-label="Prime Lab" data-launch="prime-lab">
@@ -226,13 +238,13 @@
                             🎨 Paint
                         </div>
                         <div class="menu-item" data-launch="explorer" id="menu-icon-explorer">
-                            📂 Windows Explorer
+                            📂 Explorer
                         </div>
                         <div class="menu-item" data-launch="terminal" id="menu-icon-terminal">
-                            🖥️ Terminal
+                            🖥️ Shell Core
                         </div>
                         <div class="menu-item" data-launch="taskmanager" id="menu-icon-taskmanager">
-                            📊 Task Manager
+                            📊 Task Pilot
                         </div>
                         <div class="menu-item" data-launch="pluginmanager" id="menu-icon-pluginmanager">
                             🧩 Plugin Manager
@@ -242,8 +254,8 @@
             </div>
             <hr class="menu-separator">
             <div class="menu-item" data-launch="internet-explorer"><img id="menu-img-internet"
-                    src="assets/icons/iexplorer.webp"
-                    style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> <span data-i18n="app.internet">Internet Explorer</span></div>
+                    src="assets/icons/navea.webp"
+                    style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> <span data-i18n="app.internet">Navea</span></div>
             <div class="menu-item" data-launch="display-props"><img id="menu-img-display"
                     src="assets/icons/Display.webp"
                     style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> <span data-i18n="menu.display">Display...</span></div>

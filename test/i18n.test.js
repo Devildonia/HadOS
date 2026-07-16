@@ -24,7 +24,10 @@ describe('i18n', () => {
         it('should translate known keys in Spanish', async () => {
             await i18n.setLang('es');
             expect(i18n.t('app.notepad')).toBe('Bloc de Notas');
-            expect(i18n.t('app.recyclebin')).toBe('Papelera de Reciclaje');
+            // app.recyclebin used to be the vehicle here; it is now the brand name
+            // "Eco Bin" (identical in every locale), so it no longer proves a
+            // translation happened. app.mycomputer still translates.
+            expect(i18n.t('app.mycomputer')).toBe('Mi PC');
             expect(i18n.t('menu.shutdown')).toBe('Apagar...');
         });
 

@@ -370,7 +370,12 @@ test.describe('CSS baseline', () => {
         await page.goto('/');
         await settle(page);
 
-        await expect(page).toHaveScreenshot('desktop-hados.png');
+        // Mask the taskbar clock: it shows HH:MM and ticks each minute, so a run
+        // that crosses a minute boundary from when the baseline was captured
+        // differs by ~750px — a latent flake unrelated to any change under test.
+        await expect(page).toHaveScreenshot('desktop-hados.png', {
+            mask: [page.locator('#taskbar-clock')],
+        });
     });
 
     test('the in-app menu bar looks unchanged', async ({ page }) => {
@@ -396,6 +401,8 @@ test.describe('CSS baseline', () => {
         await page.locator('#start-button').click();
         await expect(page.locator('#start-menu')).toBeVisible();
 
-        await expect(page).toHaveScreenshot('start-menu-and-window-hados.png');
+        await expect(page).toHaveScreenshot('start-menu-and-window-hados.png', {
+            mask: [page.locator('#taskbar-clock')],
+        });
     });
 });

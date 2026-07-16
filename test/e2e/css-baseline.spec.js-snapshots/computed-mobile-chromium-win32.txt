@@ -696,7 +696,7 @@ body
   visibility: visible
   opacity: 1
   width: 70px
-  height: 84.1875px
+  height: 100.188px
   min-height: 0px
   max-height: none
   padding: 8px
@@ -704,7 +704,7 @@ body
   top: 20px
   left: 20px
   right: 285px
-  bottom: 707.812px
+  bottom: 691.812px
   color: rgb(255, 255, 255)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
@@ -735,14 +735,14 @@ body
   cursor: pointer
 
 #icon-mycomputer .icon-box
-  display: block
+  display: flex
   position: static
   z-index: auto
   overflow: visible
   visibility: visible
   opacity: 1
   width: 54px
-  height: 32px
+  height: 48px
   min-height: 0px
   max-height: none
   padding: 0px
@@ -770,8 +770,8 @@ body
   text-shadow: none
   white-space: normal
   flex-direction: row
-  justify-content: normal
-  align-items: normal
+  justify-content: center
+  align-items: center
   gap: normal
   flex: 0 1 auto
   transform: none
@@ -1818,7 +1818,7 @@ body
   visibility: visible
   opacity: 1
   width: 70px
-  height: 84.1875px
+  height: 100.188px
   min-height: 0px
   max-height: none
   padding: 8px
@@ -1826,7 +1826,7 @@ body
   top: 20px
   left: 20px
   right: 285px
-  bottom: 707.812px
+  bottom: 691.812px
   color: rgb(255, 255, 255)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
@@ -1857,14 +1857,14 @@ body
   cursor: pointer
 
 #icon-mycomputer .icon-box
-  display: block
+  display: flex
   position: static
   z-index: auto
   overflow: visible
   visibility: visible
   opacity: 1
   width: 54px
-  height: 32px
+  height: 48px
   min-height: 0px
   max-height: none
   padding: 0px
@@ -1892,8 +1892,8 @@ body
   text-shadow: none
   white-space: normal
   flex-direction: row
-  justify-content: normal
-  align-items: normal
+  justify-content: center
+  align-items: center
   gap: normal
   flex: 0 1 auto
   transform: none
@@ -1903,14 +1903,14 @@ body
   cursor: pointer
 
 .main-app .icon-box
-  display: block
+  display: flex
   position: static
   z-index: auto
   overflow: visible
   visibility: visible
   opacity: 1
   width: 54px
-  height: 40px
+  height: 48px
   min-height: 0px
   max-height: none
   padding: 0px
@@ -1938,8 +1938,8 @@ body
   text-shadow: none
   white-space: normal
   flex-direction: row
-  justify-content: normal
-  align-items: normal
+  justify-content: center
+  align-items: center
   gap: normal
   flex: 0 1 auto
   transform: none

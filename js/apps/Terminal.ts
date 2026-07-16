@@ -30,7 +30,7 @@ export class Terminal implements IWindowsApp {
 
     private init(): void {
         this.windowId = WindowFactory.create({
-            title: 'Terminal',
+            title: 'Shell Core',
             width: 560,
             height: 360,
             resizable: true,
@@ -368,7 +368,7 @@ export class Terminal implements IWindowsApp {
 
 // Auto-register
 Kernel.registerApp('terminal', Terminal, {
-    name: 'Terminal',
+    name: 'Shell Core',
     icon: '🖥️',
     description: 'Command line interface.',
     singleton: false

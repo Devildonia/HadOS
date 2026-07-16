@@ -436,7 +436,7 @@ export class TaskManager implements IWindowsApp {
 
 // Auto-register
 Kernel.registerApp('taskmanager', TaskManager, {
-    name: 'Task Manager',
+    name: 'Task Pilot',
     icon: '📊',
     description: 'System monitor and process manager.',
     singleton: true

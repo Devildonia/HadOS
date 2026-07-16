@@ -27,7 +27,7 @@ describe('InternetExplorer', () => {
         it('should register as "internet-explorer" in Kernel', () => {
             const registry = Kernel.getRegistry();
             expect(registry.apps['internet-explorer']).toBeDefined();
-            expect(registry.apps['internet-explorer'].metadata.name).toBe('Internet Explorer');
+            expect(registry.apps['internet-explorer'].metadata.name).toBe('Navea');
         });
     });
 

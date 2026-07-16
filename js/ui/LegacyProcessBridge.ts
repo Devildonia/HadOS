@@ -59,9 +59,9 @@ export class LegacyProcessBridge {
                 [/rush|football/i, 'assets/icons/rush.webp'],
                 [/doom/i, 'assets/icons/doom.webp'],
                 [/display|settings/i, 'assets/icons/Display.webp'],
-                [/internet|ie/i, 'assets/icons/iexplorer.webp'],
+                [/internet|ie/i, 'assets/icons/navea.webp'],
                 [/media|amp/i, 'assets/icons/winamp_icon.webp'],
-                [/ragdoll|workshop|skin/i, 'assets/icons/ragdoll_skins.webp'],
+                [/ragdoll|workshop|skin/i, 'assets/icons/ragdoll_workshop.webp'],
                 [/paint/i, '🎨'],
                 [/notepad/i, '📝'],
                 [/folder|explorer/i, '📂']

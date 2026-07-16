@@ -559,6 +559,6 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
 // Register with Kernel
 Kernel.registerApp('ragdoll-skins', Ragdoll3DViewer, {
     name: 'Ragdoll Workshop',
-    icon: 'assets/icons/ragdoll_skins.webp',
+    icon: 'assets/icons/ragdoll_workshop.webp',
     singleton: true
 });
