@@ -41,7 +41,7 @@ global.fetch = vi.fn((url: RequestInfo | URL): Promise<Response> => {
 // Mock CONFIG
 // ============================================
 global.CONFIG = {
-    APP: { VERSION: '1.0.2', NAME: 'HadOS', LANGUAGE: 'en' },
+    APP: { VERSION: '1.0.3', NAME: 'HadOS', LANGUAGE: 'en' },
     DEBUG: {
         ENABLED: true,
         LOG_EVENTS: true,

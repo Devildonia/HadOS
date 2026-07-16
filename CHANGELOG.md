@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-07-16
+
+The desktop stops being Microsoft's. Eight apps carry HadOS icons and names — Shell Core, Task
+Pilot, Navea, Eco Bin, Notapad, FileX, Pinta — the recycle bin actually recycles, and the whole
+test suite moved to TypeScript.
+
 ### Changed
 
 - **Four more apps get HadOS icons and names:** Notepad → **Notapad** (`notapad.webp`), File

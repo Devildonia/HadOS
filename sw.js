@@ -4,7 +4,7 @@
  * v2.0 — Fase 4 Refactor
  */
 
-const CACHE_VERSION = '1.0.2';
+const CACHE_VERSION = '1.0.3';
 const CACHE_NAME = `hados-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `hados-dynamic-v${CACHE_VERSION}`;
 const MAX_DYNAMIC_ITEMS = 80;
