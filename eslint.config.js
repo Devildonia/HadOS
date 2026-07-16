@@ -100,7 +100,7 @@ export default [
     },
     {
         // Test files
-        files: ["test/**/*.{js,ts}"],
+        files: ["test/**/*.ts"],
         languageOptions: {
             parser: tseslint.parser,
             ecmaVersion: 2022,

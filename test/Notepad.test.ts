@@ -1,0 +1,204 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Kernel } from '../js/core/Kernel';
+import { Services } from '../js/core/ServiceContainer';
+
+// Import Notepad module (registers itself with Kernel)
+import '../js/apps/Notepad';
+
+describe('Notepad', () => {
+    let mockTextarea: HTMLTextAreaElement;
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+        Kernel.getRegistry().processes.forEach(p => Kernel.kill(p.pid));
+        (Services as any).__reset();
+        localStorage.clear();
+
+        document.body.innerHTML = `
+            <div id="win-notepad" class="hados-window" style="display:none;">
+                <div class="window-header"><span>Untitled - Notepad</span></div>
+                <div class="window-menu">
+                    <span class="window-menu-item">File</span>
+                    <span class="window-menu-item">Edit</span>
+                </div>
+                <div class="window-body">
+                    <textarea id="notepad-textarea"></textarea>
+                </div>
+            </div>
+        `;
+
+        mockTextarea = document.getElementById('notepad-textarea') as HTMLTextAreaElement;
+
+        // Mock WindowManager
+        Services.register('WindowManager', {
+            open: vi.fn(),
+            close: vi.fn()
+        } as any);
+
+        // Mock Notify
+        Services.register('Notify', {
+            success: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn()
+        } as any);
+    });
+
+    describe('registration', () => {
+        it('should be registered in Kernel as "notepad"', () => {
+            const registry = Kernel.getRegistry();
+            expect(registry.apps['notepad']).toBeDefined();
+            expect(registry.apps['notepad']!.metadata.name).toBe('Notepad');
+            expect(registry.apps['notepad']!.metadata.icon).toBe('📝');
+        });
+    });
+
+    describe('launch', () => {
+        it('should create instance with correct windowId', () => {
+            const proc = Kernel.launch('notepad') as any;
+            expect(proc).not.toBeNull();
+            expect(proc.instance.windowId).toBe('win-notepad');
+        });
+
+        it('should initialize with "Untitled" as default file', () => {
+            const proc = Kernel.launch('notepad') as any;
+            expect(proc.instance.currentFile).toBe('Untitled');
+        });
+    });
+
+    describe('file operations', () => {
+        it('should save file to localStorage', () => {
+            const proc = Kernel.launch('notepad') as any;
+            mockTextarea.value = 'Hello World';
+
+            // Simulate save
+            vi.spyOn(window, 'prompt').mockReturnValue('test-file');
+            proc.instance.saveFile();
+
+            const saved = JSON.parse(localStorage.getItem('notepad_test-file')!);
+            expect(saved).toBe('Hello World');
+        });
+
+        it('should open file from localStorage', () => {
+            // Pre-save a file
+            localStorage.setItem('notepad_saved-doc', JSON.stringify('Saved content'));
+
+            const proc = Kernel.launch('notepad') as any;
+            vi.spyOn(window, 'prompt').mockReturnValue('saved-doc');
+            proc.instance.openFile();
+
+            expect(mockTextarea.value).toBe('Saved content');
+            expect(proc.instance.currentFile).toBe('saved-doc');
+        });
+
+        it('should show warning when opening non-existent file', () => {
+            const proc = Kernel.launch('notepad') as any;
+            const notifyMock = Services.get('Notify') as any;
+            vi.spyOn(window, 'prompt').mockReturnValue('ghost-file');
+            proc.instance.openFile();
+            expect(notifyMock.warn).toHaveBeenCalledWith('File not found');
+        });
+
+        it('should create new file and clear textarea', () => {
+            const proc = Kernel.launch('notepad') as any;
+            mockTextarea.value = 'Some text';
+            proc.instance.isModified = false; // skip save prompt
+            vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+            proc.instance.newFile();
+            expect(mockTextarea.value).toBe('');
+            expect(proc.instance.currentFile).toBe('Untitled');
+        });
+    });
+
+    describe('title updates', () => {
+        it('should show asterisk when modified', () => {
+            const proc = Kernel.launch('notepad') as any;
+            proc.instance.isModified = true;
+            proc.instance.updateTitle();
+
+            const title = document.querySelector('#win-notepad .window-header span')!;
+            expect(title.textContent).toContain('*');
+        });
+
+        it('should not show asterisk when unmodified', () => {
+            const proc = Kernel.launch('notepad') as any;
+            proc.instance.isModified = false;
+            proc.instance.updateTitle();
+
+            const title = document.querySelector('#win-notepad .window-header span')!;
+            expect(title.textContent).not.toContain('*');
+        });
+    });
+
+    describe('multi-window support', () => {
+        it('should allow parameterizing the windowId and textareaId in constructor', () => {
+            const container = document.createElement('div');
+            container.id = 'win-custom';
+            container.innerHTML = `
+                <div class="window-header"><span>Untitled - Notepad</span></div>
+                <div class="window-body">
+                    <textarea id="textarea-custom"></textarea>
+                </div>
+            `;
+            document.body.appendChild(container);
+
+            const notepad = new (Kernel.getRegistry().apps['notepad']!.appClass)({
+                windowId: 'win-custom',
+                textareaId: 'textarea-custom'
+            }) as any;
+
+            expect(notepad.windowId).toBe('win-custom');
+            expect(notepad.textareaId).toBe('textarea-custom');
+            container.remove();
+        });
+
+        it('should support opening a new window via WindowFactory and not affect other instances', () => {
+            // Mock WindowFactory in Services
+            const mockWindowFactory = {
+                create: vi.fn((opts) => {
+                    const el = document.createElement('div');
+                    el.id = opts.id;
+                    el.appendChild(opts.bodyElement);
+                    document.body.appendChild(el);
+                    return opts.id;
+                })
+            };
+            Services.register('WindowFactory', mockWindowFactory as any);
+
+            // Re-mock WindowManager to include open
+            Services.register('WindowManager', {
+                open: vi.fn(),
+                close: vi.fn(),
+                makeDraggable: vi.fn()
+            } as any);
+
+            // We need to set up the menu for the main instance
+            document.body.innerHTML = `
+                <div id="win-notepad">
+                    <div class="window-header"><span>Untitled - Notepad</span></div>
+                    <div class="window-body">
+                        <div class="window-menu" id="notepad-menu-bar"></div>
+                        <textarea id="notepad-textarea"></textarea>
+                    </div>
+                </div>
+            `;
+
+            const primaryInstance = new (Kernel.getRegistry().apps['notepad']!.appClass)() as any;
+            
+            // Execute new-window action
+            primaryInstance._executeAction('new-window');
+
+            // Expect WindowFactory.create was called
+            expect(mockWindowFactory.create).toHaveBeenCalled();
+
+            // Find dynamic textarea and check it is different
+            const dynamicTextarea = document.querySelector('[id^="notepad-textarea-dynamic-"]')!;
+            expect(dynamicTextarea).not.toBeNull();
+            expect(dynamicTextarea.id).not.toBe('notepad-textarea');
+
+            // Clean up created dynamic windows
+            const dynamicWins = document.querySelectorAll('[id^="win-notepad-dynamic-"]');
+            dynamicWins.forEach(w => w.remove());
+        });
+    });
+});
