@@ -257,6 +257,31 @@ test.describe('CSS baseline', () => {
         expect.soft(classStates).toMatchSnapshot('states-class.txt');
     });
 
+    /**
+     * Mobile. responsive.css and touch.css only exist below 768px, so a desktop
+     * viewport measures none of them — and several `!important`s in the app
+     * partials are there specifically to out-rank those media queries. Without
+     * this, removing one would look perfectly safe and break only on phones.
+     */
+    test('computed styles are unchanged at a phone viewport', async ({ page }) => {
+        await page.addInitScript(() => localStorage.setItem('os-theme', 'hados'));
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto('/');
+        await settle(page);
+
+        const mobileSelectors = [
+            ...TRACKED_SELECTORS,
+            // Game windows are built by WindowRegistry at boot, so they are in the
+            // DOM (hidden) without opening one. Their bodies carry the overrides
+            // that fight the mobile rules.
+            '#win-flappy-neon', '#win-flappy-neon .window-body',
+            '#win-football-rush', '#win-football-rush .window-body',
+            '.ragdoll-pet-btn', '.taskbar-button', '.icon',
+        ];
+        expect(await computedStyles(page, mobileSelectors, TRACKED_PROPS))
+            .toMatchSnapshot('computed-mobile.txt');
+    });
+
     test('the desktop looks unchanged', async ({ page }) => {
         await page.addInitScript(() => localStorage.setItem('os-theme', 'hados'));
         await page.goto('/');

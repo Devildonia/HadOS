@@ -1,4 +1,11 @@
-/* ===== GAME WINDOW (iframe-based games like Flappy Neon) ===== */
+/* ===== GAME WINDOW (iframe-based games like Flappy Neon) =====
+ * A game fills its window edge to edge, so these bodies have to out-rank the
+ * mobile rules in css/responsive.css, which pad every .window-body and cap its
+ * height. They already do: `#win-… .window-body` scores (1,1,0) against that
+ * rule's (0,1,0), and a media query adds no specificity. The `!important` these
+ * declarations used to carry was redundant — verified at a 375px viewport, where
+ * the mobile rules are actually live.
+ */
 #win-flappy-neon {
     width: 520px;
     height: 600px;
@@ -6,15 +13,14 @@
 }
 
 #win-flappy-neon .window-body {
-    padding: 0 !important;
-    overflow: hidden !important;
-    background: #070716 !important;
-    max-height: none !important;
-    /* Override mobile media query */
+    padding: 0;
+    overflow: hidden;
+    background: #070716;
+    max-height: none;
     flex: 1;
     min-height: 0;
+    /* Anchor for the absolutely-positioned iframe */
     position: relative;
-    /* Anchor for absolute iframe */
 }
 
 #win-flappy-neon .window-body iframe {
@@ -35,15 +41,14 @@
 }
 
 #win-football-rush .window-body {
-    padding: 0 !important;
-    overflow: hidden !important;
-    background: #1a1a2e !important;
-    max-height: none !important;
-    /* Override mobile media query */
+    padding: 0;
+    overflow: hidden;
+    background: #1a1a2e;
+    max-height: none;
     flex: 1;
     min-height: 0;
+    /* Anchor for the absolutely-positioned iframe */
     position: relative;
-    /* Anchor for absolute iframe */
 }
 
 #win-football-rush .window-body iframe {

@@ -26,6 +26,16 @@
     grid-auto-rows: 24px;
 }
 
+/**
+ * These beat a rule, not an inline style: `button:not(.window-btn)` in
+ * chrome/controls.css scores (0,1,1) and gives every button a 24px min-height and
+ * generous padding, which would blow a 24x24 tool square apart. This selector is
+ * only (0,1,0), so without !important it loses.
+ *
+ * Fixable without it — scoping to `.paint-toolbar .paint-tool-btn` reaches (0,2,0)
+ * and wins outright — but that is a behaviour change to verify, and no baseline
+ * covers Paint's toolbar yet. Left as-is deliberately; see docs/known-issues.md.
+ */
 .paint-tool-btn {
     min-width: 0 !important;
     min-height: 0 !important;

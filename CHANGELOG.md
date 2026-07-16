@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The browser no longer parses the stylesheet twice.** `index.html` linked `/style.css` while
+  `main.ts` also imported it, so development loaded **422 rules** it did not need — Tailwind's
+  preflight included — and kept two identical `Sora` `@font-face` entries, which is why
+  `document.fonts.check()` could report `false` while one was still loading. The `<link>` is gone;
+  the import is the Vite-idiomatic path (bundled, hashed, hot-reloaded). No flash was introduced:
+  every screen starts `display:none` and nothing paints until the JS boots the OS.
+- **`!important`: 40 → 32, and the rest are classified.** The 8 in `css/apps/games.css` were
+  cargo: they sat next to a comment claiming to "override mobile media query", but a media query
+  adds no specificity and their selectors carry an ID, so they already won. Removed and verified at
+  a 375px viewport, where those mobile rules are actually live. The 10 in `css/chrome/window.css`
+  are the opposite — load-bearing, because they beat the inline geometry `WindowInteractions`
+  writes while dragging, and only `!important` beats inline. Both are now documented in place, and
+  the full classification is in [`docs/known-issues.md`](docs/known-issues.md).
+
+### Added
+
+- **`docs/known-issues.md`** — every defect found and deliberately deferred, each with the evidence
+  it is real and where it lives. Includes the tray toggles still turning Win95 grey when active,
+  the dead `.ragdoll-pet-btn` declarations, the dead boot-animation config, and the `win95-*` names
+  that outlived the rename.
+- **The baseline now covers a phone viewport.** `responsive.css` and `touch.css` only exist below
+  768px, so a desktop-only baseline measured none of them — and several `!important`s exist purely
+  to out-rank those rules. Without this, removing one would look safe and break only on phones.
+
 ### Fixed
 
 - **The Start menu's items were being restyled by Paint's menu bar, and vice versa.** Both

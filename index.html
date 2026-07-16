@@ -19,7 +19,12 @@
     <link rel="stylesheet" href="/css/themes/theme-base.css">
     <link rel="stylesheet" href="/css/themes/theme-hados.css">
     <link rel="stylesheet" href="/css/themes/theme-modern.css">
-    <link rel="stylesheet" href="/style.css">
+    <!-- style.css is NOT linked here: main.ts imports it, so Vite bundles, hashes
+         and cache-busts it, and hot-reloads its partials in dev. Linking it as
+         well made the browser parse all ~2500 rules twice in development —
+         including two identical Sora @font-face entries. There is no flash to
+         avoid by linking it early: every screen starts display:none and nothing
+         paints until the JS boots the OS. -->
 
     <script src="/libs/matter.min.js"></script>
     <script src="/libs/webamp.bundle.min.js"></script>

@@ -85,6 +85,18 @@
     padding-left: 1px;
 }
 
+/**
+ * The !important here is load-bearing — do not "clean it up".
+ *
+ * Dragging, resizing and snapping write geometry straight onto the element:
+ * WindowInteractions sets win.style.left/top/width/height as inline styles. An
+ * inline declaration outranks every selector, however specific, so a maximized
+ * window could never reach the corner from a stylesheet alone. `!important` is
+ * the one thing that beats inline, and it is why this works.
+ *
+ * The other declarations ride along for the same reason: a window that was
+ * dragged carries an inline transform, and maximizing has to cancel it.
+ */
 .win95-window.maximized {
     top: 0 !important;
     left: 0 !important;
@@ -95,7 +107,6 @@
     max-height: calc(100% - var(--taskbar-height)) !important;
     border: none !important;
     box-shadow: none !important;
-    /* v1.0.7.5: Fix background colors when maximized */
     background: var(--win-gray) !important;
 }
 
