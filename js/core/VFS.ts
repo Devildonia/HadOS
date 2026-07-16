@@ -22,6 +22,23 @@ export interface IVFSNode {
     icon?: string;
     actionType?: string;
     actionTarget?: string;
+    /** Set while a node lives in the recycle bin: the path it was deleted from,
+     *  and when. Cleared on restore. Ignored by isValidTree (extra fields are OK). */
+    trashOrigin?: string;
+    trashedAt?: number;
+}
+
+/** One item in the recycle bin, as the UI sees it. */
+export interface ITrashEntry {
+    /** Key inside the bin; pass to restoreFromTrash. */
+    id: string;
+    /** Original display name. */
+    name: string;
+    /** Path it was deleted from. */
+    origin: string;
+    type: 'dir' | 'file' | 'shortcut';
+    /** Epoch millis of deletion. */
+    deletedAt: number;
 }
 
 export interface IVFS {
@@ -35,7 +52,21 @@ export interface IVFS {
     readFileAsync(path: string): Promise<string | Blob | null>;
     /** Writes a file. String content is stored inline; a Blob goes to the blob store. */
     writeFileAsync(path: string, name: string, data: string | Blob): Promise<boolean>;
+    /** Permanently removes a node (frees its blobs). System/internal deletes use
+     *  this; user-facing deletes should prefer trashNode. */
     deleteNode(parentPath: string, name: string): boolean;
+    /** Moves a node to the recycle bin instead of deleting it. Blobs are kept so
+     *  the item can be restored. Returns false if the node does not exist. */
+    trashNode(parentPath: string, name: string): boolean;
+    /** The recycle bin's contents, newest first. */
+    listTrash(): ITrashEntry[];
+    /** How many items are in the recycle bin. */
+    trashCount(): number;
+    /** Moves a trashed item back to where it came from. Fails if that folder no
+     *  longer exists; renames on collision. */
+    restoreFromTrash(id: string): boolean;
+    /** Permanently deletes everything in the recycle bin (frees blobs). */
+    emptyTrash(): void;
     rename(parentPath: string, oldName: string, newName: string): boolean;
     listDir(path: string): string[] | null;
     /** Persists pending changes immediately (awaitable). */
@@ -532,6 +563,109 @@ export const VFS: IVFS = (() => {
         return false;
     }
 
+    // ─── Recycle bin ───────────────────────────────────────────────────────────
+    // A real trash: user deletes move here instead of vanishing, keep their blobs,
+    // and can be restored to their origin or purged. Stored as a hidden dir in the
+    // tree (so it persists and needs no separate store), with each item carrying
+    // its origin path in trashOrigin. System deletes (uninstall, session cleanup)
+    // stay on deleteNode — they must not fill the bin.
+    const RECYCLE_PARENT = 'C:\\HADOS\\SYSTEM';
+    const RECYCLE_NAME = 'RECYCLED';
+    const RECYCLE_PATH = RECYCLE_PARENT + '\\' + RECYCLE_NAME;
+
+    /** Notifies the desktop icon / dialog that the bin changed. No-op off-window. */
+    function signalTrashChanged(): void {
+        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('vfs:trash-changed'));
+        }
+    }
+
+    /** The bin directory, created under SYSTEM on first use. */
+    function ensureRecycleBin(): IVFSNode | null {
+        const existing = resolve(RECYCLE_PATH);
+        if (existing && existing.type === 'dir') return existing;
+        if (!mkdir(RECYCLE_PARENT, RECYCLE_NAME)) return null;
+        const bin = resolve(RECYCLE_PATH);
+        return (bin && bin.type === 'dir') ? bin : null;
+    }
+
+    /** A key not already taken in `container`, appending " (2)", " (3)"… on clash. */
+    function uniqueKey(container: IVFSNode, base: string): string {
+        if (!container.children || !container.children[base]) return base;
+        let i = 2;
+        while (container.children[`${base} (${i})`]) i++;
+        return `${base} (${i})`;
+    }
+
+    function trashNode(parentPath: string, name: string): boolean {
+        // Refuse to trash items already inside the bin (no double-nesting).
+        if (parentPath.toUpperCase().startsWith(RECYCLE_PATH.toUpperCase())) return false;
+        const parent = resolve(parentPath);
+        if (!(parent && parent.type === 'dir' && parent.children && parent.children[name])) return false;
+        const bin = ensureRecycleBin();
+        if (!bin || !bin.children) return false;
+
+        const node = parent.children[name];
+        const key = uniqueKey(bin, node.name);
+        node.trashOrigin = parentPath;
+        node.trashedAt = Date.now();
+        bin.children[key] = node;
+        delete parent.children[name];
+        // Blobs are intentionally kept — restore needs them. emptyTrash frees them.
+        save();
+        signalTrashChanged();
+        return true;
+    }
+
+    function listTrash(): ITrashEntry[] {
+        const bin = resolve(RECYCLE_PATH);
+        if (!bin || bin.type !== 'dir' || !bin.children) return [];
+        return Object.entries(bin.children)
+            .map(([id, node]) => ({
+                id,
+                name: node.name,
+                origin: node.trashOrigin ?? '',
+                type: node.type,
+                deletedAt: node.trashedAt ?? 0,
+            }))
+            .sort((a, b) => b.deletedAt - a.deletedAt);
+    }
+
+    function trashCount(): number {
+        const bin = resolve(RECYCLE_PATH);
+        return (bin && bin.type === 'dir' && bin.children) ? Object.keys(bin.children).length : 0;
+    }
+
+    function restoreFromTrash(id: string): boolean {
+        const bin = resolve(RECYCLE_PATH);
+        if (!bin || bin.type !== 'dir' || !bin.children || !bin.children[id]) return false;
+        const node = bin.children[id];
+        const origin = node.trashOrigin;
+        if (!origin) return false;
+        const dest = resolve(origin);
+        // The origin folder may have been deleted since; refuse rather than guess.
+        if (!dest || dest.type !== 'dir' || !dest.children) return false;
+
+        const targetKey = uniqueKey(dest, node.name);
+        if (targetKey !== node.name) node.name = targetKey; // collided → renamed copy
+        delete node.trashOrigin;
+        delete node.trashedAt;
+        dest.children[targetKey] = node;
+        delete bin.children[id];
+        save();
+        signalTrashChanged();
+        return true;
+    }
+
+    function emptyTrash(): void {
+        const bin = resolve(RECYCLE_PATH);
+        if (!bin || bin.type !== 'dir' || !bin.children) return;
+        for (const child of Object.values(bin.children)) releaseSubtreeBlobs(child);
+        bin.children = {};
+        save();
+        signalTrashChanged();
+    }
+
     function rename(parentPath: string, oldName: string, newName: string): boolean {
         // Sanitize the new name for parity with mkdir/writeFile — otherwise
         // rename is a back door for the dangerous chars (`<>:"/\|?*`, `..`) the
@@ -568,6 +702,11 @@ export const VFS: IVFS = (() => {
         readFileAsync,
         writeFileAsync,
         deleteNode,
+        trashNode,
+        listTrash,
+        trashCount,
+        restoreFromTrash,
+        emptyTrash,
         rename,
         listDir,
         flush,

@@ -65,12 +65,21 @@ now says "Shell Core" — part of the deferred modern-theme work).
 
 **Where:** `ThemeManager.swapIcons` in [`js/core/ThemeManager.ts`](../js/core/ThemeManager.ts).
 
-### 4b. The Recycle Bin has no empty/full state yet
+### 4b. ~~The Recycle Bin has no empty/full state yet~~ — BUILT
 
-`eco_bin_full.webp` is shipped and the icon system shows `eco_bin_empty.webp`, but nothing flips
-between them: deletes go straight through `VFS.deleteNode` with no trash to fill. The user chose a
-**real** recycle bin (route deletes to a restorable trash, list/restore/empty in the dialog, "full"
-= has contents) — a subsystem of its own, tracked as the next piece of this work.
+A real, restorable recycle bin now exists. `VFS.trashNode` moves a deleted node to a hidden
+`C:\HADOS\SYSTEM\RECYCLED` dir (keeping its blobs and recording its origin) instead of destroying
+it; `restoreFromTrash` puts it back where it came from (renaming on collision, refusing if the
+origin folder is gone); `emptyTrash` purges permanently and frees blobs. Terminal `del`/`rm` route
+here; `del /f` still hard-deletes. **System deletes (uninstall, session cleanup) stay on
+`deleteNode`** so they never fill the bin. The Eco Bin dialog lists trashed files with Restore and
+an Empty button (alongside the existing deleted sticky notes), and the desktop icon flips between
+`eco_bin_empty` and `eco_bin_full` on a `vfs:trash-changed` signal — re-applied after a theme swap,
+since `swapIcons` resets it. Only the HadOS theme flips; the modern theme keeps its single icon.
+
+Not yet done: no drag-a-file-to-the-bin gesture (only Terminal deletes route to trash today, since
+that is the only file-delete UI), and restore appends " (2)" to the whole name rather than before
+the extension.
 
 ---
 

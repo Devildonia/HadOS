@@ -306,7 +306,12 @@ export class Terminal implements IWindowsApp {
                 this.writeOutput(`Error: Failed to create directory: ${arg}`, true);
             }
         } else if (cmd === 'del' || cmd === 'rm') {
-            const arg = args[1];
+            // A user delete goes to the recycle bin (recoverable from the Eco Bin);
+            // `/f` or `-f` forces a permanent delete. The target is the first
+            // non-flag argument, so the flag may sit before or after it.
+            const rest = args.slice(1);
+            const force = rest.includes('/f') || rest.includes('-f');
+            const arg = rest.find((a) => a !== '/f' && a !== '-f');
             if (!arg) {
                 this.writeOutput('Error: No target specified.', true);
                 return;
@@ -320,10 +325,12 @@ export class Terminal implements IWindowsApp {
             const parentPath = targetPath.substring(0, lastSlash);
             const name = targetPath.substring(lastSlash + 1);
 
-            const success = VFS.deleteNode(parentPath, name);
+            const success = force
+                ? VFS.deleteNode(parentPath, name)
+                : VFS.trashNode(parentPath, name);
             if (success) {
                 VFS.flushSync();
-                this.writeOutput(`Deleted: ${targetPath}`);
+                this.writeOutput(force ? `Permanently deleted: ${targetPath}` : `Moved to Eco Bin: ${targetPath}`);
             } else {
                 this.writeOutput(`Error: Failed to delete: ${arg}`, true);
             }

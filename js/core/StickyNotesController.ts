@@ -1,5 +1,6 @@
 import { Services } from './ServiceContainer';
 import { Utils } from '../utils';
+import { VFS } from './VFS';
 
 const initialStyles = new Map<HTMLElement, string>();
 
@@ -13,6 +14,21 @@ export function restoreStickyNote(sticky: HTMLElement): void {
     sticky.style.display = 'block';
 }
 
+/** Sticky notes "in the bin" are the ones dragged onto the recycle-bin icon. */
+function hiddenStickies(): HTMLElement[] {
+    return Array.from(document.querySelectorAll('.draggable-sticky')).filter(
+        (el) => (el as HTMLElement).style.display === 'none'
+    ) as HTMLElement[];
+}
+
+const iconForType = (type: string): string =>
+    type === 'dir' ? '📁' : type === 'shortcut' ? '🔗' : '📄';
+
+/**
+ * Renders the recycle-bin dialog: trashed files (restore each, or empty the bin
+ * permanently) and deleted sticky notes (restore each). Rebuilt live whenever the
+ * bin changes.
+ */
 export function updateRecycleBinUI(): void {
     const dialog = document.getElementById('dialog-recyclebin');
     if (!dialog) return;
@@ -21,11 +37,10 @@ export function updateRecycleBinUI(): void {
     const buttonsEl = dialog.querySelector('.dialog-buttons') as HTMLElement;
     if (!contentEl || !buttonsEl) return;
 
-    const hiddenStickies = Array.from(document.querySelectorAll('.draggable-sticky')).filter(
-        (el) => (el as HTMLElement).style.display === 'none'
-    ) as HTMLElement[];
+    const stickies = hiddenStickies();
+    const files = VFS.listTrash();
 
-    if (hiddenStickies.length === 0) {
+    if (stickies.length === 0 && files.length === 0) {
         contentEl.innerHTML = `
             <span class="dialog-icon">🗑️</span>
             <span class="dialog-message">The Recycle Bin is empty.</span>
@@ -36,45 +51,88 @@ export function updateRecycleBinUI(): void {
         return;
     }
 
-    // Reflect the post-its and provide a restore option
-    let listHTML = '<div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-height: 200px; overflow-y: auto;">';
-    hiddenStickies.forEach((sticky, idx) => {
-        // Extract text preview
-        const firstP = sticky.querySelector('p');
-        const text = firstP ? (firstP.textContent || '') : `Sticky Note #${idx + 1}`;
-        const escapedText = Utils.escapeHTML(text);
-        listHTML += `
-            <div style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #808080; padding: 4px 8px; background: #ffffcc; color: #000; font-family: 'MS Sans Serif', Arial, sans-serif; font-size: 11px; margin-top: 4px;">
-                <span style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;">📌 ${escapedText}</span>
-                <button class="hados-btn restore-sticky-btn" data-index="${idx}" style="padding: 2px 6px; font-size: 10px;">Restore</button>
-            </div>
-        `;
-    });
-    listHTML += '</div>';
+    const rowStyle = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 8px; border:1px solid var(--hados-line, #808080); border-radius:6px;';
+    const btnStyle = 'padding:2px 8px; font-size:11px; flex-shrink:0;';
+
+    let filesHTML = '';
+    if (files.length > 0) {
+        const rows = files.map((f) => `
+            <div style="${rowStyle}">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                      title="${Utils.escapeHTML(f.origin)}">${iconForType(f.type)} ${Utils.escapeHTML(f.name)}</span>
+                <button class="hados-btn rb-restore-file" data-id="${Utils.escapeHTML(f.id)}" style="${btnStyle}">Restore</button>
+            </div>`).join('');
+        filesHTML = `
+            <span class="dialog-message" style="font-weight:bold;">Files</span>
+            <div style="display:flex; flex-direction:column; gap:6px; width:100%; max-height:160px; overflow-y:auto;">${rows}</div>`;
+    }
+
+    let stickiesHTML = '';
+    if (stickies.length > 0) {
+        const rows = stickies.map((sticky, idx) => {
+            const firstP = sticky.querySelector('p');
+            const text = Utils.escapeHTML(firstP ? (firstP.textContent || '') : `Sticky Note #${idx + 1}`);
+            return `
+                <div style="${rowStyle} background:#ffffcc; color:#000;">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📌 ${text}</span>
+                    <button class="hados-btn restore-sticky-btn" data-index="${idx}" style="${btnStyle}">Restore</button>
+                </div>`;
+        }).join('');
+        stickiesHTML = `
+            <span class="dialog-message" style="font-weight:bold; margin-top:${files.length ? '8px' : '0'};">Sticky Notes</span>
+            <div style="display:flex; flex-direction:column; gap:6px; width:100%; max-height:160px; overflow-y:auto;">${rows}</div>`;
+    }
 
     contentEl.innerHTML = `
         <span class="dialog-icon">🗑️</span>
-        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; width: 100%;">
-            <span class="dialog-message" style="font-weight: bold;">Deleted Sticky Notes:</span>
-            ${listHTML}
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px; align-items:flex-start; width:100%;">
+            ${filesHTML}
+            ${stickiesHTML}
         </div>
     `;
 
     buttonsEl.innerHTML = `
-        <button class="hados-btn restore-all-stickies-btn" style="margin-right: 8px;">Restore All</button>
+        ${files.length ? '<button class="hados-btn rb-empty-btn" style="margin-right:8px;">Empty Recycle Bin</button>' : ''}
+        ${stickies.length ? '<button class="hados-btn restore-all-stickies-btn" style="margin-right:8px;">Restore All Notes</button>' : ''}
         <button class="hados-btn" data-close-dialog="dialog-recyclebin">Close</button>
     `;
 
-    // Bind event listeners for restore buttons
-    const restoreBtns = contentEl.querySelectorAll('.restore-sticky-btn');
-    restoreBtns.forEach((btn) => {
+    const blip = (sound: string): void => {
+        const audio: any = Services.get('AudioManager');
+        if (audio) audio.play(sound, { volume: 0.8 });
+    };
+
+    contentEl.querySelectorAll('.rb-restore-file').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            const id = (e.currentTarget as HTMLElement).getAttribute('data-id') || '';
+            if (VFS.restoreFromTrash(id)) {
+                VFS.flushSync();
+                blip('spawn');
+            } else {
+                (Services.get('Notify') as { warn?: (m: string) => void } | undefined)
+                    ?.warn?.('Cannot restore: the original folder no longer exists.');
+            }
+            updateRecycleBinUI();
+        });
+    });
+
+    const emptyBtn = buttonsEl.querySelector('.rb-empty-btn');
+    if (emptyBtn) {
+        emptyBtn.addEventListener('click', () => {
+            VFS.emptyTrash();
+            VFS.flushSync();
+            blip('release');
+            updateRecycleBinUI();
+        });
+    }
+
+    contentEl.querySelectorAll('.restore-sticky-btn').forEach((btn) => {
         btn.addEventListener('click', (e) => {
             const idx = parseInt((e.currentTarget as HTMLElement).getAttribute('data-index') || '0');
-            const targetSticky = hiddenStickies[idx];
-            if (targetSticky) {
-                restoreStickyNote(targetSticky);
-                const audio: any = Services.get('AudioManager');
-                if (audio) audio.play('spawn', { volume: 0.8 });
+            const target = stickies[idx];
+            if (target) {
+                restoreStickyNote(target);
+                blip('spawn');
                 updateRecycleBinUI();
             }
         });
@@ -83,14 +141,48 @@ export function updateRecycleBinUI(): void {
     const restoreAllBtn = buttonsEl.querySelector('.restore-all-stickies-btn');
     if (restoreAllBtn) {
         restoreAllBtn.addEventListener('click', () => {
-            hiddenStickies.forEach((sticky) => {
-                restoreStickyNote(sticky);
-            });
-            const audio: any = Services.get('AudioManager');
-            if (audio) audio.play('spawn', { volume: 0.8 });
+            stickies.forEach(restoreStickyNote);
+            blip('spawn');
             updateRecycleBinUI();
         });
     }
+}
+
+/** Counts hidden sticky notes without leaking the DOM query to callers. */
+function isBinFull(): boolean {
+    return hiddenStickies().length > 0 || VFS.trashCount() > 0;
+}
+
+/**
+ * Flips the desktop recycle-bin icon between empty and full. Only the HadOS theme
+ * ships both states (eco_bin_empty / eco_bin_full); the modern theme has a single
+ * icon, so it is left untouched.
+ */
+export function refreshRecycleBinIcon(): void {
+    const img = document.querySelector('#icon-recyclebin .icon-box img') as HTMLImageElement | null;
+    if (!img) return;
+    const theme = (Services.get('ThemeManager') as { currentTheme?: string } | undefined)?.currentTheme
+        ?? (document.body.classList.contains('theme-modern') ? 'modern' : 'hados');
+    if (theme !== 'hados') return;
+
+    const src = isBinFull() ? 'assets/icons/eco_bin_full.webp' : 'assets/icons/eco_bin_empty.webp';
+    if (!img.getAttribute('src')?.endsWith(src)) img.setAttribute('src', src);
+}
+
+/**
+ * Wires the recycle bin to the rest of the system: keep the icon in sync with the
+ * bin's contents, and keep an open dialog live. Called once at boot.
+ */
+export function initRecycleBin(): void {
+    refreshRecycleBinIcon();
+    window.addEventListener('vfs:trash-changed', () => {
+        refreshRecycleBinIcon();
+        const dialog = document.getElementById('dialog-recyclebin');
+        if (dialog && dialog.style.display !== 'none') updateRecycleBinUI();
+    });
+    // ThemeManager.swapIcons resets the icon to "empty" on a theme change; restore
+    // the full state afterwards.
+    window.addEventListener('themechanged', refreshRecycleBinIcon);
 }
 
 export function setupStickyNotes(): void {
@@ -155,6 +247,7 @@ export function setupStickyNotes(): void {
                     if (audio) {
                         audio.play('release', { volume: 0.8 });
                     }
+                    refreshRecycleBinIcon(); // the bin now has a note in it
                 }
             }
 

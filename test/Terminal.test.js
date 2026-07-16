@@ -31,6 +31,7 @@ describe('Terminal CLI', () => {
         vi.spyOn(VFS, 'writeFile').mockReturnValue(true);
         vi.spyOn(VFS, 'mkdir').mockReturnValue(true);
         vi.spyOn(VFS, 'deleteNode').mockReturnValue(true);
+        vi.spyOn(VFS, 'trashNode').mockReturnValue(true);
         vi.spyOn(VFS, 'rename').mockReturnValue(true);
         vi.spyOn(VFS, 'flushSync').mockImplementation(() => {});
     });
@@ -68,6 +69,32 @@ describe('Terminal CLI', () => {
 
         const html = mockBody.innerHTML;
         expect(html).toContain('hello world');
+        term.terminate();
+    });
+
+    it('del sends a file to the recycle bin, not oblivion', () => {
+        const term = new Terminal();
+        const input = mockBody.querySelector('.terminal-input');
+
+        input.value = 'del test.txt';
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+        expect(VFS.trashNode).toHaveBeenCalledWith('C:\\HADOS\\DESKTOP', 'test.txt');
+        expect(VFS.deleteNode).not.toHaveBeenCalled();
+        expect(mockBody.innerHTML).toContain('Moved to Eco Bin');
+        term.terminate();
+    });
+
+    it('del /f permanently deletes, bypassing the bin', () => {
+        const term = new Terminal();
+        const input = mockBody.querySelector('.terminal-input');
+
+        input.value = 'del /f test.txt';
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+        expect(VFS.deleteNode).toHaveBeenCalledWith('C:\\HADOS\\DESKTOP', 'test.txt');
+        expect(VFS.trashNode).not.toHaveBeenCalled();
+        expect(mockBody.innerHTML).toContain('Permanently deleted');
         term.terminate();
     });
 

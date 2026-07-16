@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A real recycle bin.** Deleting a file no longer destroys it: `VFS.trashNode` moves it to a
+  hidden `C:\HADOS\SYSTEM\RECYCLED` dir, keeping its blobs and remembering where it came from.
+  `restoreFromTrash` returns it to its origin (renaming on collision, refusing if that folder is
+  gone); `emptyTrash` purges permanently and frees the blobs. Terminal `del`/`rm` route here — the
+  output reads *"Moved to Eco Bin"* — while `del /f` still hard-deletes. Crucially, **system deletes
+  (app uninstall, session cleanup) stay on `deleteNode`** and never fill the bin. The Eco Bin dialog
+  lists trashed files with Restore and an Empty button (next to the deleted sticky notes it already
+  showed), and the desktop icon flips between `eco_bin_empty` and `eco_bin_full` as the bin fills
+  and empties — surviving a theme swap. 14 new tests.
+
 ### Changed
 
 - **The HadOS desktop icons are its own now, and four apps are renamed.** `ms-dos.webp` →

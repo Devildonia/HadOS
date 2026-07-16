@@ -12,7 +12,7 @@ import { initializeDraggableIcons, resetDraggableIconsState } from './DesktopIco
 import { setupDisplayProperties } from './DisplayPropertiesController';
 import { setupKeyboardNavigation, resetKeyboardNavigationState } from './KeyboardNavigationController';
 import { setupDebugMenu, resetDebugMenuState } from './DebugMenuController';
-import { setupStickyNotes } from './StickyNotesController';
+import { setupStickyNotes, initRecycleBin } from './StickyNotesController';
 import { i18n } from '../services/i18n';
 
 export function setupEventListeners(): void {
@@ -178,6 +178,8 @@ export function initializeWindowControls(): void {
 
 // Setup sticky notes dragging
 setupStickyNotes();
+// Recycle bin: sync the desktop icon with the bin's contents, keep the dialog live
+initRecycleBin();
 
 // Legacy globals for os_engine compatibility
 if (typeof window !== 'undefined') {
