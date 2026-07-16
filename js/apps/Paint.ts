@@ -87,7 +87,7 @@ class Paint {
         if (!wf) return;
         wf.create({
             id: this.windowId,
-            title: 'untitled - Paint',
+            title: 'untitled - Pinta',
             width: 600,
             height: 450,
             icon: '🎨'
@@ -476,7 +476,7 @@ class Paint {
 
 // Register with Kernel
 Kernel.registerApp('paint', Paint, {
-    name: 'Paint',
+    name: 'Pinta',
     icon: '🎨',
     description: 'Basic drawing application with Undo/Redo',
     singleton: true

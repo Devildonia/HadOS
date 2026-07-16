@@ -71,7 +71,7 @@ describe('Paint', () => {
         it('should register as "paint" in Kernel', () => {
             const registry = Kernel.getRegistry();
             expect(registry.apps['paint']).toBeDefined();
-            expect(registry.apps['paint']!.metadata.name).toBe('Paint');
+            expect(registry.apps['paint']!.metadata.name).toBe('Pinta');
             expect(registry.apps['paint']!.metadata.icon).toBe('🎨');
         });
     });

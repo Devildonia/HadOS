@@ -250,7 +250,7 @@ class FileExplorer extends WindowApp {
 
 // Register with Kernel
 Kernel.registerApp('explorer', FileExplorer, {
-    name: 'Windows Explorer',
+    name: 'FileX',
     icon: '📂',
     description: 'File management',
     singleton: true

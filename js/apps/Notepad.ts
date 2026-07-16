@@ -69,7 +69,7 @@ const NOTEPAD_BODY_HTML = `
         <div class="notepad-menu-entry" id="notepad-menu-help">
             <span class="notepad-menu-label">Help</span>
             <div class="notepad-dropdown" id="notepad-dropdown-help">
-                <div class="notepad-dropdown-item" data-notepad-action="about">About Notepad</div>
+                <div class="notepad-dropdown-item" data-notepad-action="about">About Notapad</div>
             </div>
         </div>
     </div>
@@ -199,7 +199,7 @@ class Notepad {
         if (!wf) return;
         wf.create({
             id: this.windowId,
-            title: 'Untitled - Notepad',
+            title: 'Untitled - Notapad',
             width: 500,
             height: 400,
             icon: '📝'
@@ -453,7 +453,7 @@ class Notepad {
         // Create the window
         wf.create({
             id: newWindowId,
-            title: 'Untitled - Notepad',
+            title: 'Untitled - Notapad',
             width: 500,
             height: 400,
             icon: '📝',
@@ -666,7 +666,7 @@ class Notepad {
 
     private _showAbout(): void {
         const notify = Services.get('Notify') as INotify | undefined;
-        const msg = 'Notepad v5.0 — HadOS';
+        const msg = 'Notapad v5.0 — HadOS';
         if (notify) notify.info(msg);
         else Utils.Logger.log('[Notepad]', msg);
     }
@@ -690,7 +690,7 @@ class Notepad {
     public updateTitle(): void {
         const titleSpan = document.querySelector(`#${this.windowId} .window-header span`);
         if (titleSpan) {
-            titleSpan.textContent = `${this.isModified ? '*' : ''}${this.currentFile} - Notepad`;
+            titleSpan.textContent = `${this.isModified ? '*' : ''}${this.currentFile} - Notapad`;
         }
     }
 
@@ -708,7 +708,7 @@ class Notepad {
 
 // Register with Kernel
 Kernel.registerApp('notepad', Notepad, {
-    name: 'Notepad',
+    name: 'Notapad',
     icon: '📝',
     description: 'Simple text editor',
     singleton: true

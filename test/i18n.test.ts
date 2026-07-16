@@ -16,14 +16,14 @@ describe('i18n', () => {
 
     describe('t() — translation', () => {
         it('should translate known keys in English', () => {
-            expect(i18n.t('app.notepad')).toBe('Notepad');
-            expect(i18n.t('app.paint')).toBe('Paint');
+            expect(i18n.t('app.notepad')).toBe('Notapad');
+            expect(i18n.t('app.paint')).toBe('Pinta');
             expect(i18n.t('menu.shutdown')).toBe('Shut Down...');
         });
 
         it('should translate known keys in Spanish', async () => {
             await i18n.setLang('es');
-            expect(i18n.t('app.notepad')).toBe('Bloc de Notas');
+            expect(i18n.t('app.settings')).toBe('Configuración');
             expect(i18n.t('app.mycomputer')).toBe('Mi PC');
             expect(i18n.t('menu.shutdown')).toBe('Apagar...');
         });
@@ -45,9 +45,10 @@ describe('i18n', () => {
 
         it('should fall back to English when key missing in current lang', async () => {
             await i18n.setLang('es');
-            // If a key exists in EN but not ES, should fallback to EN
-            const enDict = i18n.t('app.notepad'); // exists in both
-            expect(enDict).toBe('Bloc de Notas');
+            // A key that exists in both and genuinely differs (app.notepad is now
+            // the brand "Notapad", identical everywhere, so it would not prove this).
+            const translated = i18n.t('app.mycomputer');
+            expect(translated).toBe('Mi PC');
         });
     });
 
@@ -82,24 +83,27 @@ describe('i18n', () => {
         it('should update data-i18n elements with translated text', () => {
             document.body.innerHTML = '<span data-i18n="app.notepad">old</span>';
             i18n.updateDOM();
-            expect(document.querySelector('[data-i18n]')!.textContent).toBe('Notepad');
+            expect(document.querySelector('[data-i18n]')!.textContent).toBe('Notapad');
         });
 
         it('should update placeholder for input elements', () => {
             document.body.innerHTML = '<input type="text" data-i18n="app.notepad">';
             i18n.updateDOM();
-            expect((document.querySelector('input') as HTMLInputElement).placeholder).toBe('Notepad');
+            expect((document.querySelector('input') as HTMLInputElement).placeholder).toBe('Notapad');
         });
 
         it('should switch all elements when language changes', async () => {
+            // app.notepad/app.paint are brand names now (Notapad/Pinta, identical in
+            // every locale), so they no longer prove a language switch. mycomputer
+            // and settings still translate.
             document.body.innerHTML = `
-                <span data-i18n="app.notepad"></span>
-                <span data-i18n="app.paint"></span>
+                <span data-i18n="app.mycomputer"></span>
+                <span data-i18n="app.settings"></span>
             `;
             await i18n.setLang('es');
             const spans = document.querySelectorAll('[data-i18n]');
-            expect(spans[0]!.textContent).toBe('Bloc de Notas');
-            expect(spans[1]!.textContent).toBe('Paint');
+            expect(spans[0]!.textContent).toBe('Mi PC');
+            expect(spans[1]!.textContent).toBe('Configuración');
         });
     });
 

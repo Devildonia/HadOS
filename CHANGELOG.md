@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Four more apps get HadOS icons and names:** Notepad → **Notapad** (`notapad.webp`), File
+  Explorer → **FileX** (`filex.webp`, which also retired the *"Windows Explorer"* registry name),
+  Paint → **Pinta** (`pinta.webp`), and Prime Lab's icon → `prime_lab.webp` (name unchanged). Brand
+  names, identical across all 40 locales, reaching the app registry, window titles — including
+  Notepad's dynamic `updateTitle`, which rebuilds the title as you type and had to be caught
+  separately — the `aria-label`s, the desktop labels and the Start menu. A stray *"Windows Explorer"*
+  in the Start menu markup went too.
+
 ### Added
 
 - **A real recycle bin.** Deleting a file no longer destroys it: `VFS.trashNode` moves it to a

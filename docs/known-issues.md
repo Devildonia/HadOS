@@ -52,18 +52,27 @@ flag removed from the wallpaper — we just have not gotten to it.
 
 ### 4. Desktop icons are Microsoft product icons — mostly replaced
 
-The HadOS theme's icons are now HadOS's own: `ms-dos.webp` → `shell_core.webp` (app **Shell Core**),
-`task_manager.webp` → `task_pilot.webp` (**Task Pilot**), `iexplorer.webp` → `navea.webp` (**Navea**),
-`ragdoll_skins.webp` → `ragdoll_workshop.webp`, plus new marks for My Computer (`mi_pc.webp`), the
-Recycle Bin (`eco_bin_empty.webp`, renamed **Eco Bin**), the Games folder (`games.webp`) and the
-Plugin Manager (`plugin_manager.webp`). The four orphaned Microsoft icons in `assets/icons/` were
-deleted.
+The HadOS theme's icons are now HadOS's own, across two batches: `shell_core` (**Shell Core**),
+`task_pilot` (**Task Pilot**), `navea` (**Navea**), `ragdoll_workshop`, `mi_pc`, `eco_bin_*`
+(**Eco Bin**), `games`, `plugin_manager`, then `notapad` (**Notapad**), `pinta` (**Pinta**), `filex`
+(**FileX**, which also dropped the "Windows Explorer" registry name), and `prime_lab`. The renames
+reach the app registry, window titles (including Notepad's dynamic `updateTitle`), `aria-label`s and
+the Start menu. Every orphaned Microsoft icon in `assets/icons/` was deleted.
 
 Still Microsoft: `Display.webp` and `winamp_icon.webp` in the HadOS set, and the whole `winui/` set
 the **modern** theme uses (which is why, under modern, an icon still reads as MS-DOS while its label
 now says "Shell Core" — part of the deferred modern-theme work).
 
 **Where:** `ThemeManager.swapIcons` in [`js/core/ThemeManager.ts`](../js/core/ThemeManager.ts).
+
+### 4c. The VFS default desktop shortcuts still carry the old names
+
+`DEFAULT_FS` in [`js/core/VFS.ts`](../js/core/VFS.ts) still seeds `C:\...\DESKTOP` with shortcuts
+named *Notepad*, *Paint*, *Recycle Bin*, *My Computer*, *Games*… and emoji icons — the file-system
+view (browsable in FileX) as opposed to the desktop chrome. Left untouched across every rename batch:
+it is the default *tree*, so changing it only affects fresh installs (existing ones keep their
+persisted tree) and risks the migration tests' shape assertions. Renaming these is really a
+"rename the VFS default shortcuts, with migration" task of its own.
 
 ### 4b. ~~The Recycle Bin has no empty/full state yet~~ — BUILT
 

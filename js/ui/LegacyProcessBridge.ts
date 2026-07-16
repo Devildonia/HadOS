@@ -34,7 +34,7 @@ export class LegacyProcessBridge {
 
         // Clean title for matching
         const cleanTitle = title
-            .replace(/\s*\-\s*(Notepad|Paint|Internet Explorer|Windows Explorer)/i, '')
+            .replace(/\s*\-\s*(Notapad|Pinta|Navea|FileX)/i, '')
             .replace(/The Internet/i, 'Internet Explorer')
             .replace(/Ragdoll Workshop & Skins/i, 'Ragdoll Workshop')
             .trim();

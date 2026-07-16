@@ -47,7 +47,7 @@ describe('Notepad', () => {
         it('should be registered in Kernel as "notepad"', () => {
             const registry = Kernel.getRegistry();
             expect(registry.apps['notepad']).toBeDefined();
-            expect(registry.apps['notepad']!.metadata.name).toBe('Notepad');
+            expect(registry.apps['notepad']!.metadata.name).toBe('Notapad');
             expect(registry.apps['notepad']!.metadata.icon).toBe('📝');
         });
     });
