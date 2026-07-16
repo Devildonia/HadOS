@@ -7,8 +7,9 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: *; media-src 'self' blob: data: *; connect-src 'self' blob: data: https://*.radio-browser.info; frame-src 'self' * data: about:blank; worker-src 'self' blob:;">
     <title>HadOS v1.0.1</title>
     <meta name="description"
-        content="Retro Windows 95 desktop simulator with games, apps, and a ragdoll pet. Built with Vite and Vanilla JS.">
-    <meta name="theme-color" content="#008080">
+        content="HadOS — a Web OS in your browser: isolated processes, mediated syscalls and consented capabilities, with games, apps and a 3D physics pet.">
+    <!-- Browsers paint their chrome with this. It was #008080 — Windows 95 teal. -->
+    <meta name="theme-color" content="#0b0e13">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="/assets/icons/pwa_icon_512.png">
     <link rel="manifest" href="/manifest.json">
@@ -137,9 +138,9 @@
                 </div>
                 <span data-i18n="app.winamp">Winamp</span>
             </div>
-            <div class="icon" id="icon-terminal" role="button" tabindex="0" aria-label="MS-DOS" data-launch="terminal">
+            <div class="icon" id="icon-terminal" role="button" tabindex="0" aria-label="Terminal" data-launch="terminal">
                 <div class="icon-box">🖥️</div>
-                <span data-i18n="app.terminal">MS-DOS</span>
+                <span data-i18n="app.terminal">Terminal</span>
             </div>
             <div class="icon" id="icon-taskmanager" role="button" tabindex="0" aria-label="Task Manager" data-launch="taskmanager">
                 <div class="icon-box">📊</div>
@@ -163,7 +164,7 @@
 
     <!-- Sticky Notes (Post-its) -->
     <div id="sticky-note" class="sticky-note draggable-sticky">
-        <p id="welcome-text" data-i18n="sticky.welcome_win95">Welcome to HadOS v1.0.1!</p>
+        <p id="welcome-text" data-i18n="sticky.welcome_hados">Welcome to HadOS v1.0.1!</p>
         <p data-i18n="sticky.games_hint">Check out the Games folder to get started.</p>
         <p style="text-align: right; margin-top: 10px; font-size: 13px;" data-i18n="sticky.admin">- Admin</p>
     </div>
@@ -207,7 +208,9 @@
         <div id="taskbar-apps"></div>
 
         <div id="start-menu" style="display:none;">
-            <div class="start-sidebar"><span id="start-menu-title">Windows 95</span></div>
+            <!-- ThemeManager rewrites this per theme; the markup carries the
+                 default rather than the old product's name. -->
+            <div class="start-sidebar"><span id="start-menu-title">HadOS</span></div>
             <div class="menu-items-container">
                 <div class="menu-item has-submenu">
                     <span class="menu-label" data-i18n="menu.programs_header">📁 Programs ▸</span>
@@ -226,7 +229,7 @@
                             📂 Windows Explorer
                         </div>
                         <div class="menu-item" data-launch="terminal" id="menu-icon-terminal">
-                            🖥️ MS-DOS
+                            🖥️ Terminal
                         </div>
                         <div class="menu-item" data-launch="taskmanager" id="menu-icon-taskmanager">
                             📊 Task Manager

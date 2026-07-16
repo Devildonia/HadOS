@@ -98,7 +98,7 @@ export class ThemeManager {
         // Update Sticky Note Text
         const welcomeText = document.getElementById('welcome-text');
         if (welcomeText) {
-            const key = themeName === 'modern' ? 'sticky.welcome_modern' : 'sticky.welcome_win95';
+            const key = themeName === 'modern' ? 'sticky.welcome_modern' : 'sticky.welcome_hados';
             welcomeText.setAttribute('data-i18n', key);
             welcomeText.textContent = i18n.t(key);
         }

@@ -28,16 +28,19 @@ describe('i18n', () => {
             expect(i18n.t('menu.shutdown')).toBe('Apagar...');
         });
 
+        // These used boot.memory ("Memory Test: {kb}KB OK") purely as a vehicle for
+        // interpolation. That key was one of the dead boot.* strings — it still
+        // claimed a 1995 Pentium's 64MB while the real POST reports the machine's
+        // actual hardware — so they now ride on a key the product actually uses.
         it('should interpolate parameters', () => {
-            const result = i18n.t('boot.memory', { kb: 65536 });
-            expect(result).toContain('65536');
-            expect(result).toContain('KB OK');
+            const result = i18n.t('notify.file_saved', { name: 'notes.txt' });
+            expect(result).toBe('File saved: notes.txt');
         });
 
         it('should interpolate parameters in Spanish', async () => {
             await i18n.setLang('es');
-            const result = i18n.t('boot.memory', { kb: 65536 });
-            expect(result).toContain('65536');
+            const result = i18n.t('notify.file_saved', { name: 'notas.txt' });
+            expect(result).toBe('Archivo guardado: notas.txt');
         });
 
         it('should return the key itself as fallback for unknown keys', () => {

@@ -1,12 +1,12 @@
 {
     "name": "HadOS",
     "short_name": "HadOS",
-    "description": "Retro Windows 95 desktop simulator with games, apps, and a ragdoll pet.",
+    "description": "A Web OS in your browser: isolated processes, mediated syscalls and consented capabilities, with games, apps and a 3D physics pet.",
     "start_url": "/",
     "display": "standalone",
     "orientation": "any",
-    "background_color": "#008080",
-    "theme_color": "#c0c0c0",
+    "background_color": "#000000",
+    "theme_color": "#0b0e13",
     "categories": ["games", "entertainment"],
     "lang": "en",
     "icons": [

@@ -6,7 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Eight dead Windows 95 strings from all 40 locales.** Nothing read them and every one was false:
+  `boot.bios_title` (*"AMIBIOS (C) 1995 American Megatrends, Inc."*), `boot.cpu` (*"CPU: Intel
+  Pentium(R) 133 MHz"*), `boot.starting` (*"Starting Windows 95..."*), `boot.memory`,
+  `boot.keyboard`, `boot.mouse`, `boot.press_del` and `system.shutdown_title` (*"Shut Down
+  Windows"*). The POST has reported the real machine since v1.0.1; these were what it used to
+  print. Two i18n tests used `boot.memory` as a vehicle for testing `{param}` interpolation and now
+  ride on a key the product actually uses.
+- **`CONFIG.ANIMATIONS`.** Nothing read it, and its numbers had drifted: it claimed a 3000ms splash
+  while `BootLoader` ran 4000ms and held the bar at 90% until the OS reported ready. Config that
+  disagrees with the code is worse than no config.
+
 ### Fixed
+
+- **Windows 95 was still in the product's public identity.** The meta description and the PWA
+  manifest both advertised *"Retro Windows 95 desktop simulator"*; the manifest's `theme_color` was
+  `#c0c0c0` and `background_color` `#008080` — the greys and teal the OS paints around the app
+  **when it is installed**; the Terminal icon's `aria-label` still said *"MS-DOS"*, so screen-reader
+  users heard the old name while everyone else read "Terminal"; and the Start menu sidebar's markup
+  fallback read *"Windows 95"*.
+- **`sticky.welcome_win95` → `sticky.welcome_hados`**, across 40 locales, `ThemeManager`,
+  `index.html` and the typed key union.
 
 - **The tray toggles turned Windows 95 grey when switched on.** Enabling the pet or HDR painted the
   button `#b0b0b0` with an inset white border, on a dark taskbar: `.ragdoll-pet-btn.active` scores

@@ -84,14 +84,19 @@ padding that has not been in effect for a long time. Decide it on purpose.
 
 **Where:** [`css/system/ragdoll.css`](../css/system/ragdoll.css).
 
-### 7. Dead boot-animation config
+### 7. ~~Dead boot-animation config~~ — REMOVED
 
-`CONFIG.APP.ANIMATIONS.BIOS_DURATION` (2000), `SPLASH_DURATION` (3000),
-`SPLASH_PROGRESS_DURATION` (2500) and `BOOT_DELAY` (500) are read by nothing. `BootLoader` uses its
-own constants (`SPLASH_MIN_MS = 4000`, `SPLASH_MAX_MS`, `SPLASH_HOLD_PCT`), so the config values
-are not just unused — they *disagree* with reality, which is worse than absent.
+`CONFIG.ANIMATIONS` claimed a 3000ms splash while `BootLoader` ran 4000ms and held the bar at 90%
+until the OS reported ready. Nothing read it. Config that disagrees with the code is worse than no
+config, so it is gone; the timings are constants at the top of `BootLoader`.
 
-**Where:** [`js/config.ts`](../js/config.ts) ~line 146, [`js/core/BootLoader.ts`](../js/core/BootLoader.ts).
+### 7b. ~~Dead Windows 95 strings in all 40 locales~~ — REMOVED
+
+Eight keys nothing read, and every one of them false: `boot.bios_title`
+(*"AMIBIOS (C) 1995 American Megatrends, Inc."*), `boot.cpu` (*"CPU: Intel Pentium(R) 133 MHz"*),
+`boot.starting` (*"Starting Windows 95..."*), `boot.memory`, `boot.keyboard`, `boot.mouse`,
+`boot.press_del` and `system.shutdown_title` (*"Shut Down Windows"*). The POST has reported the
+real machine since v1.0.1; these were the strings it used to print, left behind in 40 files.
 
 ---
 
@@ -103,12 +108,24 @@ are not just unused — they *disagree* with reality, which is worse than absent
 Internal names with no user-visible effect, which is why they survived the rebrand. A rename is a
 wide, mechanical diff across JS, CSS and tests — cheap to do, easy to review, worth its own commit.
 
-### 9. The `sticky.welcome_win95` i18n key
+### 9. ~~The `sticky.welcome_win95` i18n key~~ — RENAMED
 
-The theme is `hados`; the key is still `sticky.welcome_win95`, in all **40** locale files, and
-`ThemeManager` still asks for it by that name. Renaming means touching every locale.
+Now `sticky.welcome_hados`, across all 40 locales, `ThemeManager`, `index.html` and the typed key
+union in `i18n-keys.ts`.
 
-**Where:** [`js/core/ThemeManager.ts`](../js/core/ThemeManager.ts) ~line 101, `public/locales/*.json`.
+### 9b. ~~Windows 95 in the page's public identity~~ — FIXED
+
+Found while renaming the key above, and all of it user-facing:
+
+- The **meta description** and the **PWA manifest description** both advertised *"Retro Windows 95
+  desktop simulator"*.
+- `theme_color` in the manifest was `#c0c0c0` and `background_color` `#008080` — Win95 grey and
+  teal, which is what the OS paints around the app **when it is installed**.
+- `<meta name="theme-color">` was `#008080` too.
+- The Terminal icon's **`aria-label` said "MS-DOS"**: sighted users read "Terminal", screen-reader
+  users heard the old name. The Start menu entry said `MS-DOS` outright.
+- The Start menu sidebar's markup fallback read **"Windows 95"** (`ThemeManager` overwrites it at
+  runtime, so it only showed if the JS was slow or broken).
 
 ---
 

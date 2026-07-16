@@ -141,13 +141,12 @@ const CONFIG = {
         RAGDOLL_ANGRY_RED: '#FF0000'
     } as const,
 
-    // Animation timings
-    ANIMATIONS: {
-        BIOS_DURATION: 2000,
-        SPLASH_DURATION: 3000,
-        SPLASH_PROGRESS_DURATION: 2500,
-        BOOT_DELAY: 500
-    } as const,
+    // NOTE: an ANIMATIONS block used to live here (BIOS_DURATION, SPLASH_DURATION,
+    // SPLASH_PROGRESS_DURATION, BOOT_DELAY). Nothing ever read it, and its numbers
+    // had drifted away from the real ones — it claimed a 3000ms splash while
+    // BootLoader ran 4000ms and held the bar at 90% until the OS reported ready.
+    // Config that disagrees with the code is worse than no config, so it is gone.
+    // The boot timings are constants at the top of js/core/BootLoader.ts.
 
     // Audio
     AUDIO: {
@@ -187,7 +186,6 @@ Object.freeze(CONFIG.WINDOWS);
 Object.freeze(CONFIG.RAGDOLL);
 Object.freeze(CONFIG.Z_INDEX);
 Object.freeze(CONFIG.COLORS);
-Object.freeze(CONFIG.ANIMATIONS);
 Object.freeze(CONFIG.AUDIO);
 
 Object.freeze(CONFIG.PERFORMANCE);
