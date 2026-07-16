@@ -48,9 +48,15 @@
     background: rgba(16, 132, 208, 0.1);
 }
 
+/* The !important was cargo: this and `.tm-table tr:hover` both score (0,2,1), and
+   this comes later, so it already wins on a hovered active row — the only case
+   where the two compete.
+   --win-blue is a legacy alias; the themes remap it (to --hados-blue-deep here),
+   and white on it clears 5:1. Left as-is deliberately: recolouring the selected
+   row is a design change, not the removal of a redundant keyword. */
 .tm-table tr.active {
-    background: var(--win-blue) !important;
-    color: white !important;
+    background: var(--win-blue);
+    color: white;
 }
 
 .tm-table tr.active td {

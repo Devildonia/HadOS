@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Two entirely dead stylesheet partials.** `css/effects/glitch.css` (133 lines: `.glitch-active`
+  and three keyframes) and `css/desktop/folder-items.css` — neither class exists anywhere in the
+  product: not in the markup, not in the JS, not in another stylesheet. They only ever referenced
+  themselves. The `glitch` matches elsewhere are inside sandboxed game bundles, which load their
+  own stylesheet from their own iframe and never see ours.
+- **`!important` is down to 10**, from 40 at the start of this work. All ten are on
+  `.hados-window.maximized` and are the correct tool: dragging writes `left/top/width/height`
+  inline, inline beats every selector, and `!important` is the only thing that beats inline. The
+  rest went as cargo (`responsive.css` and `task-manager.css` mirrored selectors that already won
+  on order) or with the dead files that carried them.
+
 ## [1.0.2] - 2026-07-16
 
 A cleanup release. The stylesheet was one 2507-line file that no test could see; it is now 34

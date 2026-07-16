@@ -142,27 +142,35 @@ No flash was introduced: every screen starts `display:none` and nothing paints u
 the OS. Verified — computed styles, interactive states and all screenshots unchanged, with the
 CSSOM diff showing 422 rules removed and **0 added**.
 
-### 11. `!important`: 22 left in `css/`, classified
+### 11. ~~`!important`~~ — 40 → 10, and the 10 are the correct tool
 
-Down from ~39. Gone: the 8 in `css/apps/games.css` (redundant — their selectors carry an ID and
-already out-ranked the mobile rule they fought) and the 9 in `css/apps/paint.css`. What remains:
+Every remaining one is in `css/chrome/window.css`, on `.hados-window.maximized`, and they are
+**load-bearing**: dragging writes `left/top/width/height` inline via `WindowInteractions`, inline
+outranks every selector, and `!important` is the only thing that beats inline. Documented in place
+so nobody "cleans them up". (`theme-hados.css` keeps 2 more for the same rule.)
 
-| Where | Count | Verdict |
+How the other 30 went:
+
+| Where | Was | Verdict |
 |---|---|---|
-| `css/chrome/window.css` | 10 | **Necessary, and documented in place.** `.hados-window.maximized` beats the inline `left/top/width/height` that `WindowInteractions` writes while dragging. Inline outranks every selector; `!important` is the only thing that beats inline. |
-| `css/effects/glitch.css` | 6 | Not examined. |
-| `css/responsive.css`, `desktop/folder-items.css`, `apps/task-manager.css` | 6 | Not examined. |
-| `theme-hados.css` | 2 | The `.maximized` radius/background, same reason as above. |
-| `theme-modern.css` | 7 | Not examined; part of the modern-theme work. |
+| `css/apps/paint.css` | 9 | Forced by a rule of ours scoring (1,2,2) — see the `:not(#id)` lesson below. Dissolved once that was fixed. |
+| `css/apps/games.css` | 8 | Cargo. Their selectors carry an ID and already out-ranked the mobile rule they claimed to fight. |
+| `css/effects/glitch.css` | 6 | **The whole file was dead** — `.glitch-active` and its three keyframes were referenced by nothing outside it. Deleted. |
+| `css/responsive.css` | 2 | Cargo. They mirror `desktop/desktop.css` at the same specificity and are imported after it, so they already won. |
+| `css/desktop/folder-items.css` | 2 | **The whole file was dead** — `.folder-item` exists nowhere in the product. Deleted. |
+| `css/apps/task-manager.css` | 2 | Cargo. `.tm-table tr.active` and `tr:hover` both score (0,2,1), and `.active` comes later. |
 
-Two lessons, both learned the hard way:
+`theme-modern.css`'s 7 are unexamined; they belong to the modern-theme work.
 
-- **Check the specificity before assuming an `!important` is doing work.** The games.css ones sat
-  under a comment claiming to "override mobile media query" — but a media query adds no
-  specificity, and those selectors already carried an ID.
-- **`:not(#id)` hands a rule an ID's weight.** `theme-hados`'s button rule scored (1,2,2) purely
-  because it excluded the Start button by ID, which made it unbeatable and *forced* Paint's nine.
-  Swapping to a `.start-btn` class dropped it to (0,3,2) and the nine dissolved.
+Three lessons, all learned the hard way here:
+
+- **Check the specificity before assuming an `!important` is doing work.** More than half were
+  cargo, several sitting under comments confidently explaining what they overrode.
+- **`:not(#id)` hands a rule an ID's full weight.** `theme-hados`'s button rule scored (1,2,2)
+  purely because it excluded the Start button by ID, which made it unbeatable and *forced* Paint's
+  nine. A `.start-btn` class dropped it to (0,3,2) and they dissolved.
+- **An `!important` can be a fossil of dead code.** Two whole files were unreachable; their
+  `!important`s had nothing to fight because nothing rendered them.
 
 ### 12. ~~The shader palette is hand-synced~~ — FIXED
 

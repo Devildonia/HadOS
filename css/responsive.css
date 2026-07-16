@@ -13,12 +13,16 @@
         gap: 30px;
     }
 
+    /* No !important needed: these mirror the selectors in desktop/desktop.css at
+       the same specificity, and this partial is imported after it, so they already
+       win. A media query changes nothing about that — it adds no specificity, and
+       it does not need to. */
     .icon-box {
-        font-size: 32px !important;
+        font-size: 32px;
     }
 
     .main-app .icon-box {
-        font-size: 40px !important;
+        font-size: 40px;
     }
 
     /* Adjust windows for mobile */

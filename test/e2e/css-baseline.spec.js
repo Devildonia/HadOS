@@ -285,6 +285,9 @@ test.describe('CSS baseline', () => {
             '#win-flappy-neon', '#win-flappy-neon .window-body',
             '#win-football-rush', '#win-football-rush .window-body',
             '.ragdoll-pet-btn', '.taskbar-button', '.icon',
+            // The mobile icon sizes are the only thing responsive.css's !important
+            // guards; without these two the removal would look free.
+            '#icon-mycomputer .icon-box', '.main-app .icon-box',
         ];
         expect(await computedStyles(page, mobileSelectors, TRACKED_PROPS))
             .toMatchSnapshot('computed-mobile.txt');
