@@ -20,7 +20,7 @@ describe('Notepad', () => {
         // Instead, we test the class directly via Kernel registry after fresh import
 
         document.body.innerHTML = `
-            <div id="win-notepad" class="win95-window" style="display:none;">
+            <div id="win-notepad" class="hados-window" style="display:none;">
                 <div class="window-header"><span>Untitled - Notepad</span></div>
                 <div class="window-menu">
                     <span class="window-menu-item">File</span>

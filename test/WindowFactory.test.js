@@ -29,7 +29,7 @@ describe('WindowFactory', () => {
 
         const win = document.getElementById(id);
         expect(win).not.toBeNull();
-        expect(win.classList.contains('win95-window')).toBe(true);
+        expect(win.classList.contains('hados-window')).toBe(true);
         expect(win.querySelector('.window-header span').textContent).toBe('Test Window');
         expect(win.querySelector('.window-body').innerHTML).toBe('<p>Content</p>');
     });
@@ -39,7 +39,7 @@ describe('WindowFactory', () => {
         const id2 = WindowFactory.create({ id: 'unique-win', title: 'Second' });
 
         expect(id1).toBe(id2);
-        const windows = document.querySelectorAll('.win95-window');
+        const windows = document.querySelectorAll('.hados-window');
         expect(windows.length).toBe(1);
     });
 

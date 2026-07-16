@@ -15,7 +15,7 @@ function makeFakeApp(appId, geometry = { left: 120, top: 80, width: 400, height:
             this.windowId = `win-${appId}-${++seq}`;
             const el = document.createElement('div');
             el.id = this.windowId;
-            el.className = 'win95-window';
+            el.className = 'hados-window';
             el.style.cssText = `position:fixed;display:flex;left:${geometry.left}px;top:${geometry.top}px;width:${geometry.width}px;height:${geometry.height}px;`;
             document.body.appendChild(el);
         }

@@ -41,8 +41,8 @@ function defaultPrompt(appId: string, capability: string): Promise<Decision> {
             <div role="dialog" aria-modal="true" style="background:#c0c0c0;border:2px outset #fff;padding:16px;min-width:280px;font-family:'MS Sans Serif',sans-serif;font-size:12px;box-shadow:2px 2px 8px rgba(0,0,0,.4);">
                 <p style="margin:0 0 12px;">🔐 <strong>${safeAppId}</strong> wants to <strong>${label}</strong>.</p>
                 <div style="display:flex;gap:8px;justify-content:flex-end;">
-                    <button class="win95-btn" data-consent="denied">Deny</button>
-                    <button class="win95-btn" data-consent="granted">Allow</button>
+                    <button class="hados-btn" data-consent="denied">Deny</button>
+                    <button class="hados-btn" data-consent="granted">Allow</button>
                 </div>
             </div>`;
         const finish = (d: Decision) => { overlay.remove(); resolve(d); };

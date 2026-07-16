@@ -81,8 +81,8 @@ const NOTEPAD_BODY_HTML = `
             <div class="notepad-dialog-files" id="notepad-dialog-filelist"></div>
         </div>
         <div class="notepad-dialog-buttons">
-            <button class="win95-btn" id="notepad-open-ok">Open</button>
-            <button class="win95-btn" id="notepad-open-cancel">Cancel</button>
+            <button class="hados-btn" id="notepad-open-ok">Open</button>
+            <button class="hados-btn" id="notepad-open-cancel">Cancel</button>
         </div>
     </div>
     <div class="notepad-dialog" id="notepad-saveas-dialog" style="display:none;">
@@ -92,8 +92,8 @@ const NOTEPAD_BODY_HTML = `
             <input type="text" id="notepad-saveas-input" class="notepad-dialog-input" />
         </div>
         <div class="notepad-dialog-buttons">
-            <button class="win95-btn" id="notepad-saveas-ok">Save</button>
-            <button class="win95-btn" id="notepad-saveas-cancel">Cancel</button>
+            <button class="hados-btn" id="notepad-saveas-ok">Save</button>
+            <button class="hados-btn" id="notepad-saveas-cancel">Cancel</button>
         </div>
     </div>
     <div class="notepad-dialog" id="notepad-find-dialog" style="display:none;">
@@ -103,8 +103,8 @@ const NOTEPAD_BODY_HTML = `
             <input type="text" id="notepad-find-input" class="notepad-dialog-input" />
         </div>
         <div class="notepad-dialog-buttons">
-            <button class="win95-btn" id="notepad-find-next">Find Next</button>
-            <button class="win95-btn" id="notepad-find-cancel">Cancel</button>
+            <button class="hados-btn" id="notepad-find-next">Find Next</button>
+            <button class="hados-btn" id="notepad-find-cancel">Cancel</button>
         </div>
     </div>
     <textarea id="notepad-textarea"></textarea>

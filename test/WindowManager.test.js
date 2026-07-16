@@ -34,7 +34,7 @@ describe('WindowManager', () => {
         // Build a minimal desktop with windows
         document.body.innerHTML = `
             <div id="desktop">
-                <div id="win-test1" class="win95-window" style="display:none;">
+                <div id="win-test1" class="hados-window" style="display:none;">
                     <div class="window-header">
                         <span>Test Window 1</span>
                         <div class="window-controls">
@@ -45,7 +45,7 @@ describe('WindowManager', () => {
                     </div>
                     <div class="window-body">Content 1</div>
                 </div>
-                <div id="win-test2" class="win95-window" style="display:none;">
+                <div id="win-test2" class="hados-window" style="display:none;">
                     <div class="window-header">
                         <span>Test Window 2</span>
                         <div class="window-controls">
@@ -54,7 +54,7 @@ describe('WindowManager', () => {
                     </div>
                     <div class="window-body">Content 2</div>
                 </div>
-                <div id="win-with-iframe" class="win95-window" style="display:none;">
+                <div id="win-with-iframe" class="hados-window" style="display:none;">
                     <div class="window-header"><span>Game Window</span></div>
                     <div class="window-body">
                         <iframe id="game-frame" src="about:blank"></iframe>

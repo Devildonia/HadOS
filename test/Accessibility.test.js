@@ -12,7 +12,7 @@ describe('Accessibility & Keyboard Navigation', () => {
             <div id="a11y-announcer" aria-live="assertive" class="sr-only"></div>
             <div id="desktop" role="application">
                 <div class="icon" data-launch="notepad" tabindex="0">Notepad</div>
-                <div class="win95-window" id="win-notepad" style="display:none;">
+                <div class="hados-window" id="win-notepad" style="display:none;">
                     <div class="window-header">
                         <span>Notepad Title</span>
                         <div class="window-controls">
@@ -77,15 +77,15 @@ describe('Accessibility & Keyboard Navigation', () => {
             // Re-setup with 3 mock windows in DOM
             document.body.innerHTML = `
                 <div id="desktop">
-                    <div class="win95-window" id="win-1" style="display: flex; z-index: 100;">
+                    <div class="hados-window" id="win-1" style="display: flex; z-index: 100;">
                         <div class="window-header"><span>Win 1</span></div>
                         <button id="btn-1">Button 1</button>
                     </div>
-                    <div class="win95-window" id="win-2" style="display: flex; z-index: 110;">
+                    <div class="hados-window" id="win-2" style="display: flex; z-index: 110;">
                         <div class="window-header"><span>Win 2</span></div>
                         <button id="btn-2">Button 2</button>
                     </div>
-                    <div class="win95-window" id="win-3" style="display: flex; z-index: 120;">
+                    <div class="hados-window" id="win-3" style="display: flex; z-index: 120;">
                         <div class="window-header"><span>Win 3</span></div>
                         <button id="btn-3">Button 3</button>
                     </div>

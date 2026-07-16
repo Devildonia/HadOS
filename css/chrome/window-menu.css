@@ -8,12 +8,16 @@
  * hover already had to be defined once, globally, because of it. They are now
  * .window-menu-item and own their own look.
  */
+/* Colours come from tokens, not from hardcoded Windows 95 values. These used to
+   be `#808080` and a `#000080` navy hover: theme-hados overrode both, so they
+   only ever showed under theme-modern — a Windows 95 menu bar inside a Fluent
+   window, which nobody had noticed because the theme most people run hid it. */
 .window-menu {
-    border-bottom: 1px solid #808080;
+    border-bottom: 1px solid var(--border-dark);
     padding: 2px 5px;
     display: flex;
     gap: 10px;
-    font-size: 11px;
+    font-size: var(--os-font-size);
 }
 
 .window-menu-item {
@@ -22,6 +26,6 @@
 }
 
 .window-menu-item:hover {
-    background: #000080;
-    color: white;
+    background: var(--accent-color);
+    color: var(--os-text-color-inverted);
 }

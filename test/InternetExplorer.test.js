@@ -12,7 +12,7 @@ describe('InternetExplorer', () => {
         Services.__reset();
 
         document.body.innerHTML = `
-            <div id="win-internet-explorer" class="win95-window" style="display:none;">
+            <div id="win-internet-explorer" class="hados-window" style="display:none;">
                 <div class="window-header"><span>Internet Explorer</span></div>
                 <div class="window-body">
                     <input id="ie-address-input" type="text" value="">

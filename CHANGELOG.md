@@ -6,6 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`.win95-window` / `.win95-btn` / `.win95-dialog` are now `.hados-*`**, across 37 files, along
+  with the `win95-notify-in` keyframe. Render-neutral — every screenshot came back
+  pixel-identical. The storage migration keys (`win95-vfs`, `win95_vfs_root`, `win95-vfs-blobs`)
+  and `ThemeManager`'s `LEGACY_THEME` keep the old name on purpose: they identify pre-rename
+  installs, and renaming them would strand that data.
+- **The wallpaper takes its palette from the theme.** `SHADER_HADOS`'s blues were GLSL literals
+  hand-copied from the `--hados-blue-*` tokens, so editing the stylesheet quietly left the
+  wallpaper on the old colour. `buildHadosShader()` now injects them from the live custom
+  properties at compile time — the shader is rebuilt on every theme change anyway. The baseline
+  proves the wiring by moving a token and watching the pixels follow.
+- **`!important` in `css/`: 31 → 22.** Paint's nine are gone. They were unavoidable while
+  `theme-hados`'s button rule scored **(1,2,2)** — because it excluded the Start button with
+  `:not(#start-button)`, which hands a rule an ID's full weight. Swapping that for a `.start-btn`
+  class drops it to (0,3,2), and scoping Paint's tools to their window wins outright.
+
+### Fixed
+
+- **Disabled text was invisible in the modern theme.** `chrome/controls.css` coloured it with
+  `var(--border-dark)` — a *border* token used as *text*, which only ever worked because Win95
+  happened to map it to a usable grey. Modern maps it to `#e5e5e5`: near-white on a near-white
+  button. There are now `--control-disabled-color` / `--control-disabled-text-shadow` tokens per
+  theme, and modern renders at `#9a9a9a`.
+- **The in-app menu bar was still Windows 95 under the modern theme** — a `#808080` rule and a
+  `#000080` navy hover, hardcoded. `theme-hados` overrode both, which is why nobody saw it. Now
+  tokenised.
+- **A latent race in the e2e suite.** `settle()` and `boot.spec` waited for the BIOS to hide and
+  then expected the desktop with the default 5s timeout — but the splash sits between them for at
+  least 4s, so it was a coin flip under parallel load. Reproduced at 2-in-3 before the fix, 4/4
+  clean after.
+
 ### Removed
 
 - **Eight dead Windows 95 strings from all 40 locales.** Nothing read them and every one was false:

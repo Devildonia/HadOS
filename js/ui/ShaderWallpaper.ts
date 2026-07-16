@@ -9,7 +9,7 @@ import { Services } from '../core/ServiceContainer';
 import {
     SHADER_WIN95,
     SHADER_MODERN,
-    SHADER_HADOS
+    buildHadosShader
 } from './ThemeShaders';
 
 export interface IShaderWallpaper {
@@ -272,12 +272,12 @@ const ShaderWallpaper: IShaderWallpaper = (() => {
         // the waving Windows flag — so any unrecognised theme, including 'hados',
         // would have painted Microsoft's logo across the HadOS desktop.
         const shaders: Record<string, string> = {
-            hados: SHADER_HADOS,
+            hados: buildHadosShader(),
             modern: SHADER_MODERN,
             win95: SHADER_WIN95,
         };
 
-        passes.push(new RenderPass(gl, shaders[currentTheme] ?? SHADER_HADOS, false));
+        passes.push(new RenderPass(gl, shaders[currentTheme] ?? buildHadosShader(), false));
     }
 
     function resizeCanvas(): void {

@@ -19,7 +19,7 @@ const PRIME_LAB_HTML = `
             <label for="prime-lab-count">N =</label>
             <input id="prime-lab-count" type="number" value="20000" min="1" max="100000"
                    style="width:90px;" />
-            <button id="prime-lab-run" class="win95-btn">Compute (off-thread)</button>
+            <button id="prime-lab-run" class="hados-btn">Compute (off-thread)</button>
         </div>
         <p id="prime-lab-status" style="margin:8px 0; min-height:16px;">Worker process: starting…</p>
         <p id="prime-lab-result" style="margin:0; font-weight:bold;"></p>

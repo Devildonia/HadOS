@@ -263,7 +263,7 @@ export class TaskManager implements IWindowsApp {
                 <td>${Utils.escapeHTML(proc.windowId || '—')}</td>
                 <td class="${statusClass}">${proc.status}</td>
                 <td>
-                    <button class="win95-btn tm-kill-btn" data-pid="${proc.pid}" style="padding: 1px 6px; min-height: 18px; font-size: 10px;">
+                    <button class="hados-btn tm-kill-btn" data-pid="${proc.pid}" style="padding: 1px 6px; min-height: 18px; font-size: 10px;">
                         ${endTaskLabel}
                     </button>
                 </td>

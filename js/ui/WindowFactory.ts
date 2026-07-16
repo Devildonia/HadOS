@@ -1,6 +1,6 @@
 /**
  * WINDOWS 95 APP CENTER - WINDOW FACTORY
- * Creates win95-window DOM elements dynamically.
+ * Creates hados-window DOM elements dynamically.
  * Apps call WindowFactory.create() instead of relying on static HTML.
  * Version: 1.1 (ES Modules)
  */
@@ -47,7 +47,7 @@ export const WindowFactory: IWindowFactory = (function () {
     let _idCounter = 0;
 
     /**
-     * Creates a win95-window element and appends it to the desktop
+     * Creates a hados-window element and appends it to the desktop
      * @param {IWindowOptions} opts - Window configuration
      * @returns {string} Window ID
      */
@@ -69,7 +69,7 @@ export const WindowFactory: IWindowFactory = (function () {
 
         // Build window DOM
         const win = document.createElement('div');
-        win.className = `win95-window ${className}`.trim();
+        win.className = `hados-window ${className}`.trim();
         win.id = id;
         win.style.display = 'none';
         win.setAttribute('role', 'dialog');
@@ -265,7 +265,7 @@ export const WindowFactory: IWindowFactory = (function () {
             createdWindows.clear();
             _idCounter = 0;
             // Clear DOM windows if any
-            const windows = document.querySelectorAll('.win95-window');
+            const windows = document.querySelectorAll('.hados-window');
             windows.forEach(w => w.remove());
         }
     };

@@ -58,11 +58,15 @@ body.theme-modern {
     --control-shadow: none;
     --control-active-border-color: var(--accent-color);
     --control-active-shadow: none;
+    /* Fluent's disabled text. It must not come from a border token: --border-dark
+       is #e5e5e5 here, which is invisible on a #f9f9f9 button. */
+    --control-disabled-color: #9a9a9a;
+    --control-disabled-text-shadow: none;
 }
 
 /* Specific component overrides that require extra CSS for modern look */
-body.theme-modern .win95-window,
-body.theme-modern .win95-dialog {
+body.theme-modern .hados-window,
+body.theme-modern .hados-dialog {
     border-radius: var(--window-border-radius);
     overflow: hidden;
     background: rgba(255, 255, 255, 0.7) !important;

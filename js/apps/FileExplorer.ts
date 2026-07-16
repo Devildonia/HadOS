@@ -23,7 +23,7 @@ export interface IFileExplorerParams {
 
 const EXPLORER_BODY_HTML = `
     <div class="explorer-toolbar">
-        <button class="win95-btn" id="explorer-back" data-i18n="folder.back">⬅ Back</button>
+        <button class="hados-btn" id="explorer-back" data-i18n="folder.back">⬅ Back</button>
         <span class="explorer-menu-hint" data-i18n="folder.menu">📁 File 📝 Edit 👁️ View ❓ Help</span>
     </div>
     <div class="explorer-address">

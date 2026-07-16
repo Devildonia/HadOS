@@ -85,6 +85,8 @@ body.theme-hados {
     --control-shadow: none;
     --control-active-border-color: var(--accent-color);
     --control-active-shadow: 0 0 0 2px rgba(59, 155, 240, 0.35);
+    --control-disabled-color: #5a6b80;
+    --control-disabled-text-shadow: none;
 }
 
 body.theme-hados {
@@ -94,15 +96,15 @@ body.theme-hados {
 
 /* ===== WINDOWS ===== */
 
-body.theme-hados .win95-window,
-body.theme-hados .win95-dialog {
+body.theme-hados .hados-window,
+body.theme-hados .hados-dialog {
     /* The radius has to clip the header's gradient and the content beneath it. */
     overflow: hidden;
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
 }
 
-body.theme-hados .win95-window.maximized {
+body.theme-hados .hados-window.maximized {
     border-radius: 0 !important;
     background: var(--window-bg) !important;
 }
@@ -117,7 +119,7 @@ body.theme-hados .window-header {
 }
 
 /* The active window earns the accent; the rest recede. */
-body.theme-hados .win95-window.active-window .window-header {
+body.theme-hados .hados-window.active-window .window-header {
     background: linear-gradient(180deg, #223049, #161e2b);
     box-shadow: inset 0 1px 0 rgba(127, 210, 255, 0.14);
 }
@@ -170,8 +172,12 @@ body.theme-hados .window-resize-handle {
 
 /* ===== CONTROLS ===== */
 
-body.theme-hados .win95-btn,
-body.theme-hados button:not(.window-btn):not(#start-button) {
+body.theme-hados .hados-btn,
+/* The Start button opts out by class. This used to read :not(#start-button),
+   which handed the rule an ID's weight and pushed it to (1,2,2) — high enough
+   that nothing could override it without !important, which is exactly why Paint's
+   tool squares needed nine of them. */
+body.theme-hados button:not(.window-btn):not(.start-btn) {
     border-radius: 6px;
     color: var(--os-text-color);
     font-family: var(--os-font-family);
@@ -180,22 +186,22 @@ body.theme-hados button:not(.window-btn):not(#start-button) {
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
 }
 
-body.theme-hados .win95-btn:hover:not(:disabled),
-body.theme-hados button:not(.window-btn):not(#start-button):hover:not(:disabled) {
+body.theme-hados .hados-btn:hover:not(:disabled),
+body.theme-hados button:not(.window-btn):not(.start-btn):hover:not(:disabled) {
     /* style.css brightens; on dark surfaces that reads as grey mush. */
     filter: none;
     background: #243044;
     border-color: var(--hados-line-strong);
 }
 
-body.theme-hados .win95-btn:active:not(:disabled),
-body.theme-hados button:not(.window-btn):not(#start-button):active:not(:disabled) {
+body.theme-hados .hados-btn:active:not(:disabled),
+body.theme-hados button:not(.window-btn):not(.start-btn):active:not(:disabled) {
     padding: 6px 16px;
     transform: scale(0.97);
     border-color: var(--accent-color);
 }
 
-body.theme-hados .win95-btn:focus-visible,
+body.theme-hados .hados-btn:focus-visible,
 body.theme-hados button:focus-visible,
 body.theme-hados input:focus-visible,
 body.theme-hados select:focus-visible {
@@ -204,11 +210,10 @@ body.theme-hados select:focus-visible {
     box-shadow: var(--control-active-shadow);
 }
 
-body.theme-hados .win95-btn:disabled,
+/* Colour and text-shadow now come from --control-disabled-*, set in the token
+   block above; only the fade is specific to this theme. */
+body.theme-hados .hados-btn:disabled,
 body.theme-hados button:disabled {
-    color: #5a6b80;
-    /* The Win95 disabled look embossed the label with a white shadow. */
-    text-shadow: none;
     opacity: 0.6;
 }
 
@@ -248,7 +253,7 @@ body.theme-hados #install-bar-fill {
 
 /* ===== DIALOGS ===== */
 
-body.theme-hados .win95-dialog {
+body.theme-hados .hados-dialog {
     border-radius: var(--window-border-radius);
 }
 
@@ -562,7 +567,7 @@ body.theme-hados .icon:hover .icon-box {
 
 @media (prefers-reduced-motion: reduce) {
 
-    body.theme-hados .win95-btn,
+    body.theme-hados .hados-btn,
     body.theme-hados button,
     body.theme-hados .taskbar-button,
     body.theme-hados #start-button,

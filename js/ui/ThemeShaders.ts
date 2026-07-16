@@ -124,6 +124,53 @@ void main() {
 `;
 
 /**
+ * Converts a CSS hex colour to a GLSL vec3 literal.
+ * Accepts `#rgb` and `#rrggbb`, with or without surrounding whitespace —
+ * getPropertyValue returns the token verbatim, leading space included.
+ */
+export function hexToVec3(hex: string): string | null {
+    const m = hex.trim().replace(/^#/, '');
+    const full = m.length === 3 ? m.split('').map(c => c + c).join('') : m;
+    if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
+    const c = (i: number) => (parseInt(full.slice(i, i + 2), 16) / 255).toFixed(4);
+    return `vec3(${c(0)}, ${c(2)}, ${c(4)})`;
+}
+
+/** The palette the shader needs, and the CSS token each one comes from. */
+const SHADER_PALETTE = {
+    BLUE_DEEP: { token: '--hados-blue-deep', fallback: '#0b5ed7' },
+    BLUE_MID: { token: '--hados-blue', fallback: '#3b9bf0' },
+    BLUE_LIGHT: { token: '--hados-blue-light', fallback: '#7fd2ff' },
+    BG_TOP: { token: '--hados-bg', fallback: '#0b0e13' },
+} as const;
+
+/**
+ * Reads the brand palette out of the live CSS custom properties.
+ *
+ * The theme owns the palette. These values used to be hand-copied into the GLSL
+ * as literals, which meant editing --hados-blue in the stylesheet quietly left
+ * the wallpaper on the old colour, with nothing to catch it.
+ *
+ * Falls back to the shipped values if a token is missing or malformed — a
+ * wallpaper that renders in slightly stale blues beats a black screen.
+ */
+export function readShaderPalette(read?: (token: string) => string): Record<string, string> {
+    const get = read ?? ((token: string) => {
+        try {
+            return getComputedStyle(document.body).getPropertyValue(token);
+        } catch {
+            return '';
+        }
+    });
+
+    const out: Record<string, string> = {};
+    for (const [name, { token, fallback }] of Object.entries(SHADER_PALETTE)) {
+        out[name] = hexToVec3(get(token)) ?? hexToVec3(fallback)!;
+    }
+    return out;
+}
+
+/**
  * HadOS Shader — the brand mark, drawn rather than blitted.
  *
  * The Win95 wallpaper it replaces built its flag procedurally in GLSL; this does
@@ -137,8 +184,14 @@ void main() {
  *
  * Budget: 72 march steps against three boxes. That is well under SHADER_MODERN,
  * which raymarches 40 layers of noise.
+ *
+ * Built rather than declared: the palette is injected from the theme's CSS tokens
+ * at compile time, so there is one source of truth for the HadOS blues. The
+ * shader is recompiled whenever the theme changes, which is exactly when the
+ * palette could have moved.
  */
-export const SHADER_HADOS = `
+export function buildHadosShader(palette: Record<string, string> = readShaderPalette()): string {
+    return `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -150,13 +203,19 @@ uniform float iTime;
 
 #define PI 3.1415926535897932384626433832795
 
-// Brand palette, matching the CSS tokens in theme-hados.css.
-#define BLUE_DEEP  vec3(0.043, 0.369, 0.843)
-#define BLUE_MID   vec3(0.231, 0.608, 0.941)
-#define BLUE_LIGHT vec3(0.498, 0.824, 1.000)
-#define BG_TOP     vec3(0.043, 0.055, 0.075)
-#define BG_BOTTOM  vec3(0.020, 0.027, 0.039)
+// Injected from the CSS custom properties — see readShaderPalette().
+#define BLUE_DEEP  ${palette.BLUE_DEEP}
+#define BLUE_MID   ${palette.BLUE_MID}
+#define BLUE_LIGHT ${palette.BLUE_LIGHT}
+#define BG_TOP     ${palette.BG_TOP}
+// The backdrop's darker end, derived from the surface colour rather than
+// declared: a shade below BG_TOP.
+#define BG_BOTTOM  (BG_TOP * 0.5)
+${SHADER_HADOS_BODY}`;
+}
 
+/** Everything below the palette. Concatenated by buildHadosShader(). */
+const SHADER_HADOS_BODY = `
 mat2 rot(float a) {
     float c = cos(a), s = sin(a);
     return mat2(c, -s, s, c);

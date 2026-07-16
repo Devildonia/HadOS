@@ -37,7 +37,7 @@ describe('Paint', () => {
         HTMLCanvasElement.prototype.getContext = vi.fn(() => mockCtx);
 
         document.body.innerHTML = `
-            <div id="win-paint" class="win95-window" style="display:none;">
+            <div id="win-paint" class="hados-window" style="display:none;">
                 <div class="window-header"><span>Paint</span></div>
                 <div class="window-body">
                     <div class="paint-toolbar">

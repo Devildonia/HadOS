@@ -1,5 +1,5 @@
 /* ===== DIALOG WINDOWS (SMALLER, CENTERED) ===== */
-.win95-dialog {
+.hados-dialog {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -42,6 +42,6 @@
     padding: 0 20px 20px 20px;
 }
 
-.dialog-buttons .win95-btn {
+.dialog-buttons .hados-btn {
     min-width: 80px;
 }

@@ -826,7 +826,7 @@ body
   backdrop-filter: none
   cursor: pointer
 
-.win95-window
+.hados-window
   display: none
   position: fixed
   z-index: 100
@@ -1148,7 +1148,7 @@ body
   backdrop-filter: none
   cursor: nwse-resize
 
-.win95-btn
+.hados-btn
   display: block
   position: static
   z-index: auto
@@ -1612,4 +1612,10 @@ body
   cursor: auto
 
 .window-menu .window-menu-item
+  <absent>
+
+.paint-tool-btn
+  <absent>
+
+.paint-toolbar
   <absent>

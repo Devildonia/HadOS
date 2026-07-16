@@ -23,7 +23,7 @@ describe('TouchManager', () => {
                     <div class="icon-box">📝</div>
                     <span>Notepad</span>
                 </div>
-                <div id="win-test" class="win95-window" style="display:none;">
+                <div id="win-test" class="hados-window" style="display:none;">
                     <div class="window-header"><span>Test</span></div>
                 </div>
             </div>

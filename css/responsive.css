@@ -22,7 +22,7 @@
     }
 
     /* Adjust windows for mobile */
-    .win95-window {
+    .hados-window {
         min-width: 280px;
         max-width: 95vw;
         max-height: 85vh;
@@ -80,7 +80,7 @@
         gap: 20px;
     }
 
-    .win95-window {
+    .hados-window {
         min-width: 260px;
     }
 

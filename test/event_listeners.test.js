@@ -39,7 +39,7 @@ describe('Global Event Listeners', () => {
             <div id="tab1" class="display-tab-content"></div>
             <div id="tab2" class="display-tab-content"></div>
             
-            <div class="win95-window">
+            <div class="hados-window">
                 <button class="close-btn"></button>
             </div>
             
@@ -137,7 +137,7 @@ describe('Global Event Listeners', () => {
 
     it('should close windows on generic close button click', () => {
         const closeBtn = document.querySelector('.close-btn');
-        const win = document.querySelector('.win95-window');
+        const win = document.querySelector('.hados-window');
 
         closeBtn.onclick({ target: closeBtn });
         expect(win.style.display).toBe('none');

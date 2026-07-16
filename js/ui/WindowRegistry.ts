@@ -185,8 +185,8 @@ const GAME_DEFS: IGameDef[] = [
 export function buildDynamicFolderWindows(): void {
     FOLDER_DEFS.forEach(def => {
         const backBtnHtml = def.backBtnId 
-            ? `<button class="win95-btn" id="${def.backBtnId}" style="padding: 2px 8px; font-size: 11px;" data-i18n="folder.back">⬅ Back</button>`
-            : `<button class="win95-btn" disabled style="padding: 2px 8px; font-size: 11px; opacity: 0.5;" data-i18n="folder.back">⬅ Back</button>`;
+            ? `<button class="hados-btn" id="${def.backBtnId}" style="padding: 2px 8px; font-size: 11px;" data-i18n="folder.back">⬅ Back</button>`
+            : `<button class="hados-btn" disabled style="padding: 2px 8px; font-size: 11px; opacity: 0.5;" data-i18n="folder.back">⬅ Back</button>`;
 
         let iconsHtml = '';
         def.icons.forEach(icon => {

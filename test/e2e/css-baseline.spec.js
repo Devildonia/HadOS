@@ -50,14 +50,18 @@ const TRACKED_SELECTORS = [
     '#start-menu', '.start-sidebar', '.menu-items-container',
     '#start-menu .menu-item', '#start-menu .menu-separator', '#start-menu .submenu',
     '#system-icons', '#icon-mycomputer', '#icon-mycomputer .icon-box', '#icon-mycomputer span',
-    '.win95-window', '.window-header', '.window-header span', '.window-controls',
+    '.hados-window', '.window-header', '.window-header span', '.window-controls',
     '.window-btn', '.window-body', '.window-resize-handle',
-    '.win95-btn', '#splash-screen', '.splash-title', '.splash-progress', '.splash-progress-bar',
+    '.hados-btn', '#splash-screen', '.splash-title', '.splash-progress', '.splash-progress-bar',
     // Tray buttons and the in-app menu bar: both are served by selectors that are
     // declared in three partials each, so they are the ones a consolidation can
     // most easily change by accident.
     '#system-tray', '#clock', '#ragdollToggle', '#hdr-toggle', '.ragdoll-text',
     '.window-menu', '.window-menu .window-menu-item',
+    // Paint's tool squares: 24x24 icon buttons that have to escape the OS-wide
+    // button rules. Nothing covered them before, which is why their !important
+    // could not be touched.
+    '.paint-tool-btn', '.paint-toolbar',
 ];
 
 /**
@@ -72,7 +76,11 @@ const HOVER_TARGETS = [
 /** Freezes everything that moves, so measurements are reproducible. */
 async function settle(page) {
     await expect(page.locator('#boot-screen')).toBeHidden({ timeout: BOOT_TIMEOUT });
-    await expect(page.locator('#desktop')).toBeVisible();
+    // The BIOS hiding does not mean the desktop is up — the splash sits between
+    // them for at least 4s (SPLASH_MIN_MS), longer if the OS is slow to report
+    // ready. The default 5s expect timeout was just barely enough, and lost the
+    // race under parallel load.
+    await expect(page.locator('#desktop')).toBeVisible({ timeout: BOOT_TIMEOUT });
 
     // toBeVisible() resolves the moment the desktop is displayed, but it then
     // fades in over 1s (#desktop has opacity:0 + a transition). Measuring on that
@@ -280,6 +288,78 @@ test.describe('CSS baseline', () => {
         ];
         expect(await computedStyles(page, mobileSelectors, TRACKED_PROPS))
             .toMatchSnapshot('computed-mobile.txt');
+    });
+
+    /**
+     * The wallpaper's blues used to be hand-copied GLSL literals duplicating the
+     * theme's CSS tokens, with nothing to catch them drifting apart. They are now
+     * injected from those tokens at compile time; this proves the wiring by
+     * moving a token and watching the pixels follow.
+     */
+    test('the wallpaper takes its palette from the theme tokens', async ({ page }) => {
+        await page.addInitScript(() => localStorage.setItem('os-theme', 'hados'));
+        await page.goto('/');
+        await settle(page);
+
+        const sample = await page.evaluate(async () => {
+            const { buildHadosShader, readShaderPalette, hexToVec3 } = await import('/js/ui/ThemeShaders.ts');
+
+            const render = (src) => {
+                const c = document.createElement('canvas');
+                c.width = 120; c.height = 90;
+                const gl = c.getContext('webgl', { preserveDrawingBuffer: true });
+                const vs = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vs, 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }');
+                gl.compileShader(vs);
+                const fs = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fs, src);
+                gl.compileShader(fs);
+                if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) return { error: gl.getShaderInfoLog(fs) };
+                const pr = gl.createProgram();
+                gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr); gl.useProgram(pr);
+                const b = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, b);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+                const loc = gl.getAttribLocation(pr, 'p');
+                gl.enableVertexAttribArray(loc);
+                gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+                gl.uniform2f(gl.getUniformLocation(pr, 'iResolution'), 120, 90);
+                gl.uniform1f(gl.getUniformLocation(pr, 'iTime'), 0);
+                gl.viewport(0, 0, 120, 90);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                const px = new Uint8Array(4);
+                // Dead centre: the crossbar of the mark.
+                gl.readPixels(60, 45, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+                return { mark: [px[0], px[1], px[2]] };
+            };
+
+            const shipped = render(buildHadosShader());
+            // Swap the token the way a theme edit would, and rebuild.
+            document.body.style.setProperty('--hados-blue', '#e03b3b');
+            const recoloured = render(buildHadosShader(readShaderPalette()));
+            document.body.style.removeProperty('--hados-blue');
+
+            return {
+                hexParsing: hexToVec3('#0b5ed7'),
+                rejectsGarbage: hexToVec3('not-a-colour'),
+                shipped,
+                recoloured,
+            };
+        });
+
+        expect(sample.hexParsing).toBe('vec3(0.0431, 0.3686, 0.8431)');
+        expect(sample.rejectsGarbage).toBeNull();
+
+        // Shipped palette: the mark is blue.
+        expect(sample.shipped.error).toBeUndefined();
+        expect(sample.shipped.mark[2]).toBeGreaterThan(sample.shipped.mark[0] + 40);
+
+        // Token moved to red: the mark follows. Asserted as a shift rather than an
+        // absolute colour — the surface mixes three blues with a specular, so
+        // moving one token tints the result, it does not repaint it.
+        expect(sample.recoloured.error).toBeUndefined();
+        expect(sample.recoloured.mark[0]).toBeGreaterThan(sample.shipped.mark[0] + 30);
+        expect(sample.recoloured.mark[2]).toBeLessThan(sample.shipped.mark[2]);
     });
 
     test('the desktop looks unchanged', async ({ page }) => {

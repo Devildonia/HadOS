@@ -12,28 +12,28 @@ describe('Games', () => {
         // Don't reset Kernel — we need the game registrations from import
 
         document.body.innerHTML = `
-            <div id="win-vlrs-game" class="win95-window" style="display:none;">
+            <div id="win-vlrs-game" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="vlrs-game-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-flappy-neon" class="win95-window" style="display:none;">
+            <div id="win-flappy-neon" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="flappy-neon-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-football-rush" class="win95-window" style="display:none;">
+            <div id="win-football-rush" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="football-rush-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-doom" class="win95-window" style="display:none;">
+            <div id="win-doom" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="doom-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-tetris-tryhard" class="win95-window" style="display:none;">
+            <div id="win-tetris-tryhard" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="tetris-tryhard-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-chapas-game" class="win95-window" style="display:none;">
+            <div id="win-chapas-game" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="chapas-game-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-nocturna-game" class="win95-window" style="display:none;">
+            <div id="win-nocturna-game" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="nocturna-game-frame" src="about:blank"></iframe></div>
             </div>
-            <div id="win-gameboy-game" class="win95-window" style="display:none;">
+            <div id="win-gameboy-game" class="hados-window" style="display:none;">
                 <div class="window-body"><iframe id="gameboy-game-frame" src="about:blank"></iframe></div>
             </div>
         `;

@@ -271,7 +271,7 @@ class Paint {
             }
 
             const btn = document.createElement('button');
-            btn.className = 'win95-btn paint-tool-btn';
+            btn.className = 'hados-btn paint-tool-btn';
             btn.style.cssText = 'width: 24px; height: 24px; padding: 0;';
             btn.title = tool.id;
             const iconSpan = document.createElement('span');

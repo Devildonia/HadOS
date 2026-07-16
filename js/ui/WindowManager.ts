@@ -79,7 +79,7 @@ const WindowManager: IWindowManager = (function () {
 
     /** Make window visible and manage z-index */
     function showWindow(win: HTMLElement, windowId: string): void {
-        if (win.classList.contains('win95-window')) {
+        if (win.classList.contains('hados-window')) {
             win.style.display = 'flex';
 
             // Start open animation
@@ -140,7 +140,7 @@ const WindowManager: IWindowManager = (function () {
         // PROCESS TERMINATION: Fully terminate iframes (stop rAF, intervals, audio)
         iframeProc.terminateWindowIframes(win, windowId);
 
-        if (win.classList.contains('win95-window')) {
+        if (win.classList.contains('hados-window')) {
             win.classList.remove('window-opening');
             win.classList.add('window-closing');
 

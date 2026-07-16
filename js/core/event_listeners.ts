@@ -124,9 +124,9 @@ export function setupEventListeners(): void {
         (btn as HTMLElement).onclick = (e: MouseEvent) => {
             if (window.playBlip) window.playBlip(700);
             Services.get('HapticService')?.medium();
-            const win = (e.target as HTMLElement).closest('.win95-window, .win95-dialog') as HTMLElement | null;
+            const win = (e.target as HTMLElement).closest('.hados-window, .hados-dialog') as HTMLElement | null;
             if (win) {
-                if (win.classList.contains('win95-dialog')) {
+                if (win.classList.contains('hados-dialog')) {
                     win.style.display = 'none';
                 } else if (win.id) {
                     WindowManager.close(win.id);
@@ -152,7 +152,7 @@ export { initializeDraggableIcons };
 export function initializeWindowControls(): void {
     Utils.Logger.log("[WINDOW] Setting up supplementary window UI handlers...");
 
-    document.querySelectorAll('.win95-window').forEach(winEl => {
+    document.querySelectorAll('.hados-window').forEach(winEl => {
         const win = winEl as HTMLElement;
         const setupBtn = (selector: string, action: EventListener): void => {
             const btn = win.querySelector(selector) as HTMLElement | null;

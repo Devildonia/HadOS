@@ -1,5 +1,5 @@
-/* ===== WIN95 WINDOW ===== */
-.win95-window {
+/* ===== WINDOW ===== */
+.hados-window {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -97,7 +97,7 @@
  * The other declarations ride along for the same reason: a window that was
  * dragged carries an inline transform, and maximizing has to cancel it.
  */
-.win95-window.maximized {
+.hados-window.maximized {
     top: 0 !important;
     left: 0 !important;
     transform: none !important;
@@ -136,7 +136,7 @@
 }
 
 /* Hide resize handle when maximized */
-.win95-window.maximized .window-resize-handle {
+.hados-window.maximized .window-resize-handle {
     display: none;
 }
 

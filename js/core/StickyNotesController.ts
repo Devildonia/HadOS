@@ -31,7 +31,7 @@ export function updateRecycleBinUI(): void {
             <span class="dialog-message">The Recycle Bin is empty.</span>
         `;
         buttonsEl.innerHTML = `
-            <button class="win95-btn" data-close-dialog="dialog-recyclebin">OK</button>
+            <button class="hados-btn" data-close-dialog="dialog-recyclebin">OK</button>
         `;
         return;
     }
@@ -46,7 +46,7 @@ export function updateRecycleBinUI(): void {
         listHTML += `
             <div style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #808080; padding: 4px 8px; background: #ffffcc; color: #000; font-family: 'MS Sans Serif', Arial, sans-serif; font-size: 11px; margin-top: 4px;">
                 <span style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;">📌 ${escapedText}</span>
-                <button class="win95-btn restore-sticky-btn" data-index="${idx}" style="padding: 2px 6px; font-size: 10px;">Restore</button>
+                <button class="hados-btn restore-sticky-btn" data-index="${idx}" style="padding: 2px 6px; font-size: 10px;">Restore</button>
             </div>
         `;
     });
@@ -61,8 +61,8 @@ export function updateRecycleBinUI(): void {
     `;
 
     buttonsEl.innerHTML = `
-        <button class="win95-btn restore-all-stickies-btn" style="margin-right: 8px;">Restore All</button>
-        <button class="win95-btn" data-close-dialog="dialog-recyclebin">Close</button>
+        <button class="hados-btn restore-all-stickies-btn" style="margin-right: 8px;">Restore All</button>
+        <button class="hados-btn" data-close-dialog="dialog-recyclebin">Close</button>
     `;
 
     // Bind event listeners for restore buttons

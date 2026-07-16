@@ -35,9 +35,9 @@ const RAGDOLL_WORKSHOP_BODY_HTML = `
             <!-- Tab: Skins -->
             <div id="tab-skins" class="tab-content">
                 <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 5px;">
-                    <button class="win95-btn" data-action="ragdoll-skin-standard" data-i18n="workshop.standard"
+                    <button class="hados-btn" data-action="ragdoll-skin-standard" data-i18n="workshop.standard"
                         style="flex: 1; padding: 4px;">Standard</button>
-                    <button class="win95-btn" data-action="ragdoll-skin-custom" data-i18n="workshop.custom"
+                    <button class="hados-btn" data-action="ragdoll-skin-custom" data-i18n="workshop.custom"
                         style="flex: 1; padding: 4px;">Custom</button>
                 </div>
 
@@ -149,9 +149,9 @@ const RAGDOLL_WORKSHOP_BODY_HTML = `
 
                     <label style="display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px;" data-i18n="workshop.emanations">Emanations</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 12px;">
-                        <button class="vfx-btn win95-btn" data-type="fire" data-i18n="workshop.fire_trail"
+                        <button class="vfx-btn hados-btn" data-type="fire" data-i18n="workshop.fire_trail"
                             style="font-size: 9px; padding: 3px;">Fire Trail</button>
-                        <button class="vfx-btn win95-btn" data-type="stars" data-i18n="workshop.star_aura"
+                        <button class="vfx-btn hados-btn" data-type="stars" data-i18n="workshop.star_aura"
                             style="font-size: 9px; padding: 3px;">Star Aura</button>
                     </div>
 
@@ -183,42 +183,42 @@ const RAGDOLL_WORKSHOP_BODY_HTML = `
                     <label style="display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px;" data-i18n="workshop.animations">Animations</label>
                     <div id="debug-animations"
                         style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 10px;">
-                        <button class="win95-btn" data-action="ragdoll-anim-dancing" data-i18n="workshop.anim_dance"
+                        <button class="hados-btn" data-action="ragdoll-anim-dancing" data-i18n="workshop.anim_dance"
                             style="font-size: 9px; padding: 2px;">Dance</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-moonwalk" data-i18n="workshop.anim_moonwalk"
+                        <button class="hados-btn" data-action="ragdoll-anim-moonwalk" data-i18n="workshop.anim_moonwalk"
                             style="font-size: 9px; padding: 2px;">Moonwalk</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-backflip" data-i18n="workshop.anim_backflip"
+                        <button class="hados-btn" data-action="ragdoll-anim-backflip" data-i18n="workshop.anim_backflip"
                             style="font-size: 9px; padding: 2px;">Backflip</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-jumping" data-i18n="workshop.anim_jump"
+                        <button class="hados-btn" data-action="ragdoll-anim-jumping" data-i18n="workshop.anim_jump"
                             style="font-size: 9px; padding: 2px;">Jump</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-waving" data-i18n="workshop.anim_wave"
+                        <button class="hados-btn" data-action="ragdoll-anim-waving" data-i18n="workshop.anim_wave"
                             style="font-size: 9px; padding: 2px;">Wave</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-sitting" data-i18n="workshop.anim_sit"
+                        <button class="hados-btn" data-action="ragdoll-anim-sitting" data-i18n="workshop.anim_sit"
                             style="font-size: 9px; padding: 2px;">Sit</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-laughing" data-i18n="workshop.anim_laugh"
+                        <button class="hados-btn" data-action="ragdoll-anim-laughing" data-i18n="workshop.anim_laugh"
                             style="font-size: 9px; padding: 2px;">Laugh</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-eating" data-i18n="workshop.anim_eat"
+                        <button class="hados-btn" data-action="ragdoll-anim-eating" data-i18n="workshop.anim_eat"
                             style="font-size: 9px; padding: 2px;">Eat</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-crying" data-i18n="workshop.anim_cry"
+                        <button class="hados-btn" data-action="ragdoll-anim-crying" data-i18n="workshop.anim_cry"
                             style="font-size: 9px; padding: 2px;">Cry</button>
-                        <button class="win95-btn" data-action="ragdoll-anim-yawning" data-i18n="workshop.anim_sleep"
+                        <button class="hados-btn" data-action="ragdoll-anim-yawning" data-i18n="workshop.anim_sleep"
                             style="font-size: 9px; padding: 2px;">Sleep</button>
                     </div>
 
                     <label style="display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px;" data-i18n="workshop.emotions">Emotions</label>
                     <div id="debug-emotions"
                         style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
-                        <button class="win95-btn" data-action="ragdoll-emotion-happy" data-i18n="workshop.emo_happy"
+                        <button class="hados-btn" data-action="ragdoll-emotion-happy" data-i18n="workshop.emo_happy"
                             style="font-size: 9px; padding: 2px;">Happy</button>
-                        <button class="win95-btn" data-action="ragdoll-emotion-neutral" data-i18n="workshop.emo_neutral"
+                        <button class="hados-btn" data-action="ragdoll-emotion-neutral" data-i18n="workshop.emo_neutral"
                             style="font-size: 9px; padding: 2px;">Neutral</button>
-                        <button class="win95-btn" data-action="ragdoll-emotion-sad" data-i18n="workshop.emo_sad"
+                        <button class="hados-btn" data-action="ragdoll-emotion-sad" data-i18n="workshop.emo_sad"
                             style="font-size: 9px; padding: 2px;">Sad</button>
-                        <button class="win95-btn" data-action="ragdoll-emotion-angry" data-i18n="workshop.emo_angry"
+                        <button class="hados-btn" data-action="ragdoll-emotion-angry" data-i18n="workshop.emo_angry"
                             style="font-size: 9px; padding: 2px;">Angry</button>
-                        <button class="win95-btn" data-action="ragdoll-emotion-panic" data-i18n="workshop.emo_panic"
+                        <button class="hados-btn" data-action="ragdoll-emotion-panic" data-i18n="workshop.emo_panic"
                             style="font-size: 9px; padding: 2px;">Panic</button>
-                        <button class="win95-btn" data-action="ragdoll-emotion-hurt" data-i18n="workshop.emo_hurt"
+                        <button class="hados-btn" data-action="ragdoll-emotion-hurt" data-i18n="workshop.emo_hurt"
                             style="font-size: 9px; padding: 2px;">Hurt</button>
                     </div>
                 </div>
@@ -240,8 +240,8 @@ const RAGDOLL_WORKSHOP_BODY_HTML = `
                         <!-- Physics Section -->
                         <div class="sidebar-section" style="margin-top: auto; padding-top: 5px; border-top: 1px solid rgba(0,0,0,0.1);">
                             <div style="font-size: 9px; color: #444; margin-bottom: 5px; font-style: italic;" data-i18n="workshop.drag_mouse">Arrastrar con el ratón</div>
-                            <button id="reset-physics-btn" class="win95-btn" style="width: 100%; font-size: 10px; height: 24px; margin-bottom: 4px;" data-i18n="workshop.reset_pose">♻️ Reset Pose</button>
-                            <button id="toggle-physics-btn" class="win95-btn" style="width: 100%; font-size: 10px; height: 24px;" data-i18n="workshop.toggle_skeleton">🛠️ Ver Esqueleto</button>
+                            <button id="reset-physics-btn" class="hados-btn" style="width: 100%; font-size: 10px; height: 24px; margin-bottom: 4px;" data-i18n="workshop.reset_pose">♻️ Reset Pose</button>
+                            <button id="toggle-physics-btn" class="hados-btn" style="width: 100%; font-size: 10px; height: 24px;" data-i18n="workshop.toggle_skeleton">🛠️ Ver Esqueleto</button>
                         </div>
                     </div>
 
@@ -279,7 +279,7 @@ const RAGDOLL_WORKSHOP_BODY_HTML = `
                     <span id="global-width-val" style="font-size: 9px; margin-top: 2px;">1.0</span>
                 </div>
             </div>
-            <button id="reset-global-scale" class="win95-btn" style="padding: 2px 8px; font-size: 10px;" data-i18n="workshop.reset">Reset</button>
+            <button id="reset-global-scale" class="hados-btn" style="padding: 2px 8px; font-size: 10px;" data-i18n="workshop.reset">Reset</button>
         </div>
 
     </div>
@@ -440,7 +440,7 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
         const displayName = this.ANIM_MAP[exactKey] || exactKey;
         this.updateStatus(`Motion: ${displayName}`);
         
-        const buttons = document.querySelectorAll('#animation-list .win95-btn');
+        const buttons = document.querySelectorAll('#animation-list .hados-btn');
         buttons.forEach((btn: any) => {
             if (btn.textContent.trim() === displayName) {
                 btn.style.backgroundColor = '#000080';
@@ -476,7 +476,7 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
             }
 
             const btn = document.createElement('button');
-            btn.className = 'win95-btn';
+            btn.className = 'hados-btn';
             btn.style.textAlign = 'left';
             btn.style.fontSize = '10px';
             btn.style.padding = '4px 8px';

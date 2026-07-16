@@ -1,5 +1,5 @@
-/* ===== WIN95 BUTTONS ===== */
-.win95-btn,
+/* ===== BUTTONS ===== */
+.hados-btn,
 button:not(.window-btn) {
     background: var(--control-bg);
     border: var(--control-border);
@@ -12,22 +12,29 @@ button:not(.window-btn) {
     box-shadow: var(--control-shadow);
 }
 
-.win95-btn:hover:not(:disabled),
+.hados-btn:hover:not(:disabled),
 button:not(.window-btn):hover:not(:disabled) {
     filter: brightness(1.05);
 }
 
-.win95-btn:active:not(:disabled),
+.hados-btn:active:not(:disabled),
 button:not(.window-btn):active:not(:disabled) {
     border-color: var(--control-active-border-color);
     padding: 6px 14px 4px 16px;
     box-shadow: var(--control-active-shadow);
 }
 
-.win95-btn:disabled,
+/**
+ * Disabled text has its own token. It used to read --border-dark — a *border*
+ * colour used as *text*, which only ever worked by accident: under Windows 95
+ * that token happened to be #808080, a usable grey. theme-modern maps it to
+ * #e5e5e5, so a disabled label there rendered near-white on a near-white button
+ * and simply vanished.
+ */
+.hados-btn:disabled,
 button:disabled {
-    color: var(--border-dark);
-    text-shadow: 1px 1px 0 var(--border-light);
+    color: var(--control-disabled-color);
+    text-shadow: var(--control-disabled-text-shadow);
     cursor: not-allowed;
 }
 

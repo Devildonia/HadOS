@@ -57,7 +57,7 @@ export class PluginManagerApp implements IWindowsApp {
                 <!-- Installation Bar -->
                 <div class="pm-install-bar">
                     <input type="text" class="pm-input" id="pm-manifest-url" placeholder="Manifest URL or plugin object structure..." />
-                    <button class="win95-btn" id="pm-install-btn" style="min-width: 80px;">${installText}</button>
+                    <button class="hados-btn" id="pm-install-btn" style="min-width: 80px;">${installText}</button>
                 </div>
                 
                 <!-- Status/Validation Message -->
@@ -154,8 +154,8 @@ export class PluginManagerApp implements IWindowsApp {
             row.className = 'pm-row';
 
             const buttonHtml = isPlugin
-                ? `<button class="win95-btn pm-uninstall-btn" data-id="${id}" style="padding: 2px 8px; min-height: 20px; font-size: 10px;">${uninstallText}</button>`
-                : `<button class="win95-btn" disabled style="padding: 2px 8px; min-height: 20px; font-size: 10px;" title="${coreAppText}">${coreAppText}</button>`;
+                ? `<button class="hados-btn pm-uninstall-btn" data-id="${id}" style="padding: 2px 8px; min-height: 20px; font-size: 10px;">${uninstallText}</button>`
+                : `<button class="hados-btn" disabled style="padding: 2px 8px; min-height: 20px; font-size: 10px;" title="${coreAppText}">${coreAppText}</button>`;
 
             row.innerHTML = `
                 <div class="pm-row-info">

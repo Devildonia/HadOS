@@ -20,7 +20,7 @@ const DIALOG_CONFIGS: Record<string, { title: string, html: string }> = {
                 <span class="dialog-message">Access Denied. Unauthorized User.</span>
             </div>
             <div class="dialog-buttons">
-                <button class="win95-btn" data-close-dialog="dialog-mycomputer">OK</button>
+                <button class="hados-btn" data-close-dialog="dialog-mycomputer">OK</button>
             </div>
         `
     },
@@ -32,7 +32,7 @@ const DIALOG_CONFIGS: Record<string, { title: string, html: string }> = {
                 <span class="dialog-message">The Recycle Bin is empty.</span>
             </div>
             <div class="dialog-buttons">
-                <button class="win95-btn" data-close-dialog="dialog-recyclebin">OK</button>
+                <button class="hados-btn" data-close-dialog="dialog-recyclebin">OK</button>
             </div>
         `
     },
@@ -56,8 +56,8 @@ const DIALOG_CONFIGS: Record<string, { title: string, html: string }> = {
                 <p style="font-size: 11px; color: #555;">(All positions and settings will be deleted)</p>
             </div>
             <div class="dialog-buttons">
-                <button class="win95-btn" id="btn-reset-desktop">Reset All</button>
-                <button class="win95-btn" data-close-dialog="dialog-debug">Cancel</button>
+                <button class="hados-btn" id="btn-reset-desktop">Reset All</button>
+                <button class="hados-btn" data-close-dialog="dialog-debug">Cancel</button>
             </div>
         `
     },
@@ -69,7 +69,7 @@ const DIALOG_CONFIGS: Record<string, { title: string, html: string }> = {
                 <span class="dialog-message">This file is encrypted. Access denied.</span>
             </div>
             <div class="dialog-buttons">
-                <button class="win95-btn" data-close-dialog="dialog-encryption">OK</button>
+                <button class="hados-btn" data-close-dialog="dialog-encryption">OK</button>
             </div>
         `
     }
@@ -81,7 +81,7 @@ function _ensureDialog(dialogId: string): void {
     if (!config) return;
 
     const dialog = document.createElement('div');
-    dialog.className = 'win95-dialog';
+    dialog.className = 'hados-dialog';
     dialog.id = dialogId;
     dialog.style.display = 'none';
     if (dialogId === 'dialog-debug') {

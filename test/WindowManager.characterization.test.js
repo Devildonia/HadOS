@@ -17,7 +17,7 @@ import { Services } from '../js/core/ServiceContainer.js';
 function buildDesktop() {
     document.body.innerHTML = `
         <div id="desktop">
-            <div id="win-alpha" class="win95-window" style="display:none;">
+            <div id="win-alpha" class="hados-window" style="display:none;">
                 <div class="window-header">
                     <span>Alpha</span>
                     <div class="window-controls">
@@ -28,7 +28,7 @@ function buildDesktop() {
                 </div>
                 <div class="window-body"><input id="alpha-input" /></div>
             </div>
-            <div id="win-frame" class="win95-window" style="display:none;">
+            <div id="win-frame" class="hados-window" style="display:none;">
                 <div class="window-header"><span>Frame</span></div>
                 <div class="window-body"><iframe id="the-frame" src="about:blank"></iframe></div>
             </div>

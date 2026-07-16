@@ -87,7 +87,7 @@ function createNotification(type: 'info' | 'success' | 'warn' | 'error', message
         pointer-events: auto;
         cursor: pointer;
         box-shadow: 1px 1px 0 #000, inset -1px -1px 0 #808080;
-        animation: win95-notify-in 0.2s ease-out;
+        animation: hados-notify-in 0.2s ease-out;
         opacity: 1;
         transition: opacity 0.3s, transform 0.3s;
     `;

@@ -26,17 +26,11 @@
     transition: none;
 }
 
+/* HDRManager adds .disabled (and the disabled attribute) when the display cannot
+   do HDR. The colour used to be hardcoded here because chrome/controls.css drew
+   disabled text with a border token; now that it has --control-disabled-color,
+   the theme handles it and only the fade is left. */
 .ragdoll-pet-btn.disabled {
-    /* HDRManager adds .disabled (and the disabled attribute) when the display
-       cannot do HDR.
-       This colour looks like another Win95 leftover and is not: under
-       theme-modern it is the only thing keeping the label readable. Dropping it
-       falls through to chrome/controls.css's `button:disabled { color:
-       var(--border-dark) }`, and modern maps --border-dark to #e5e5e5 — a border
-       colour used as text, which renders near-white on a near-white button.
-       That is the real bug; see docs/known-issues.md. Until it is fixed, this
-       stays. */
-    color: #808080;
     cursor: not-allowed;
     opacity: 0.6;
 }

@@ -67,6 +67,8 @@
     --control-shadow: none;
     --control-active-border-color: var(--accent-color);
     --control-active-shadow: 0 0 0 2px rgba(59, 155, 240, 0.35);
+    --control-disabled-color: #5a6b80;
+    --control-disabled-text-shadow: none;
 
     /* Legacy Windows 95 variables. Still referenced by rules that predate the
        token system; remapped onto HadOS surfaces so nothing renders chiselled grey.

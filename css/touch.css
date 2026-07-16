@@ -49,8 +49,8 @@ button,
     }
 }
 
-/* === Win95 Notification Toast === */
-@keyframes win95-notify-in {
+/* === Notification Toast === */
+@keyframes hados-notify-in {
     from {
         opacity: 0;
         transform: translateX(100%);

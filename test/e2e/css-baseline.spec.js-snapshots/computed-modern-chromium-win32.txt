@@ -826,7 +826,7 @@ body
   backdrop-filter: none
   cursor: pointer
 
-.win95-window
+.hados-window
   display: none
   position: fixed
   z-index: 100
@@ -1148,7 +1148,7 @@ body
   backdrop-filter: none
   cursor: nwse-resize
 
-.win95-btn
+.hados-btn
   display: block
   position: static
   z-index: auto
@@ -1165,7 +1165,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(229, 229, 229)
+  color: rgb(154, 154, 154)
   background-color: rgb(249, 249, 249)
   background-image: none
   border-width: 1px
@@ -1173,7 +1173,7 @@ body
   border-color: rgb(209, 209, 209)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(229, 229, 229) none 3px
+  outline: rgb(154, 154, 154) none 3px
   font-family: "Segoe UI", Inter, Roboto, sans-serif
   font-size: 11px
   font-weight: 400
@@ -1181,7 +1181,7 @@ body
   line-height: 16.5px
   text-align: center
   text-transform: none
-  text-shadow: rgba(0, 0, 0, 0) 1px 1px 0px
+  text-shadow: none
   white-space: normal
   flex-direction: row
   justify-content: normal
@@ -1490,7 +1490,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(128, 128, 128)
+  color: rgb(154, 154, 154)
   background-color: rgb(249, 249, 249)
   background-image: none
   border-width: 1px
@@ -1498,7 +1498,7 @@ body
   border-color: rgb(209, 209, 209)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(128, 128, 128) none 3px
+  outline: rgb(154, 154, 154) none 3px
   font-family: "Segoe UI", Inter, Roboto, sans-serif
   font-size: 13px
   font-weight: 400
@@ -1506,7 +1506,7 @@ body
   line-height: 19.5px
   text-align: center
   text-transform: none
-  text-shadow: rgba(0, 0, 0, 0) 1px 1px 0px
+  text-shadow: none
   white-space: normal
   flex-direction: row
   justify-content: normal
@@ -1552,7 +1552,7 @@ body
   line-height: 16.5px
   text-align: center
   text-transform: none
-  text-shadow: rgba(0, 0, 0, 0) 1px 1px 0px
+  text-shadow: none
   white-space: normal
   flex-direction: row
   justify-content: normal
@@ -1573,7 +1573,7 @@ body
   visibility: visible
   opacity: 1
   width: 498px
-  height: 23.5px
+  height: 25.5px
   min-height: auto
   max-height: none
   padding: 2px 5px
@@ -1587,15 +1587,15 @@ body
   background-image: none
   border-width: 0px 0px 1px
   border-style: solid
-  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgb(128, 128, 128)
+  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgb(229, 229, 229)
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
   font-family: "Segoe UI", Inter, Roboto, sans-serif
-  font-size: 11px
+  font-size: 13px
   font-weight: 400
   letter-spacing: normal
-  line-height: 16.5px
+  line-height: 19.5px
   text-align: start
   text-transform: none
   text-shadow: none
@@ -1612,4 +1612,10 @@ body
   cursor: auto
 
 .window-menu .window-menu-item
+  <absent>
+
+.paint-tool-btn
+  <absent>
+
+.paint-toolbar
   <absent>

@@ -22,30 +22,23 @@ uses for a running app) and the momentary `:active` press separately. Verified: 
 state went from `rgb(176,176,176)` with a 2px inset white border to the accent, and nothing else
 moved.
 
-### 1b. Disabled text is near-invisible in the modern theme
+### 1b. ~~Disabled text is near-invisible in the modern theme~~ — FIXED
 
-**Evidence:** measured — removing `.ragdoll-pet-btn.disabled { color: #808080 }` made
-`#hdr-toggle` compute to `color: rgb(229,229,229)` under `theme-modern`, on a `#f9f9f9` button.
+`chrome/controls.css` drew disabled buttons with `color: var(--border-dark)` — a **border** token
+used as **text**. It only ever worked by accident: under Windows 95 that token was `#808080`, a
+usable grey. `theme-modern` maps it to `#e5e5e5`, so disabled labels rendered near-white on a
+`#f9f9f9` button and vanished.
 
-`chrome/controls.css` styles disabled buttons with `color: var(--border-dark)` — a **border** token
-used as **text**. Under Win95 that token was `#808080`, which passed for grey disabled text by
-accident; `theme-modern` maps it to `#e5e5e5` and the label disappears. `theme-hados` is unaffected
-(it sets its own `button:disabled` colour).
+Fixed with tokens that mean what they say: `--control-disabled-color` and
+`--control-disabled-text-shadow` (the latter carried the Win95 emboss), defined per theme. Modern
+now renders them at `#9a9a9a`. With the root cause gone, the `#808080` that the tray button was
+forced to hardcode went too.
 
-This is why the tray button still hardcodes `color: #808080`: it is the only thing keeping that
-label readable in modern. The real fix is a proper disabled-text token, which is part of the
-modern-theme work.
+### 2. ~~The in-app menu bar is still Win95 underneath~~ — FIXED
 
-**Where:** [`css/chrome/controls.css`](../css/chrome/controls.css),
-[`public/css/themes/theme-modern.css`](../public/css/themes/theme-modern.css) (`--border-dark`).
-
-### 2. The in-app menu bar is still Win95 underneath
-
-`.window-menu` hardcodes `border-bottom: 1px solid #808080` and its items hover to `#000080` navy.
-The HadOS theme overrides both, so this only shows if the theme fails to load — but the modern
-theme does *not* override them, so Paint's menu bar there is genuinely Win95 navy.
-
-**Where:** [`css/chrome/window-menu.css`](../css/chrome/window-menu.css).
+`.window-menu` now reads `--border-dark`, `--accent-color` and `--os-font-size` instead of
+hardcoding `#808080` and a `#000080` navy hover. Those only ever showed under theme-modern — a
+Windows 95 menu bar inside a Fluent window — because theme-hados overrode both.
 
 ### 3. The `modern` theme is a Windows 11 clone
 
@@ -71,16 +64,20 @@ the whole `winui/` set for modern. Being replaced gradually, by decision.
 ### 5. ~~Most of `.ragdoll-pet-btn` never applies~~ — PRUNED
 
 The Windows 95 background, border, font, padding and hover tint are gone; the partial is layout
-only. Two declarations that *looked* dead were kept because the baseline proved they are not:
-`transition: none` is live under `theme-modern` (which sets no transition of its own), and
-`color: #808080` on `.disabled` is the only thing keeping that label readable there — see **1b**.
+only. One declaration that *looked* dead was kept because the baseline proved otherwise:
+`transition: none` is live under `theme-modern`, which sets no transition of its own. (The
+`color: #808080` on `.disabled` was kept for the same reason and has since been removed, once
+**1b** fixed the token it was working around.)
 
 ### 6. The pet button's mobile padding has never applied
 
-`@media (max-width: 768px) { .ragdoll-pet-btn { padding: 2px 4px } }` is dead: a media query adds
-no specificity, and `chrome/tray-buttons.css` sets `padding` on the same selector further down the
-manifest. Left exactly where it is — moving it after that partial would silently *revive* a mobile
-padding that has not been in effect for a long time. Decide it on purpose.
+`@media (max-width: 768px) { .ragdoll-pet-btn { padding: 2px 4px } }` is dead. Measured at 375px,
+where it would apply: the button computes to `padding: 6px 16px`. A media query adds no
+specificity, so this (0,1,0) loses to the theme's `button:not(.window-btn):not(.start-btn)` at
+(0,3,2). Reordering the manifest will not rescue it.
+
+Left in place rather than deleted: whether these buttons *should* shrink on a phone is a design
+call, and it should be made deliberately rather than resolved by a refactor.
 
 **Where:** [`css/system/ragdoll.css`](../css/system/ragdoll.css).
 
@@ -102,11 +99,14 @@ real machine since v1.0.1; these were the strings it used to print, left behind 
 
 ## Naming that outlived the rename
 
-### 8. `win95-*` class names
+### 8. ~~`win95-*` class names~~ — RENAMED
 
-`.win95-window` (16 uses), `.win95-btn` (63), `.win95-dialog` (4), the `win95-notify-in` keyframe.
-Internal names with no user-visible effect, which is why they survived the rebrand. A rename is a
-wide, mechanical diff across JS, CSS and tests — cheap to do, easy to review, worth its own commit.
+Now `hados-window`, `hados-btn`, `hados-dialog` and the `hados-notify-in` keyframe, across 37
+files. Render-neutral: every screenshot came back pixel-identical.
+
+The storage migration keys (`win95-vfs`, `win95_vfs_root`, `win95-vfs-blobs`) and `ThemeManager`'s
+`LEGACY_THEME = 'win95'` deliberately keep the old name. They identify pre-rename installs;
+renaming them would strand that data.
 
 ### 9. ~~The `sticky.welcome_win95` i18n key~~ — RENAMED
 
@@ -142,29 +142,36 @@ No flash was introduced: every screen starts `display:none` and nothing paints u
 the OS. Verified — computed styles, interactive states and all screenshots unchanged, with the
 CSSOM diff showing 422 rules removed and **0 added**.
 
-### 11. `!important`: 32 left, classified
+### 11. `!important`: 22 left in `css/`, classified
 
-Down from 40 — the 8 in `css/apps/games.css` were redundant (their selectors carry an ID and
-already out-ranked the mobile rule they were fighting) and are gone, verified at a 375px viewport.
-What remains, and why:
+Down from ~39. Gone: the 8 in `css/apps/games.css` (redundant — their selectors carry an ID and
+already out-ranked the mobile rule they fought) and the 9 in `css/apps/paint.css`. What remains:
 
 | Where | Count | Verdict |
 |---|---|---|
-| `css/chrome/window.css` | 10 | **Necessary.** `.win95-window.maximized` beats the inline `left/top/width/height` that `WindowInteractions` writes while dragging. Only `!important` beats inline. |
-| `css/apps/paint.css` | 9 | **Fixable.** `.paint-tool-btn` (0,1,0) loses to `button:not(.window-btn)` (0,1,1) in `chrome/controls.css`. Scoping to `.paint-toolbar .paint-tool-btn` (0,2,0) would win without it — but no baseline covers Paint's toolbar yet. |
-| `theme-modern.css` | 7 | Not examined. |
+| `css/chrome/window.css` | 10 | **Necessary, and documented in place.** `.hados-window.maximized` beats the inline `left/top/width/height` that `WindowInteractions` writes while dragging. Inline outranks every selector; `!important` is the only thing that beats inline. |
 | `css/effects/glitch.css` | 6 | Not examined. |
 | `css/responsive.css`, `desktop/folder-items.css`, `apps/task-manager.css` | 6 | Not examined. |
+| `theme-hados.css` | 2 | The `.maximized` radius/background, same reason as above. |
+| `theme-modern.css` | 7 | Not examined; part of the modern-theme work. |
 
-The lesson from the games.css ones: `!important` next to a comment saying "override mobile media
-query" was cargo — a media query adds no specificity, so an ID selector already beat it. Check the
-specificity before assuming an `!important` is doing work.
+Two lessons, both learned the hard way:
 
-### 12. The shader palette is hand-synced
+- **Check the specificity before assuming an `!important` is doing work.** The games.css ones sat
+  under a comment claiming to "override mobile media query" — but a media query adds no
+  specificity, and those selectors already carried an ID.
+- **`:not(#id)` hands a rule an ID's weight.** `theme-hados`'s button rule scored (1,2,2) purely
+  because it excluded the Start button by ID, which made it unbeatable and *forced* Paint's nine.
+  Swapping to a `.start-btn` class dropped it to (0,3,2) and the nine dissolved.
 
-`SHADER_HADOS`'s `BLUE_DEEP` / `BLUE_MID` / `BLUE_LIGHT` are GLSL literals that duplicate the
-`--hados-blue-*` tokens in `theme-hados.css`. Change the palette and both must move together;
-nothing enforces it.
+### 12. ~~The shader palette is hand-synced~~ — FIXED
+
+`buildHadosShader()` injects the palette from the live CSS custom properties at compile time — the
+shader is rebuilt on every theme change anyway, which is exactly when the palette could have moved.
+The theme is now the single source of truth; the GLSL literals are gone.
+
+Proved rather than asserted: the baseline moves `--hados-blue` to red and checks the rendered
+pixels follow, which they could not do while the shader carried its own copy.
 
 **Where:** [`js/ui/ThemeShaders.ts`](../js/ui/ThemeShaders.ts).
 
@@ -185,3 +192,7 @@ cannot (its screenshots hang).
 - **Playwright's local workers are capped at 2** in `playwright.config.js`. Every spec boots the
   whole OS with a WebGL wallpaper; at the default (~half the CPU count) the contexts starve each
   other until boot times out, failing specs unrelated to the change under test.
+- **The BIOS disappearing does not mean the desktop is up.** The splash sits between them for at
+  least 4s (`SPLASH_MIN_MS`), longer if the OS is slow to report ready. Any e2e step that waits for
+  `#boot-screen` to hide and then expects `#desktop` needs an explicit timeout: the default 5s wins
+  that race often enough to look fine locally and flake under load.

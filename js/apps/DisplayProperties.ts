@@ -69,8 +69,8 @@ const DISPLAY_PROPS_BODY_HTML = `
 
     <div id="wallpaper-drop-zone"
         style="margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 10px; border: 2px dashed transparent; padding: 5px; transition: all 0.2s;">
-        <button class="win95-btn" data-action="wallpaper-browse">Browse...</button>
-        <button class="win95-btn" data-wallpaper="">Default Shader</button>
+        <button class="hados-btn" data-action="wallpaper-browse">Browse...</button>
+        <button class="hados-btn" data-wallpaper="">Default Shader</button>
         <span style="font-style: italic; color: #666;">or Drag & Drop Image</span>
         <input type="file" id="wallpaper-upload" accept="image/*" style="display: none;">
     </div>
@@ -78,7 +78,7 @@ const DISPLAY_PROPS_BODY_HTML = `
     <div id="display-tab-appearance" class="display-tab-content" style="display: none;">
         <p style="margin-bottom: 15px;">Select your OS Theme:</p>
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-            <button class="win95-btn" id="theme-toggle" title="Toggle OS Theme"
+            <button class="hados-btn" id="theme-toggle" title="Toggle OS Theme"
                 style="padding: 6px 15px; display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 16px;">🎨</span>
                 <span>Toggle Modern/Classic Theme</span>
@@ -113,8 +113,8 @@ const DISPLAY_PROPS_BODY_HTML = `
     </div>
     <div
         style="margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px; margin-right: 15px; margin-bottom: 10px;">
-        <button class="win95-btn" data-close-window="win-display-props">OK</button>
-        <button class="win95-btn" data-close-window="win-display-props">Cancel</button>
+        <button class="hados-btn" data-close-window="win-display-props">OK</button>
+        <button class="hados-btn" data-close-window="win-display-props">Cancel</button>
     </div>
 `;
 

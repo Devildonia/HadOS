@@ -36,7 +36,7 @@ export class WindowControls {
 
         Utils.Logger.window('Initializing window controls (Event Delegation)...');
 
-        const windows = document.querySelectorAll('.win95-window');
+        const windows = document.querySelectorAll('.hados-window');
 
         windows.forEach(node => {
             const win = node as HTMLElement;
@@ -86,14 +86,14 @@ export class WindowControls {
                 // Check if it was a window header to bring to front
                 const winHeader = target.closest('.window-header') as HTMLElement | null;
                 if (winHeader) {
-                    const win = winHeader.closest('.win95-window') as HTMLElement | null;
+                    const win = winHeader.closest('.hados-window') as HTMLElement | null;
                     if (win) this.deps.bringToFront(win);
                 }
                 return;
             }
 
             // Find which window this button belongs to
-            const win = btn.closest('.win95-window') as HTMLElement | null;
+            const win = btn.closest('.hados-window') as HTMLElement | null;
             if (!win) {
                 Utils.Logger.error('[WindowManager] Button clicked but no parent window found!');
                 return;

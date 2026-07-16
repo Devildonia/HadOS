@@ -10,12 +10,15 @@ test.describe('OS Boot Sequence', () => {
         const bootScreen = page.locator('#boot-screen');
         await expect(bootScreen).toBeVisible();
 
-        // 2. Wait for the boot screen to disappear (meaning boot finished)
-        await expect(bootScreen).toBeHidden({ timeout: 15000 }); // Boot can take ~4-8 seconds
+        // 2. Wait for the BIOS to disappear — which hands over to the splash, not
+        //    to the desktop.
+        await expect(bootScreen).toBeHidden({ timeout: 15000 });
 
-        // 3. Desktop should be visible
+        // 3. Desktop should be visible. The splash holds for at least 4s after the
+        //    BIOS goes, so this needs a real timeout rather than the default 5s —
+        //    otherwise it is a coin flip under parallel load.
         const desktop = page.locator('#desktop');
-        await expect(desktop).toBeVisible();
+        await expect(desktop).toBeVisible({ timeout: 15000 });
 
         // 4. Ensure Start button is visible
         const startBtn = page.locator('#start-button');
