@@ -244,6 +244,16 @@ cannot (its screenshots hang).
   whatever bug you just fixed appearing to still be there. Hard-reload, or spawn with a cache
   buster while iterating. Production is unaffected: Workbox revisions precached files per build.
 
+- **The e2e CI job cannot pass: ubuntu runner, win32-only snapshots.** `.github/workflows/ci.yml`
+  runs Playwright on `ubuntu-latest`, and `playwright.config.js` sets no `snapshotPathTemplate`, so
+  the default includes the platform — CI looks for `…-chromium-linux.txt/.png` while every snapshot
+  committed is `…-chromium-win32.*`. Missing snapshots fail under CI rather than being written.
+  This predates the AI work (it arrived with the css-baseline spec in c9aaa0a) and is invisible
+  locally, where the win32 files match. Three ways out, none free: generate the linux set in a
+  container and commit both; move the e2e job to `windows-latest`; or drop `{platform}` from
+  `snapshotPathTemplate` and accept that font rendering differs across OSes, which the screenshot
+  assertions would then trip over (the text snapshots would be fine).
+
 ## Latent
 
 - **`base: './'` and root-absolute asset paths disagree.** `vite.config.js` sets `base: './'`,
