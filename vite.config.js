@@ -12,6 +12,12 @@ export default defineConfig({
       manifest: false,      // Use existing public/manifest.json
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,opus,mp3,woff2,ttf}'],
+        // The LiteRT runtime is ~36 MB across its four builds and only one is ever
+        // loaded — feature-detected per browser, on first use of an AI feature. The
+        // .wasm files already fall outside globPatterns and the size cap, but their
+        // loader .js siblings would match: precaching those would make every install
+        // pay for AI it may never touch, and cache three loaders that never run.
+        globIgnores: ['**/wasm/litert/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         rollupOptions: {
           output: {

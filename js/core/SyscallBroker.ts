@@ -14,6 +14,8 @@ import { Utils } from '../utils';
 import { Services } from './ServiceContainer';
 import { VFS } from './VFS';
 import { PermissionBroker } from './PermissionBroker';
+import { AiService, AI_CAPABILITY } from '../ai/AiService';
+import { toFloat32 } from '../ai/aiRuntimeHandlers';
 import type { WorkerProcess } from './WorkerProcess';
 
 export interface SyscallContext {
@@ -24,11 +26,13 @@ export interface SyscallContext {
 }
 
 /** The syscalls the broker can serve. */
-export const DEFAULT_SYSCALLS = ['sys.log', 'notify', 'fs.read', 'fs.list', 'fs.write'] as const;
+export const DEFAULT_SYSCALLS = ['sys.log', 'notify', 'fs.read', 'fs.list', 'fs.write', 'ai.loadModel', 'ai.infer'] as const;
 
 /**
  * Capability required by each syscall. `null` = always allowed (no consent).
  * fs.read/fs.list share `fs:read`; fs.write is `fs:write`. Consent is per capability.
+ * ai.loadModel/ai.infer share `ai:infer` — loading is what downloads the model, so
+ * splitting them would prompt twice for one user-visible action.
  */
 const SYSCALL_CAPABILITY: Record<string, string | null> = {
     'sys.log': null,
@@ -36,6 +40,8 @@ const SYSCALL_CAPABILITY: Record<string, string | null> = {
     'fs.read': 'fs:read',
     'fs.list': 'fs:read',
     'fs.write': 'fs:write',
+    'ai.loadModel': AI_CAPABILITY,
+    'ai.infer': AI_CAPABILITY,
 };
 
 type Args = Record<string, unknown>;
@@ -98,6 +104,20 @@ const HANDLERS: Record<string, (args: Args, ctx: SyscallContext) => unknown | Pr
         assertInRoot(dir, ctx);
         const ok = await VFS.writeFileAsync(dir, name, args.content as string | Blob);
         return ok;
+    },
+    /**
+     * ai.* run the app's work on the shared `ai-runtime` process.
+     *
+     * The guest names a model by id, never by URL: `AiService` resolves it against
+     * the registry allowlist. Handing a guest control of the URL would turn this
+     * syscall into a download primitive on the OS's origin.
+     */
+    'ai.loadModel': (args, ctx) => AiService.loadModel(ctx.appId, asString(args.id)),
+    'ai.infer': async (args, ctx) => {
+        const input = toFloat32(args.input);
+        const shape = Array.isArray(args.shape) ? args.shape.map(Number) : [];
+        const out = await AiService.infer(ctx.appId, asString(args.id), input, shape);
+        return { data: out.data, shape: out.shape };
     },
 };
 

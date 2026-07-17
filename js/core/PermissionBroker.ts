@@ -26,6 +26,10 @@ const CAP_LABELS: Record<string, string> = {
     'fs:write': 'save files',
     'notify': 'show notifications',
     'net': 'access the network',
+    // Worth its own consent rather than folding into `net`: the first use downloads
+    // megabytes of model over the user's connection and then runs it against
+    // whatever the app hands it — the picture on their canvas, say.
+    'ai:infer': 'run AI on your device',
 };
 
 /** Default consent UI: a small modal with Allow / Deny. */

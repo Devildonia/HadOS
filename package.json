@@ -6,7 +6,7 @@
   "main": "main.ts",
   "scripts": {
     "dev": "vite",
-    "predev": "npm run build:guest",
+    "predev": "npm run build:guest && npm run copy:litert && npm run build:ai-worker",
     "build:guest": "vite build --config vite.guest.config.js",
     "test": "vitest",
     "test:run": "vitest run --reporter=verbose",
@@ -17,10 +17,12 @@
     "lint": "eslint js/ main.ts",
     "lint:fix": "eslint js/ main.ts --fix",
     "typecheck": "tsc --noEmit",
-    "build": "npm run build:guest && npm run build:games && vite build",
+    "build": "npm run build:guest && npm run build:games && npm run copy:litert && npm run build:ai-worker && vite build",
     "build:games": "npx tailwindcss -i tailwind-games.css -o public/css/tailwind-games.css --content \"./public/games/**/*.html\" --minify",
     "generate:app": "node scripts/create-app.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy:litert": "node scripts/copy-litert-wasm.js",
+    "build:ai-worker": "vite build --config vite.ai-worker.config.js"
   },
   "keywords": [
     "windows95",
@@ -61,6 +63,7 @@
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.3",
+    "@litertjs/core": "^2.5.2",
     "@types/three": "^0.183.1",
     "three": "^0.183.2"
   }

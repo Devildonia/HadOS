@@ -159,3 +159,7 @@ node_modules
 
 # Generated iframe-process guest bundle (built from js/sdk/guestBoot.ts by `npm run build:guest`)
 public/process-guest.js
+
+# LiteRT wasm runtime: ~36 MB, regenerated from node_modules by scripts/copy-litert-wasm.js
+public/wasm/litert/
+public/ai-runtime.js

@@ -237,3 +237,19 @@ cannot (its screenshots hang).
   least 4s (`SPLASH_MIN_MS`), longer if the OS is slow to report ready. Any e2e step that waits for
   `#boot-screen` to hide and then expects `#desktop` needs an explicit timeout: the default 5s wins
   that race often enough to look fine locally and flake under load.
+
+- **The dev service worker serves a stale `public/ai-runtime.js`.** The AI worker is a prebuilt
+  artifact in `public/`, so the registered SW caches it like any other asset — rebuilding it with
+  `npm run build:ai-worker` while a tab is open keeps spawning the OLD bundle, and the symptom is
+  whatever bug you just fixed appearing to still be there. Hard-reload, or spawn with a cache
+  buster while iterating. Production is unaffected: Workbox revisions precached files per build.
+
+## Latent
+
+- **`base: './'` and root-absolute asset paths disagree.** `vite.config.js` sets `base: './'`,
+  which exists so the app can be served from a subdirectory — but every `public/` asset loaded from
+  code is referenced root-absolute (`/css/themes/theme-base.css`, `/games/ragdoll/assets/audio/*.opus`,
+  `/wasm/litert/`). Deployed under a subpath they would all 404 together. Harmless while HadOS is
+  served from the origin root; the two settings should agree before that ever changes. Fixing it
+  means routing every such path through `import.meta.env.BASE_URL` (and the worker case is awkward:
+  `BASE_URL` is `'./'` in a build, which a worker at `/assets/` resolves wrongly).
