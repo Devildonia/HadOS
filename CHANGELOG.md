@@ -6,6 +6,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-17
+
+HadOS learns to run AI in the browser, and Pinta uses it to cut a subject out of a photo — on
+device, with the model downloaded once and cached, gated behind user consent like any other
+capability.
+
+### Added
+
+- **On-device AI, end to end.** A reusable substrate every later AI feature builds on: an
+  `ai-runtime` Kernel worker that owns the inference runtime and the loaded models off the main
+  thread; an `ai:infer` capability the PermissionBroker prompts for on first use; `ai.loadModel` /
+  `ai.infer` syscalls for isolated apps; and `AiModelCache`, which downloads a model once into its
+  own OPFS subdirectory (→ IndexedDB → memory), verifies it against a pinned size and SHA-256, and
+  serves it on every later boot. The whole thing runs behind one `IInferenceRuntime` seam, so
+  `LiteRtRuntime` (`@litertjs/core`) is the only file that knows LiteRT exists and the substrate is
+  testable against a fake with no GPU or download.
+- **Pinta: remove background (🪄).** Runs DeepLab v3 in the AI process and clears everything the
+  model calls background, leaving the subject on transparency — undoable, so ↩️ brings it back.
+  Verified in-browser on a real photo: ~34 ms on WebGPU, a spatially coherent cutout.
+- **Pinta can finally open images (📂).** A file picker and drag-and-drop onto the canvas — the app
+  had no way to load a bitmap before, which "remove background" needed to do anything real.
+- **The model itself.** DeepLab v3 (2.65 MB, 21 PASCAL VOC classes), pinned by size and SHA-256 to
+  an immutable versioned URL; its LiteRT wasm runtime (~36 MB, one build loaded per browser) is
+  self-hosted from `node_modules` at build time, gitignored, and kept out of the PWA precache so a
+  visitor who never touches AI never downloads it.
+- **`scripts/sync-locales.js`** — fills any key missing from a locale with the English value and
+  aligns key order to `en.json` for clean diffs.
+
+### Changed
+
+- **System dialogs are localized.** My Computer, Recycle Bin, shutdown, debug and encryption
+  dialogs were hardcoded English; they now resolve through `i18n.t`, with strings across all 40
+  locales (English fallback where untranslated — no regression, since they were English-only
+  before). `AppPackage`'s `KNOWN_PERMISSIONS` gained `ai:infer` so a manifest can declare it.
+- **Refactors.** `utils.ts` (566 lines) became a barrel over ten focused modules and `Notepad.ts`
+  (717) split its dialogs/files/actions/templates out, with the public surface unchanged; the
+  Ragdoll workshop's 309-line inline HTML moved to a template module; `TaskManager` named its magic
+  numbers, split `refreshUI`, and skips rebuilding the process table when nothing changed.
+
+### Fixed
+
+- **Pinta's active tool was invisible under HadOS.** The selected tool was styled inline
+  (`#e0e0e0` + a Win95 border), which no stylesheet can override, so once the theme gave the
+  buttons light text it went light-on-light — contrast 1.12. It now carries a `.tool-active` class
+  the themes paint, readable at 11.59 and marked three ways.
+- Dead code out: `SystemBridge`'s fake `familyData`, `destroyAudioBridge`, a legacy AudioManager
+  fallback, and an unused ragdoll bootstrap in `GenericApps`.
+
+### Known issues
+
+- The e2e CI job cannot pass on `ubuntu-latest`: every committed Playwright snapshot is `win32`,
+  and the default snapshot path includes the platform. Predates this release. See
+  `docs/known-issues.md`.
+- A removed background is invisible against Pinta's white CSS canvas (the saved PNG is genuinely
+  transparent); and the cutout keeps every recognised class, so a cat on a sofa keeps the sofa.
+
 ## [1.0.3] - 2026-07-16
 
 The desktop stops being Microsoft's. Eight apps carry HadOS icons and names — Shell Core, Task
