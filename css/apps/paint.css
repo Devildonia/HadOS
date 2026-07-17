@@ -52,6 +52,19 @@
     padding: 1px 0 0 1px;
 }
 
+/**
+ * The selected tool. `.tool-active` is a class Paint adds, deliberately not named
+ * `.active`: this element already has an `:active` pseudo-class rule above, the two
+ * would score the same, and source order would silently decide the winner.
+ *
+ * Token-driven so every theme gets a readable marker. Paint used to paint this
+ * inline (#e0e0e0 + a Win95 inset border) — inline beats every stylesheet, so the
+ * active tool went invisible the moment the theme gave these buttons light text.
+ */
+#win-paint .paint-tool-btn.tool-active {
+    border-color: var(--control-active-border-color);
+}
+
 .paint-canvas-container {
     flex: 1;
     overflow: hidden;

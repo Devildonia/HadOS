@@ -635,6 +635,15 @@ body.theme-hados #win-paint .paint-tool-btn {
     border-radius: 4px;
 }
 
+/* The selected tool wears the same accent wash the taskbar uses for a running app,
+   so "this one is on" reads the same across the system — and the icon stays
+   readable, which a light fill would not allow against this theme's light text. */
+body.theme-hados #win-paint .paint-tool-btn.tool-active {
+    background: rgba(59, 155, 240, 0.16);
+    border-color: var(--accent-color);
+    box-shadow: inset 0 -2px 0 var(--accent-color);
+}
+
 body.theme-hados .workshop-tabs,
 body.theme-hados #win-ragdoll-skins .window-body {
     background: var(--window-bg) !important;

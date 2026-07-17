@@ -417,20 +417,21 @@ class Paint {
         if (!this.ctx || !this.canvas) return;
 
         // Remove active styling from other buttons
+        // Mark the selected tool with a class and let the theme paint it. This used
+        // to set `background: #e0e0e0` and a Win95 inset border inline, which no
+        // stylesheet can override — so once the theme gave these buttons light text,
+        // the active tool became light-on-light and vanished.
         const btns = document.querySelectorAll(`#${this.windowId} .paint-toolbar button`);
         btns.forEach(b => {
             const btnEl = b as HTMLButtonElement;
             if (btnEl.title !== 'undo' && btnEl.title !== 'redo') {
-                btnEl.style.border = '';
-                btnEl.style.background = '';
+                btnEl.classList.remove('tool-active');
             }
         });
 
-        // Add active style to the selected button
         const activeBtn = Array.from(btns).find(b => (b as HTMLButtonElement).title === tool) as HTMLButtonElement | undefined;
         if (activeBtn) {
-            activeBtn.style.border = '1px inset #fff';
-            activeBtn.style.background = '#e0e0e0';
+            activeBtn.classList.add('tool-active');
         }
 
         if (tool === 'undo' || tool === 'redo' || tool === 'clear' || tool === 'separator') {

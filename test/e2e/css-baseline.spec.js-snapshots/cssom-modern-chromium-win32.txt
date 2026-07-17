@@ -58,6 +58,24 @@ body.theme-hados ::-webkit-scrollbar-thumb:hover { background: content-box rgba(
 body.theme-hados ::-webkit-scrollbar-button { display: none; width: 0px; height: 0px; }
 body.theme-hados .icon span { color: var(--os-text-color); text-shadow: rgba(0, 0, 0, 0.8) 0px 1px 3px; font-size: 12px; }
 body.theme-hados .icon:hover .icon-box { background: rgba(127, 210, 255, 0.12); border-radius: 8px; }
+body.theme-hados .explorer-toolbar, body.theme-hados .explorer-address { background: var(--window-bg); border-color: var(--hados-line); color: var(--os-text-color); }
+body.theme-hados .explorer-content { background: var(--window-content-bg); }
+body.theme-hados .explorer-icon { color: var(--os-text-color); }
+body.theme-hados .explorer-icon:hover { background: rgba(59, 155, 240, 0.16); }
+body.theme-hados .ie-toolbar, body.theme-hados .ie-button-bar { background: var(--window-bg); border-color: var(--hados-line); color: var(--os-text-color); }
+body.theme-hados .ie-btn { background: var(--control-bg); color: var(--os-text-color); border: 1px solid var(--hados-line); border-radius: 6px; }
+body.theme-hados .ie-btn:active { border-color: var(--accent-color); transform: none; }
+body.theme-hados .ie-address-bar input, body.theme-hados .ie-content { background: var(--window-content-bg); border-color: var(--hados-line); color: var(--os-text-color); }
+body.theme-hados .ie-menu-bar span:hover { background: var(--hados-blue-deep); }
+body.theme-hados .paint-body, body.theme-hados .paint-toolbar, body.theme-hados .paint-canvas-container, body.theme-hados .paint-color-bar { background: var(--window-bg); border-color: var(--hados-line); }
+body.theme-hados #win-paint .paint-tool-btn { background: var(--control-bg); color: var(--os-text-color); border: 1px solid var(--hados-line); border-radius: 4px; }
+body.theme-hados #win-paint .paint-tool-btn.tool-active { background: rgba(59, 155, 240, 0.16); border-color: var(--accent-color); box-shadow: inset 0 -2px 0 var(--accent-color); }
+body.theme-hados .workshop-tabs, body.theme-hados #win-ragdoll-skins .window-body { color: var(--os-text-color); background: var(--window-bg) !important; border-color: var(--hados-line) !important; }
+body.theme-hados #win-ragdoll-skins .tab-btn { color: var(--os-text-color); background: var(--control-bg) !important; border-color: var(--hados-line) !important; }
+body.theme-hados #win-ragdoll-skins .tab-btn.active { background: rgb(36, 48, 68) !important; border-bottom-color: rgb(36, 48, 68) !important; }
+body.theme-hados #win-ragdoll-skins .drop-zone, body.theme-hados #win-ragdoll-skins .skin-grid + div, body.theme-hados #win-ragdoll-skins [style*="background: #fff"] { color: var(--os-text-color); background: var(--window-content-bg) !important; border-color: var(--hados-line) !important; }
+body.theme-hados #win-ragdoll-skins [style*="#808080"] { border-color: var(--hados-line) !important; }
+body.theme-hados #win-ragdoll-skins #selected-part-label { color: var(--hados-blue-light) !important; }
 @media (prefers-reduced-motion: reduce) {
   body.theme-hados .hados-btn, body.theme-hados button, body.theme-hados .taskbar-button, body.theme-hados #start-button, body.theme-hados .window-btn { transition: none; }
 }
@@ -802,7 +820,7 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .window-resize-handle::after { content: ""; position: absolute; bottom: 0px; right: 0px; width: 0px; height: 0px; border-style: solid; border-width: 0px 0px 16px 16px; border-color: transparent transparent var(--win-gray) transparent; }
 .hados-window.maximized .window-resize-handle { display: none; }
 .window-body { padding: 15px; background: var(--window-bg); flex: 1 1 0%; overflow: auto; }
-.window-body.explorer-window { padding: 0px; background: white; }
+.window-body.explorer-window { padding: 0px; background: var(--window-content-bg); }
 .window-body.explorer-window .explorer-toolbar, .window-body.explorer-window .explorer-address { background: var(--window-bg); padding: 8px; }
 .window-body.explorer-window .explorer-content { background: var(--window-content-bg); padding: 8px; }
 .window-body h3 { font-size: 12px; margin: 0px 0px 12px; }
@@ -828,9 +846,9 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .explorer-icon:hover { background: rgba(0, 0, 128, 0.1); }
 .explorer-icon:active { background: rgba(0, 0, 128, 0.2); }
 .explorer-icon .icon-box, .explorer-icon .icon-img { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 48px; background: transparent; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; box-shadow: none; }
-.explorer-icon span { font-size: 11px; text-align: center; overflow-wrap: break-word; max-width: 100px; color: rgb(0, 0, 0); }
+.explorer-icon span { font-size: 11px; text-align: center; overflow-wrap: break-word; max-width: 100px; color: var(--os-text-color); }
 #readme-content { background: var(--window-content-bg); color: var(--os-text-color); font-family: "Courier New", monospace; font-size: 11px; padding: 10px; margin: 0px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
-.explorer-address input { flex: 1 1 0%; border: 1px solid rgb(128, 128, 128); padding: 2px 4px; font-family: "MS Sans Serif", Arial; font-size: 11px; }
+.explorer-address input { flex: 1 1 0%; border: 1px solid var(--border-dark); padding: 2px 4px; font-family: "MS Sans Serif", Arial; font-size: 11px; }
 .wallpaper-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; background: white; padding: 10px; border-width: 2px; border-style: solid; border-image: initial; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); }
 .wallpaper-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 5px; border: 1px solid transparent; }
 .wallpaper-item:hover { background: rgb(0, 0, 128); color: white; border-color: var(--border-dark); }
@@ -945,6 +963,7 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .paint-toolbar { width: 56px; background: rgb(192, 192, 192); border-right: 1px solid rgb(128, 128, 128); padding: 3px; display: grid; grid-template-columns: 24px 24px; gap: 2px; grid-auto-rows: 24px; }
 #win-paint .paint-tool-btn { min-width: 0px; min-height: 0px; width: 24px; height: 24px; padding: 0px; display: flex; align-items: center; justify-content: center; }
 #win-paint .paint-tool-btn:active { padding: 1px 0px 0px 1px; }
+#win-paint .paint-tool-btn.tool-active { border-color: var(--control-active-border-color); }
 .paint-canvas-container { flex: 1 1 0%; overflow: hidden; background: rgb(128, 128, 128); padding: 10px; display: flex; justify-content: center; align-items: center; }
 #paint-canvas { background: white; cursor: crosshair; box-shadow: rgba(0, 0, 0, 0.5) 2px 2px 5px; width: 100%; height: 100%; }
 .paint-color-bar { height: 40px; background: rgb(192, 192, 192); border-top: 1px solid rgb(128, 128, 128); display: flex; align-items: center; padding-left: 5px; }
