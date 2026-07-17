@@ -22,26 +22,26 @@ describe('NotificationManager (Notify)', () => {
     describe('notification creation', () => {
         it('should create info notification in the DOM', () => {
             Notify.info('Test message');
-            const notifications = document.querySelectorAll('.win95-notification');
+            const notifications = document.querySelectorAll('.hados-notification');
             expect(notifications.length).toBe(1);
         });
 
         it('should create success notification', () => {
             Notify.success('Done!');
-            const el = document.querySelector('.win95-notification')!;
+            const el = document.querySelector('.hados-notification')!;
             expect(el).not.toBeNull();
             expect(el.textContent).toContain('Done!');
         });
 
         it('should create warn notification', () => {
             Notify.warn('Low disk space');
-            const el = document.querySelector('.win95-notification')!;
+            const el = document.querySelector('.hados-notification')!;
             expect(el.textContent).toContain('Low disk space');
         });
 
         it('should create error notification with System Error title', () => {
             Notify.error('Critical failure');
-            const el = document.querySelector('.win95-notification')!;
+            const el = document.querySelector('.hados-notification')!;
             expect(el.textContent).toContain('Critical failure');
             expect(el.textContent).toContain('System Error');
         });
@@ -52,7 +52,7 @@ describe('NotificationManager (Notify)', () => {
             Notify.warn('warn');
             Notify.error('error');
 
-            const all = document.querySelectorAll('.win95-notification');
+            const all = document.querySelectorAll('.hados-notification');
             expect(all.length).toBe(4);
         });
     });
@@ -60,7 +60,7 @@ describe('NotificationManager (Notify)', () => {
     describe('XSS prevention', () => {
         it('should escape HTML in notification messages', () => {
             Notify.info('<script>alert("xss")</script>');
-            const el = document.querySelector('.win95-notification')!;
+            const el = document.querySelector('.hados-notification')!;
             expect(el.innerHTML).not.toContain('<script>');
         });
     });
@@ -70,7 +70,7 @@ describe('NotificationManager (Notify)', () => {
             Notify.info('First');
             Notify.info('Second');
             Notify.info('Third');
-            const all = document.querySelectorAll('.win95-notification');
+            const all = document.querySelectorAll('.hados-notification');
             expect(all.length).toBe(3);
         });
     });
@@ -80,7 +80,7 @@ describe('NotificationManager (Notify)', () => {
             Notify.info('A');
             Notify.error('B');
             Notify.clear();
-            const container = document.getElementById('win95-notifications');
+            const container = document.getElementById('hados-notifications');
             if (container) {
                 expect(container.children.length).toBe(0);
             }
@@ -91,7 +91,7 @@ describe('NotificationManager (Notify)', () => {
         it('should auto-dismiss after configured duration', () => {
             vi.useFakeTimers();
             Notify.info('Temporary', { duration: 100 });
-            expect(document.querySelectorAll('.win95-notification').length).toBe(1);
+            expect(document.querySelectorAll('.hados-notification').length).toBe(1);
 
             vi.advanceTimersByTime(500); // 100ms dismiss + 300ms animation
             // Notification should be gone or fading

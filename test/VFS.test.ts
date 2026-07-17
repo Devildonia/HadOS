@@ -116,4 +116,28 @@ describe('VFS (Virtual File System)', () => {
         expect(root.name).toBe('C:');
         expect(root.children.HADOS).toBeDefined();
     });
+
+    it('should filter out hidden files/folders in listDir (L3)', () => {
+        // SYSTEM should be hidden by default
+        const hadosDir = VFS.listDir('C:\\HADOS');
+        expect(hadosDir).not.toContain('SYSTEM');
+
+        // Create a custom file in SYSTEM, it should be marked hidden and filtered in listDir
+        VFS.writeFile('C:\\HADOS\\SYSTEM', 'dummy.txt', 'data');
+        const systemDir = VFS.listDir('C:\\HADOS\\SYSTEM');
+        expect(systemDir).not.toContain('dummy.txt');
+    });
+
+    it('should reject trashing C:\\HADOS\\SYSTEM or any of its subpaths (L5)', () => {
+        // Create dummy file inside SYSTEM
+        VFS.writeFile('C:\\HADOS\\SYSTEM', 'secret.txt', 'secret data');
+
+        // Try to trash the secret.txt inside SYSTEM
+        const result1 = VFS.trashNode('C:\\HADOS\\SYSTEM', 'secret.txt');
+        expect(result1).toBe(false);
+
+        // Try to trash SYSTEM itself
+        const result2 = VFS.trashNode('C:\\HADOS', 'SYSTEM');
+        expect(result2).toBe(false);
+    });
 });

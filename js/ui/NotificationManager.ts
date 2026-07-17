@@ -36,7 +36,7 @@ function ensureContainer(): void {
     if (container && document.body.contains(container)) return;
 
     container = document.createElement('div');
-    container.id = 'win95-notifications';
+    container.id = 'hados-notifications';
     container.style.cssText = `
         position: fixed;
         bottom: 40px;
@@ -70,7 +70,7 @@ function createNotification(type: 'info' | 'success' | 'warn' | 'error', message
     const icon = ICONS[type] || 'ℹ️';
 
     const el = document.createElement('div');
-    el.className = 'win95-notification';
+    el.className = 'hados-notification';
     el.dataset.notifyId = id.toString();
     el.style.cssText = `
         background: #c0c0c0;

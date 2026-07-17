@@ -7,7 +7,6 @@
 import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
 import {
-    SHADER_WIN95,
     SHADER_MODERN,
     buildHadosShader
 } from './ThemeShaders';
@@ -268,13 +267,11 @@ const ShaderWallpaper: IShaderWallpaper = (() => {
         const tm: any = Services.get('ThemeManager');
         const currentTheme = forceTheme || (tm ? tm.currentTheme : 'hados');
 
-        // Explicit map, not an if/else: the old fallback branch drew SHADER_WIN95 —
-        // the waving Windows flag — so any unrecognised theme, including 'hados',
-        // would have painted Microsoft's logo across the HadOS desktop.
+        // Explicit map, not an if/else: the old fallback branch drew the legacy shader
+        // so any unrecognised theme would have painted Microsoft's logo across the HadOS desktop.
         const shaders: Record<string, string> = {
             hados: buildHadosShader(),
             modern: SHADER_MODERN,
-            win95: SHADER_WIN95,
         };
 
         passes.push(new RenderPass(gl, shaders[currentTheme] ?? buildHadosShader(), false));

@@ -22,6 +22,7 @@ export interface IVFSNode {
     icon?: string;
     actionType?: string;
     actionTarget?: string;
+    hidden?: boolean;
     /** Set while a node lives in the recycle bin: the path it was deleted from,
      *  and when. Cleared on restore. Ignored by isValidTree (extra fields are OK). */
     trashOrigin?: string;
@@ -108,7 +109,7 @@ export const VFS: IVFS = (() => {
         children: {
             'HADOS': {
                 name: 'HADOS', type: 'dir', children: {
-                    'SYSTEM': { name: 'SYSTEM', type: 'dir', children: {} },
+                    'SYSTEM': { name: 'SYSTEM', type: 'dir', hidden: true, children: {} },
                     'DESKTOP': {
                         name: 'DESKTOP',
                         type: 'dir',
@@ -443,6 +444,12 @@ export const VFS: IVFS = (() => {
             ? Utils.sanitizePath(name) : name;
     }
 
+    function isSystemPath(parentPath: string, name: string): boolean {
+        const fullPath = parentPath + (parentPath.endsWith('\\') ? '' : '\\') + name;
+        const upper = fullPath.toUpperCase();
+        return upper === 'C:\\HADOS\\SYSTEM' || upper.startsWith('C:\\HADOS\\SYSTEM\\');
+    }
+
     function mkdir(path: string, name: string): boolean {
         const safeName = sanitize(name);
         if (!safeName) return false;
@@ -456,7 +463,8 @@ export const VFS: IVFS = (() => {
                 Utils.Logger.warn(`VFS: cannot mkdir "${safeName}" — a file with that name exists`);
                 return false;
             }
-            parent.children[safeName] = { name: safeName, type: 'dir', children: {} };
+            const hidden = isSystemPath(path, safeName);
+            parent.children[safeName] = { name: safeName, type: 'dir', children: {}, ...(hidden ? { hidden: true } : {}) };
             save();
             return true;
         }
@@ -481,7 +489,8 @@ export const VFS: IVFS = (() => {
             }
             // Overwriting a blob-backed file with inline text: free the old blob.
             releaseBlob(existing);
-            parent.children[safeName] = { name: safeName, type: 'file', content };
+            const hidden = isSystemPath(path, safeName);
+            parent.children[safeName] = { name: safeName, type: 'file', content, ...(hidden ? { hidden: true } : {}) };
             save();
             return true;
         }
@@ -541,7 +550,8 @@ export const VFS: IVFS = (() => {
             return false;
         }
         releaseBlob(current.children[safeName]);
-        current.children[safeName] = { name: safeName, type: 'file', blobRef, size: data.size, mime: data.type || '' };
+        const hidden = isSystemPath(path, safeName);
+        current.children[safeName] = { name: safeName, type: 'file', blobRef, size: data.size, mime: data.type || '', ...(hidden ? { hidden: true } : {}) };
         save();
         return true;
     }
@@ -600,6 +610,13 @@ export const VFS: IVFS = (() => {
     function trashNode(parentPath: string, name: string): boolean {
         // Refuse to trash items already inside the bin (no double-nesting).
         if (parentPath.toUpperCase().startsWith(RECYCLE_PATH.toUpperCase())) return false;
+
+        // L5: Refuse to trash C:\HADOS\SYSTEM itself or any item inside it.
+        const fullPath = parentPath + (parentPath.endsWith('\\') ? '' : '\\') + name;
+        const fullPathUpper = fullPath.toUpperCase();
+        const systemPathUpper = 'C:\\HADOS\\SYSTEM';
+        if (fullPathUpper === systemPathUpper || fullPathUpper.startsWith(systemPathUpper + '\\')) return false;
+
         const parent = resolve(parentPath);
         if (!(parent && parent.type === 'dir' && parent.children && parent.children[name])) return false;
         const bin = ensureRecycleBin();
@@ -688,7 +705,11 @@ export const VFS: IVFS = (() => {
     function listDir(path: string): string[] | null {
         const node = resolve(path);
         if (node && node.type === 'dir' && node.children) {
-            return Object.keys(node.children);
+            // Bound to a local so the narrowing survives into the callback:
+            // noUncheckedIndexedAccess types an index read as possibly undefined,
+            // even when the key came from Object.keys.
+            const children = node.children;
+            return Object.keys(children).filter(name => !children[name]?.hidden);
         }
         return null;
     }

@@ -110,7 +110,7 @@ class FileExplorer extends WindowApp {
         if (folderNode && folderNode.type === 'dir' && folderNode.children) {
             Object.keys(folderNode.children).forEach(name => {
                 const item = (folderNode.children as Record<string, IVFSNode>)[name];
-                if (item) {
+                if (item && !item.hidden) {
                     this.createIcon(name, item);
                 }
             });
@@ -123,7 +123,8 @@ class FileExplorer extends WindowApp {
         const statusLabel = document.getElementById('explorer-status');
         if (statusLabel) {
             const children = folderNode?.children || {};
-            statusLabel.textContent = `${Object.keys(children).length} object(s)`;
+            const visibleCount = Object.values(children).filter(item => !item.hidden).length;
+            statusLabel.textContent = `${visibleCount} object(s)`;
         }
     }
 

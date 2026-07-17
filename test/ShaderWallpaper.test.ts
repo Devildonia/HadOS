@@ -125,7 +125,7 @@ describe('ShaderWallpaper', () => {
         loggerSpy.mockRestore();
     });
 
-    it('should load shaders and compile them (win95)', () => {
+    it('should load shaders and compile them (hados)', () => {
         // Re-inject mock canvas since prior tests might have cleared it
         document.body.innerHTML = '<canvas id="shader-bg"></canvas>';
         canvas = document.getElementById('shader-bg') as HTMLCanvasElement;
@@ -134,10 +134,10 @@ describe('ShaderWallpaper', () => {
         ShaderWallpaper.init('shader-bg');
 
         // setFragmentShader orchestrates loadThemeShaders internally
-        ShaderWallpaper.setFragmentShader('win95');
+        ShaderWallpaper.setFragmentShader('hados');
 
         // Should compile VS and FS
-        // 2 calls from init, 2 calls from loading win95 = 4 calls total
+        // 2 calls from init, 2 calls from loading hados = 4 calls total
         expect(mockGL.createShader).toHaveBeenCalledTimes(4);
         expect(mockGL.compileShader).toHaveBeenCalledTimes(4);
         expect(mockGL.linkProgram).toHaveBeenCalledTimes(2);
@@ -154,7 +154,7 @@ describe('ShaderWallpaper', () => {
 
         ShaderWallpaper.init('shader-bg');
 
-        ShaderWallpaper.setFragmentShader('win95');
+        ShaderWallpaper.setFragmentShader('hados');
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('compile error'), expect.any(String));
 
         consoleSpy.mockRestore();
@@ -182,7 +182,7 @@ describe('ShaderWallpaper', () => {
         canvas.getContext = vi.fn(() => mockGL) as any;
 
         ShaderWallpaper.init('shader-bg');
-        ShaderWallpaper.setFragmentShader('win95');
+        ShaderWallpaper.setFragmentShader('hados');
 
         ShaderWallpaper.stop();
         expect(window.cancelAnimationFrame).toHaveBeenCalled();
