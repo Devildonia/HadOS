@@ -11,15 +11,24 @@
  *   3. In-memory Map — last resort so the API never throws (non-durable).
  */
 
+/**
+ * Type defining the storage backend strategies.
+ */
 type BlobBackend = 'opfs' | 'indexeddb' | 'memory';
 
+/** Database name storing binary blob files. */
 const BLOB_DB_NAME = 'hados-vfs-blobs';
+/** Schema version index for the IndexedDB blob database. */
 const BLOB_DB_VERSION = 1;
+/** Target object store name within the blob database. */
 const BLOB_STORE = 'blobs';
 
 /** Pre-HadOS blob store. Blobs are migrated lazily — see get(). */
 const LEGACY_BLOB_DB_NAME = 'win95-vfs-blobs';
 
+/**
+ * Checks whether Origin Private File System (OPFS) is supported by the host.
+ */
 function opfsAvailable(): boolean {
     try {
         return typeof navigator !== 'undefined'
@@ -30,6 +39,9 @@ function opfsAvailable(): boolean {
     }
 }
 
+/**
+ * Checks whether IndexedDB is available and functional in the host browser environment.
+ */
 function idbAvailable(): boolean {
     try {
         return typeof indexedDB !== 'undefined' && indexedDB !== null;
@@ -39,10 +51,18 @@ function idbAvailable(): boolean {
 }
 
 // ── OPFS backend ──────────────────────────────────────────────────────────────
+/**
+ * Resolves the root directory handle for origin private file system storage.
+ */
 async function opfsDir(): Promise<FileSystemDirectoryHandle> {
     return navigator.storage.getDirectory();
 }
 
+/**
+ * Writes raw Blob content to the OPFS backend under a given file entry key.
+ * @param id Unique blob key identifier.
+ * @param data Blob instance containing binary data.
+ */
 async function opfsPut(id: string, data: Blob): Promise<void> {
     const dir = await opfsDir();
     const handle = await dir.getFileHandle(id, { create: true });
@@ -51,6 +71,10 @@ async function opfsPut(id: string, data: Blob): Promise<void> {
     await writable.close();
 }
 
+/**
+ * Retrieves a binary Blob instance from the OPFS storage backend.
+ * @param id Unique blob key identifier.
+ */
 async function opfsGet(id: string): Promise<Blob | null> {
     try {
         const dir = await opfsDir();
@@ -61,6 +85,10 @@ async function opfsGet(id: string): Promise<Blob | null> {
     }
 }
 
+/**
+ * Deletes a file entry from the OPFS storage.
+ * @param id Unique blob key identifier.
+ */
 async function opfsDelete(id: string): Promise<void> {
     try {
         const dir = await opfsDir();
@@ -69,8 +97,13 @@ async function opfsDelete(id: string): Promise<void> {
 }
 
 // ── IndexedDB backend ─────────────────────────────────────────────────────────
+/** DB connection instance promise cache. */
 let blobDbPromise: Promise<IDBDatabase> | null = null;
 
+/**
+ * Opens a connection to a specific database by name for blob operations.
+ * @param name Database name.
+ */
 function openNamedBlobDB(name: string): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const req = indexedDB.open(name, BLOB_DB_VERSION);
@@ -85,6 +118,9 @@ function openNamedBlobDB(name: string): Promise<IDBDatabase> {
     });
 }
 
+/**
+ * Resolves the primary active database connection promise for blob operations.
+ */
 function openBlobDB(): Promise<IDBDatabase> {
     if (!blobDbPromise) blobDbPromise = openNamedBlobDB(BLOB_DB_NAME);
     return blobDbPromise;
@@ -92,9 +128,8 @@ function openBlobDB(): Promise<IDBDatabase> {
 
 /**
  * Looks a blob up in the pre-HadOS store. Blobs are migrated LAZILY (on the first
- * read that misses) rather than copied wholesale at boot: a library of images
- * could be hundreds of MB, and paying that on one startup to rename a database
- * would be a poor trade.
+ * read that misses) rather than copied wholesale at boot.
+ * @param id Unique blob key identifier.
  */
 async function legacyIdbGetRaw(id: string): Promise<StoredBlob | null> {
     try {
@@ -115,11 +150,21 @@ async function legacyIdbGetRaw(id: string): Promise<StoredBlob | null> {
     }
 }
 
-// Store as { buffer, type } rather than a raw Blob: ArrayBuffers structured-clone
-// reliably across every engine (and test shims), whereas Blob-in-IndexedDB has a
-// history of browser quirks. The Blob is reconstructed on read.
-interface StoredBlob { buffer: ArrayBuffer; type: string; }
+/**
+ * Intermediate schema mapping binary files for browser storage compatibility.
+ */
+interface StoredBlob {
+    /** Raw array buffer contents. */
+    buffer: ArrayBuffer;
+    /** Original file type metadata. */
+    type: string;
+}
 
+/**
+ * Performs a write transaction to insert a binary record into the IndexedDB database.
+ * @param id Unique blob key identifier.
+ * @param data Blob instance.
+ */
 async function idbPut(id: string, data: Blob): Promise<void> {
     const buffer = await data.arrayBuffer();
     const record: StoredBlob = { buffer, type: data.type };
@@ -133,6 +178,10 @@ async function idbPut(id: string, data: Blob): Promise<void> {
     });
 }
 
+/**
+ * Fetches the database record containing the raw binary buffer of a blob.
+ * @param id Unique blob key identifier.
+ */
 function idbGetRaw(id: string): Promise<StoredBlob | null> {
     return openBlobDB().then(db => new Promise<StoredBlob | null>((resolve, reject) => {
         const req = db.transaction(BLOB_STORE, 'readonly').objectStore(BLOB_STORE).get(id);
@@ -141,6 +190,10 @@ function idbGetRaw(id: string): Promise<StoredBlob | null> {
     }));
 }
 
+/**
+ * Reconstructs a full Blob wrapper from the raw database records, lazy-migrating legacy keys.
+ * @param id Unique blob key identifier.
+ */
 async function idbGet(id: string): Promise<Blob | null> {
     const rec = await idbGetRaw(id);
     if (rec) return new Blob([rec.buffer], { type: rec.type });
@@ -154,6 +207,10 @@ async function idbGet(id: string): Promise<Blob | null> {
     return blob;
 }
 
+/**
+ * Removes a record entry from the IndexedDB store.
+ * @param id Unique blob key identifier.
+ */
 function idbDelete(id: string): Promise<void> {
     return openBlobDB().then(db => new Promise<void>((resolve, reject) => {
         const tx = db.transaction(BLOB_STORE, 'readwrite');
@@ -164,16 +221,25 @@ function idbDelete(id: string): Promise<void> {
 }
 
 // ── Memory backend (last resort) ──────────────────────────────────────────────
+/** Local in-memory Map fallback database for testing environments. */
 const memory = new Map<string, Blob>();
 
+/**
+ * Interface defining durable binary blob storage controller operations.
+ */
 export interface IVFSBlobStore {
+    /** Stores a Blob binary payload associated with a unique reference ID. */
     put(id: string, data: Blob): Promise<void>;
+    /** Retrieves the binary Blob payload associated with a unique reference ID. */
     get(id: string): Promise<Blob | null>;
+    /** Deletes the binary Blob payload associated with a unique reference ID. */
     delete(id: string): Promise<void>;
+    /** Identifies the active storage backend engine. */
     backend(): BlobBackend;
 }
 
 export const VFSBlobStore: IVFSBlobStore = (() => {
+    /** The active selected storage backend strategy. */
     const backend: BlobBackend = opfsAvailable() ? 'opfs' : (idbAvailable() ? 'indexeddb' : 'memory');
 
     async function put(id: string, data: Blob): Promise<void> {

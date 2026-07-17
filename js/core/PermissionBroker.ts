@@ -13,7 +13,14 @@
 import { VFS } from './VFS';
 import { Utils } from '../utils';
 
+/**
+ * Type representing the user consent decision (granted or denied).
+ */
 export type Decision = 'granted' | 'denied';
+
+/**
+ * Type representing the asynchronous consent prompt function signature.
+ */
 export type ConsentPrompt = (appId: string, capability: string) => Promise<Decision>;
 
 const GRANTS_DIR = 'C:\\HADOS\\SYSTEM';
@@ -32,7 +39,11 @@ const CAP_LABELS: Record<string, string> = {
     'ai:infer': 'run AI on your device',
 };
 
-/** Default consent UI: a small modal with Allow / Deny. */
+/**
+ * Renders the default UI prompt popup modal requesting capability authorization from the user.
+ * @param appId Unique app package identifier.
+ * @param capability Target capability string (e.g. 'fs:read').
+ */
 function defaultPrompt(appId: string, capability: string): Promise<Decision> {
     return new Promise((resolve) => {
         // Escape both interpolations: appId comes from the process (only package
@@ -59,25 +70,18 @@ function defaultPrompt(appId: string, capability: string): Promise<Decision> {
 }
 
 export const PermissionBroker = (() => {
+    /** Stores all active capability grants mapping appId to capability to Decision. */
     let grants: Record<string, Record<string, Decision>> = {};
-    /**
-     * Permission ceiling declared by an installed app's manifest (Fase 4). If an
-     * app declared its capabilities, anything outside that list is refused
-     * outright — without bothering the user. Apps with no manifest (built-in
-     * demo processes) have no ceiling and fall through to consent.
-     */
+    /** Permissions ceiling configuration mapping app packages to declared capabilities list. */
     let declared: Record<string, string[]> = {};
+    /** Active consent prompt dialog renderer hook. */
     let prompt: ConsentPrompt = defaultPrompt;
-    /**
-     * In-flight consent requests (see check()). The key joins appId and
-     * capability with a NUL escape rather than a space, so an appId that
-     * contains the separator cannot collide with another (appId, capability)
-     * pair. Written as an escape to keep this source plain ASCII — it used to
-     * embed a raw control character, which made tooling treat the file as binary.
-     */
+    /** In-flight permission consent requests mapping appId/capability combination to decision promises. */
     const pending = new Map<string, Promise<Decision>>();
 
-    /** Loads persisted grants from the VFS (call once at boot). */
+    /**
+     * Hydrates the persisted permission grants from the VFS registry.
+     */
     function init(): void {
         const raw = VFS.readFile(GRANTS_PATH);
         if (raw) {
@@ -86,12 +90,17 @@ export const PermissionBroker = (() => {
         }
     }
 
-    /** Overrides the consent UI (used by tests). */
+    /**
+     * Configures a custom consent prompt dialog handler.
+     * @param p Consent prompt callback hook.
+     */
     function setPrompt(p: ConsentPrompt): void { prompt = p; }
 
     /**
-     * Resolves whether `appId` may use `capability`, prompting for consent on
-     * first use and remembering the decision.
+     * Mediates capability checks. Prompts the user on first request and returns the decision.
+     * @param appId Target app package identifier.
+     * @param capability Requested capability key.
+     * @returns Promise resolving to true if authorization is granted.
      */
     async function check(appId: string, capability: string): Promise<boolean> {
         // Manifest ceiling: never prompt for a capability the app didn't declare.
@@ -128,38 +137,64 @@ export const PermissionBroker = (() => {
         return (await inflight) === 'granted';
     }
 
-    /** Returns a stored decision without prompting (or undefined if none). */
+    /**
+     * Reads a recorded decision synchronously without prompting the user.
+     * @param appId App package identifier.
+     * @param capability Target capability key.
+     */
     function peek(appId: string, capability: string): Decision | undefined {
         return grants[appId]?.[capability];
     }
 
+    /**
+     * Persists the active permission grants dictionary to the VFS.
+     */
     function persist(): void {
         VFS.mkdir('C:\\HADOS', 'SYSTEM'); // idempotent; ensures the dir exists
         VFS.writeFile(GRANTS_DIR, GRANTS_NAME, JSON.stringify(grants));
         void VFS.flush();
     }
 
-    /** Grants/denies programmatically (settings UI, tests). */
+    /**
+     * Manually overrides a stored permission decision for a capability.
+     * @param appId Target app package.
+     * @param capability Capability key.
+     * @param decision Intended decision state.
+     */
     function set(appId: string, capability: string, decision: Decision): void {
         (grants[appId] ?? (grants[appId] = {}))[capability] = decision;
         persist();
     }
 
-    /** Records an installed app's declared permission ceiling (from its manifest). */
+    /**
+     * Configures the manifest capability ceiling list for an app package.
+     * @param appId App package identifier.
+     * @param permissions Allowed list of capability strings.
+     */
     function setDeclared(appId: string, permissions: string[]): void {
         declared[appId] = [...permissions];
     }
 
+    /**
+     * Removes the manifest capability ceiling configuration for an app package.
+     * @param appId App package identifier.
+     */
     function clearDeclared(appId: string): void {
         delete declared[appId];
     }
 
-    /** Drops every stored decision for an app (called on uninstall). */
+    /**
+     * Revokes all granted permissions stored under a given app package.
+     * @param appId Target app package identifier.
+     */
     function revokeApp(appId: string): void {
         delete grants[appId];
         persist();
     }
 
+    /**
+     * Resets the broker registry state (primarily for test environments).
+     */
     function reset(): void {
         grants = {};
         declared = {};

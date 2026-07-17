@@ -21,64 +21,100 @@ import { attachSyscalls } from './SyscallBroker';
 import { PermissionBroker } from './PermissionBroker';
 import { PackageManager } from './PackageManager';
 
+/**
+ * Represents an entry in the application registry, mapping an app constructor to its metadata.
+ */
 export interface IAppRegistryEntry {
+    /** The constructor class used to instantiate the application. */
     appClass: IWindowsAppConstructor;
+    /** Metadata detailing the application's details (name, icon, etc.). */
     metadata: IAppMetadata;
 }
 
+/**
+ * The internal structure of the Kernel registry tracking registered apps and live processes.
+ */
 export interface IKernelRegistry {
+    /** A dictionary of registered applications keyed by their app ID. */
     apps: Record<string, IAppRegistryEntry>;
+    /** A map of active processes keyed by their Process Identifier (PID). */
     processes: Map<number, IProcess>;
 }
 
+/**
+ * The Kernel interface defining core OS management capabilities.
+ */
 export interface IKernel {
+    /** Initializes the Kernel subsystems, reloading grants and packages. */
     init(): void;
+    /** Registers an application with the kernel registry. */
     registerApp(id: string, appClass: IWindowsAppConstructor, metadata: IAppMetadata): void;
+    /** Unregisters an application from the kernel registry. */
     unregisterApp(id: string): boolean;
+    /** Validates and installs a plugin app, registering it and optionally rendering its window. */
     installPlugin(plugin: IAppPlugin): void;
+    /** Uninstalls a plugin, killing all its active processes and revoking bridge trusts. */
     uninstallPlugin(id: string): boolean;
+    /** Instantiates and starts a registered application process. Handles singleton checks. */
     launch(appId: string, params?: Record<string, unknown>): IProcess | null;
+    /** Spawns a process sandboxed within a Web Worker. */
     spawnWorker(appId: string, transport: IProcessTransport, opts?: { windowId?: string | null; fsRoot?: string }): { pid: number; worker: WorkerProcess; process: IProcess };
+    /** Spawns a process sandboxed within an iframe communicating via MessagePort. */
     spawnIframe(appId: string, opts?: IframeSpawnOptions & { windowId?: string | null; fsRoot?: string }): Promise<{ pid: number; worker: WorkerProcess; process: IProcess; iframe: HTMLIFrameElement }>;
+    /** Retrieves the WorkerProcess handle associated with a worker PID. */
     getWorker(pid: number): WorkerProcess | undefined;
+    /** Terminates a process by PID, freeing its resources and disposing of related windows. */
     kill(pid: number): boolean;
+    /** Returns a snapshot copy of the Kernel registry containing registered apps and active processes list. */
     getRegistry(): { apps: Record<string, IAppRegistryEntry>, processes: IProcess[] };
+    /** Retrieves a process details by its PID. */
     getProcess(pid: number): IProcess | undefined;
+    /** Returns the number of currently active processes. */
     getActiveCount(): number;
+    /** Resets the Kernel registry, terminating all workers and clearing registered apps/processes (for testing). */
     __reset(): void;
 }
 
 export const Kernel: IKernel = (() => {
     'use strict';
 
+    /** Internal registry of applications and active processes. */
     const registry: IKernelRegistry = {
         apps: {},
         processes: new Map<number, IProcess>() // Map<pid, process> — replaces array, auto-cleans on kill
     };
 
+    /** Monotonically increasing PID counter for active processes. */
     let _nextPid = 0;          // Monotonically increasing PID counter
 
-    // Records the actual iframe id trusted by the PluginBridge for each plugin,
-    // so uninstall revokes the exact frame even when a plugin supplied its own
-    // iframeId (install and uninstall must resolve the id the same way).
+    /** Records the actual iframe id trusted by the PluginBridge for each plugin. */
     const pluginFrameIds = new Map<string, string>();
 
-    // Isolated (Web Worker) processes: pid -> host-side handle. Kept separate from
-    // the IProcess table so IProcess stays a plain data record.
+    /** Isolated (Web Worker/Iframe) process handles mapping PID to host-side interface. */
     const workers = new Map<number, WorkerProcess>();
+
+    /** Watchdog checking and killing unresponsive worker/iframe processes. */
     const watchdog = new ProcessWatchdog({
         getTargets: () => Array.from(workers.entries()).map(([pid, proc]) => ({ pid, proc })),
         onKill: (pid) => { Utils.Logger.warn(`Kernel: watchdog killing unresponsive PID ${pid}`); kill(pid); },
     });
 
     /**
-     * Registers a new application class to the system
+     * Registers a new application class to the system.
+     * @param id Unique identifier of the app.
+     * @param appClass Constructor class of the app.
+     * @param metadata App presentation properties (name, icon).
      */
     function registerApp(id: string, appClass: IWindowsAppConstructor, metadata: IAppMetadata): void {
         registry.apps[id] = { appClass, metadata };
         Utils.Logger.log(`Kernel: App registered [${id}]`);
     }
 
+    /**
+     * Unregisters an application class from the system.
+     * @param id Unique identifier of the app to remove.
+     * @returns True if the app was found and removed, false otherwise.
+     */
     function unregisterApp(id: string): boolean {
         if (registry.apps[id]) {
             delete registry.apps[id];
@@ -88,6 +124,10 @@ export const Kernel: IKernel = (() => {
         return false;
     }
 
+    /**
+     * Validates and installs a plugin, registering its constructor and spawning its windows.
+     * @param plugin The app plugin configuration to install.
+     */
     function installPlugin(plugin: IAppPlugin): void {
         const validation = PluginManager.validatePlugin(plugin);
         if (!validation.ok) {
@@ -116,6 +156,11 @@ export const Kernel: IKernel = (() => {
         Utils.Logger.log(`Kernel: Plugin installed [${plugin.id}]`);
     }
 
+    /**
+     * Uninstalls a plugin, terminating its running processes and removing frame trust.
+     * @param id The app ID of the plugin to uninstall.
+     * @returns True if successful, false otherwise.
+     */
     function uninstallPlugin(id: string): boolean {
         // Kill active processes of that appId
         const procs = getRegistry().processes.filter(p => p.appId === id);
@@ -137,6 +182,12 @@ export const Kernel: IKernel = (() => {
         return false;
     }
 
+    /**
+     * Launches a process within the kernel. For singleton applications, focuses the existing window.
+     * @param appId The unique ID of the application to run.
+     * @param params Optional initialization parameters passed to the app constructor.
+     * @returns The process descriptor if launched successfully, or null if failed.
+     */
     function launch(appId: string, params: Record<string, unknown> = {}): IProcess | null {
         const appInfo = registry.apps[appId];
         if (!appInfo) {
@@ -198,8 +249,9 @@ export const Kernel: IKernel = (() => {
     }
 
     /**
-     * Terminates a process and removes it from the process table.
-     * No memory accumulation: killed processes are fully deleted.
+     * Terminates a process by its PID, triggering cleanup hooks, closing windows, and cleaning up WebGL resources.
+     * @param pid The PID of the process to kill.
+     * @returns True if the process was terminated, false if not found.
      */
     function kill(pid: number): boolean {
         const process = registry.processes.get(pid);
@@ -231,15 +283,9 @@ export const Kernel: IKernel = (() => {
     }
 
     /**
-     * Registers an isolated process over any transport (Worker or iframe port).
-     * Shared by spawnWorker/spawnIframe. `onTerminate` runs extra teardown (e.g.
-     * removing an iframe element) when the process is killed.
-     */
-    /**
-     * Per-app home directory under C:\APPS, created on demand (Fase 3 namespacing).
-     * Uses the SAME sanitizer as VFS.mkdir (Utils.sanitizePath) so the returned
-     * fsRoot always names the directory that was actually created — a different
-     * local regex could diverge for odd ids and hand back a root that doesn't exist.
+     * Ensures that an isolated app has a dedicated home directory directory structure.
+     * @param appId The unique identifier of the app.
+     * @returns The resolved canonical path to the app's VFS folder.
      */
     function ensureAppHome(appId: string): string {
         const safe = Utils.sanitizePath(appId) || 'unknown-app';
@@ -248,6 +294,12 @@ export const Kernel: IKernel = (() => {
         return `C:\\APPS\\${safe}`;
     }
 
+    /**
+     * Helper method to initialize, attach syscalls, and register a worker or iframe-based isolated process.
+     * @param appId The unique ID of the application.
+     * @param transport Message channel transport layer (Worker or MessagePort).
+     * @param opts Virtualization parameters, including window references, process kind, and custom cleanup action.
+     */
     function spawnProcess(appId: string, transport: IProcessTransport, opts: { windowId?: string | null; kind: 'worker' | 'iframe'; onTerminate?: () => void; fsRoot?: string | undefined }): { pid: number; worker: WorkerProcess; process: IProcess } {
         const worker = new WorkerProcess(transport);
         const pid = _nextPid++;
@@ -279,18 +331,20 @@ export const Kernel: IKernel = (() => {
     }
 
     /**
-     * Spawns an isolated Web Worker process. The caller supplies a transport
-     * (workerTransport(url) in the app, a loopback in tests). Returns the pid and
-     * the WorkerProcess handle for request()/ready. The watchdog auto-starts.
+     * Spawns an isolated background Web Worker process.
+     * @param appId The unique ID of the application.
+     * @param transport Worker messaging transport layer.
+     * @param opts Launch options, including custom target window or virtual root directory.
      */
     function spawnWorker(appId: string, transport: IProcessTransport, opts: { windowId?: string | null; fsRoot?: string } = {}): { pid: number; worker: WorkerProcess; process: IProcess } {
         return spawnProcess(appId, transport, { windowId: opts.windowId ?? null, kind: 'worker', fsRoot: opts.fsRoot });
     }
 
     /**
-     * Spawns a sandboxed iframe process. Builds the iframe + authenticated
-     * MessagePort handshake (see IframeProcess), then registers it as a process
-     * whose kill() also removes the iframe.
+     * Spawns an isolated sandboxed iframe process and initiates the MessagePort handshake.
+     * @param appId The unique ID of the application.
+     * @param opts Handshake and sandboxing preferences.
+     * @returns A promise resolving to the process registry details and the HTMLIFrameElement handles.
      */
     async function spawnIframe(appId: string, opts: IframeSpawnOptions & { windowId?: string | null; fsRoot?: string } = {}): Promise<{ pid: number; worker: WorkerProcess; process: IProcess; iframe: HTMLIFrameElement }> {
         const { transport, iframe } = await createIframeTransport(opts);
@@ -303,10 +357,17 @@ export const Kernel: IKernel = (() => {
         return { ...r, iframe };
     }
 
+    /**
+     * Fetches the host-side worker handler for a given PID.
+     * @param pid Process ID.
+     */
     function getWorker(pid: number): WorkerProcess | undefined {
         return workers.get(pid);
     }
 
+    /**
+     * Boots the Kernel, initializing permissions, packages, VFS, and bridges.
+     */
     function init(): void {
         Utils.Logger.log('Kernel: Booting...');
         // VFS.init() is async and idempotent. The boot sequence (main.ts) awaits it
@@ -320,8 +381,7 @@ export const Kernel: IKernel = (() => {
     }
 
     /**
-     * Returns a snapshot of the registry for inspection.
-     * processes is exposed as an iterable array for external consumers.
+     * Captures a snapshot of registered applications and running processes list.
      */
     function getRegistry(): { apps: Record<string, IAppRegistryEntry>, processes: IProcess[] } {
         return {

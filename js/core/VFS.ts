@@ -9,92 +9,123 @@ import { Services } from './ServiceContainer';
 import { VFSStore } from './VFSStore';
 import { VFSBlobStore } from './VFSBlobStore';
 
+/**
+ * Represents a node in the Virtual File System tree (directory, file, or shortcut).
+ */
 export interface IVFSNode {
+    /** The display name of the node. */
     name: string;
+    /** The node type. */
     type: 'dir' | 'file' | 'shortcut';
+    /** A map of child nodes, present only for directory nodes. */
     children?: Record<string, IVFSNode>;
+    /** Inline text content, present only for text-based file nodes. */
     content?: string;
-    /** Binary/large files store their bytes in the VFSBlobStore (OPFS/IDB); the
-     *  tree keeps only this reference plus size/mime. Mutually exclusive with `content`. */
+    /**
+     * Reference key pointing to out-of-tree binary content in the VFSBlobStore.
+     * Mutually exclusive with `content`.
+     */
     blobRef?: string;
+    /** Size of the binary blob in bytes, if applicable. */
     size?: number;
+    /** MIME type of the file content, if applicable. */
     mime?: string;
+    /** Presentation icon character/image path, typically for shortcuts. */
     icon?: string;
+    /** Event execution action type triggered by launching this node. */
     actionType?: string;
+    /** Target argument passed to the action handler. */
     actionTarget?: string;
+    /** If true, this node is hidden from directory listings. */
     hidden?: boolean;
-    /** Set while a node lives in the recycle bin: the path it was deleted from,
-     *  and when. Cleared on restore. Ignored by isValidTree (extra fields are OK). */
+    /** Original path of the node before it was moved to the recycle bin. */
     trashOrigin?: string;
+    /** Epoch timestamp in milliseconds when the node was deleted. */
     trashedAt?: number;
 }
 
-/** One item in the recycle bin, as the UI sees it. */
+/**
+ * Represents a trashed item entry as exposed to the UI layers.
+ */
 export interface ITrashEntry {
-    /** Key inside the bin; pass to restoreFromTrash. */
+    /** The unique ID of the trashed item key. */
     id: string;
-    /** Original display name. */
+    /** Original display name of the deleted file. */
     name: string;
-    /** Path it was deleted from. */
+    /** Original VFS directory path where the item was deleted from. */
     origin: string;
+    /** Node type (dir, file, shortcut). */
     type: 'dir' | 'file' | 'shortcut';
-    /** Epoch millis of deletion. */
+    /** Epoch timestamp in milliseconds of the deletion event. */
     deletedAt: number;
 }
 
+/**
+ * Interface detailing all Virtual File System operations.
+ */
 export interface IVFS {
     /** Hydrates the in-memory tree from the durable backend (IndexedDB / fallback). */
     init(): Promise<void>;
+    /** Resolves a canonical path string to a VFS node reference. */
     resolve(path: string): IVFSNode | null;
+    /** Creates a new directory at the specified target path. */
     mkdir(path: string, name: string): boolean;
+    /** Writes string content inline into a file node at the target path. */
     writeFile(path: string, name: string, content: string): boolean;
+    /** Synchronously reads inline string content from a file node. */
     readFile(path: string): string | null;
-    /** Reads a file's content: a Blob when it is blob-backed, else its inline text. */
+    /** Reads a file's content asynchronously, returning a Blob for binary files or text string. */
     readFileAsync(path: string): Promise<string | Blob | null>;
-    /** Writes a file. String content is stored inline; a Blob goes to the blob store. */
+    /** Writes a file asynchronously. Small strings go inline; binary Blobs go out-of-tree. */
     writeFileAsync(path: string, name: string, data: string | Blob): Promise<boolean>;
-    /** Permanently removes a node (frees its blobs). System/internal deletes use
-     *  this; user-facing deletes should prefer trashNode. */
+    /** Permanently deletes a VFS node and releases any associated blob storage assets. */
     deleteNode(parentPath: string, name: string): boolean;
-    /** Moves a node to the recycle bin instead of deleting it. Blobs are kept so
-     *  the item can be restored. Returns false if the node does not exist. */
+    /** Moves a VFS node to the recycle bin, preserving blob references for restoration. */
     trashNode(parentPath: string, name: string): boolean;
-    /** The recycle bin's contents, newest first. */
+    /** Retrieves all entries inside the recycle bin, sorted newest first. */
     listTrash(): ITrashEntry[];
-    /** How many items are in the recycle bin. */
+    /** Returns the current count of items in the recycle bin. */
     trashCount(): number;
-    /** Moves a trashed item back to where it came from. Fails if that folder no
-     *  longer exists; renames on collision. */
+    /** Restores a trashed item back to its original location path. Handles collisions. */
     restoreFromTrash(id: string): boolean;
-    /** Permanently deletes everything in the recycle bin (frees blobs). */
+    /** Permanently purges all items inside the recycle bin and clears their storage blobs. */
     emptyTrash(): void;
+    /** Renames a file or directory node under the specified parent directory. */
     rename(parentPath: string, oldName: string, newName: string): boolean;
+    /** Lists child names of a directory path, omitting hidden files. */
     listDir(path: string): string[] | null;
-    /** Persists pending changes immediately (awaitable). */
+    /** Immediately persists all pending tree state modifications to IndexedDB. */
     flush(): Promise<void>;
-    /** Best-effort synchronous-style flush for unload paths (fire-and-forget). */
+    /** Best-effort synchronous flush of pending VFS changes during page unloads. */
     flushSync(): void;
+    /** Returns the root directory node of the Virtual File System. */
     getRoot(): IVFSNode | null;
+    /** Resets the in-memory VFS state (primarily for testing purposes). */
     __reset(): void;
 }
 
 export const VFS: IVFS = (() => {
     'use strict';
 
-    /** Reject any single file whose content exceeds this (protects the shared
-     *  localStorage quota from a runaway plugin or oversized paste). */
+    /** Max file size in bytes allowed for inline text files. */
     const MAX_FILE_BYTES = 1_000_000; // ~1 MB (inline text)
     /** Cap for blob-backed (binary) files stored out-of-tree. */
     const MAX_BLOB_BYTES = 50 * 1024 * 1024; // 50 MB
     /** Guard against pathological / malicious deep nesting. */
     const MAX_DEPTH = 32;
 
-    /** Fire-and-forget removal of a blob backing a file node, if any. */
+    /**
+     * Deletes the binary file content from the out-of-tree blob store if it exists.
+     * @param node The file node reference to evaluate.
+     */
     function releaseBlob(node: IVFSNode | undefined): void {
         if (node && node.blobRef) void VFSBlobStore.delete(node.blobRef);
     }
 
-    /** Collects and releases every blob under a subtree (for recursive delete). */
+    /**
+     * Recursively traverses a node's children and releases all associated binary blobs.
+     * @param node The root node of the subtree to purge.
+     */
     function releaseSubtreeBlobs(node: IVFSNode): void {
         releaseBlob(node);
         if (node.children) {
@@ -179,14 +210,17 @@ export const VFS: IVFS = (() => {
         }
     };
 
+    /** The internal VFS directory root pointer. */
     let root: IVFSNode | null = null;
+    /** Delayed timer ID for auto-persisting tree changes. */
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
-    // Shared hydration promise so concurrent/repeated init() calls await one load.
+    /** Shared initialization promise for hydration requests. */
     let initPromise: Promise<void> | null = null;
 
+    /**
+     * Clones the default VFS configuration tree structure safely.
+     */
     function cloneDefaultFS(): IVFSNode {
-        // structuredClone is unavailable on older engines; a JSON round-trip is a
-        // safe fallback here because the FS tree is plain, cycle-free JSON data.
         if (typeof structuredClone === 'function') {
             return structuredClone(DEFAULT_FS);
         }
@@ -194,10 +228,10 @@ export const VFS: IVFS = (() => {
     }
 
     /**
-     * Validates a parsed tree loaded from storage: root must be a dir, and every
-     * node must have a valid `type` and a `children` map when it is a dir. Rejects
-     * structurally broken/oversized trees so we fall back to a clean default
-     * instead of operating on garbage. Also enforces MAX_DEPTH.
+     * Validates structural integrity of a loaded tree.
+     * Enforces depth constraints and verifies directory schema mappings.
+     * @param node The VFS node object to check.
+     * @param depth Current depth index tracking path recursion.
      */
     function isValidTree(node: unknown, depth = 0): node is IVFSNode {
         if (depth > MAX_DEPTH) return false;
@@ -215,17 +249,17 @@ export const VFS: IVFS = (() => {
         return true;
     }
 
+    /**
+     * Triggers the VFS tree hydration cycle.
+     */
     function init(): Promise<void> {
-        // Idempotent: repeated calls share one hydration (boot + Kernel both call it).
         if (!initPromise) initPromise = hydrate();
         return initPromise;
     }
 
     /**
-     * Renames the legacy `WINDOWS` system directory to `HADOS` in a tree loaded
-     * from storage (the HadOS rename). Idempotent and non-destructive: if a HADOS
-     * directory somehow already exists, the legacy one is left untouched rather
-     * than merged, so nothing is silently overwritten.
+     * Migrates the legacy WINDOWS directory to HADOS.
+     * Leaves the original in place if a target HADOS directory already exists.
      */
     function migrateSystemDirName(): void {
         if (!root?.children) return;
@@ -242,6 +276,9 @@ export const VFS: IVFS = (() => {
         save();
     }
 
+    /**
+     * Asynchronously loads tree state from local storage, running updates and migrations.
+     */
     async function hydrate(): Promise<void> {
         const saved = await VFSStore.load();
         let needsReset = false;
@@ -250,20 +287,14 @@ export const VFS: IVFS = (() => {
             try {
                 const parsed = JSON.parse(saved);
 
-                // Reject structurally invalid trees instead of operating on garbage.
                 if (!isValidTree(parsed)) {
                     Utils.Logger.error('VFS: Stored tree failed schema validation, resetting...');
                     throw new Error('invalid VFS schema');
                 }
                 root = parsed;
 
-                // HadOS rename: a tree written before the rename keeps its system
-                // directory under C:\WINDOWS. Move it to C:\HADOS so existing files
-                // (crash logs, permissions, packages, session, desktop shortcuts)
-                // survive. Runs once — afterwards there is no WINDOWS node left.
                 migrateSystemDirName();
 
-                // v1.0.7.5: Check if GAMES and DESKTOP are properly populated
                 const gamesFolder = root?.children ? root.children['GAMES'] : null;
                 const desktopFolder = root?.children ? root.children['DESKTOP'] : null;
 
@@ -277,15 +308,12 @@ export const VFS: IVFS = (() => {
                     needsReset = true;
                 }
 
-                // Dynamic updates & migrations for existing localStorage
                 if (root && root.children && !needsReset) {
-                    // Update README.txt version if needed
                     const docs = root.children['DOCUMENTS'];
                     if (docs && docs.children && docs.children['README.txt']) {
                         docs.children['README.txt'].content = 'Welcome to HadOS v1.1.0';
                     }
 
-                    // Populate C:\GAMES
                     const games = root.children['GAMES'];
                     if (games && games.children) {
                         const expectedGames = ['Virtual Life Restart Simulator', 'Flappy Neon', 'Football Rush', 'Ultimate DOOM', 'Tetris Tryhard', 'Chapas Prime', 'Nocturna', 'H.I.P. Game Boy'];
@@ -314,7 +342,6 @@ export const VFS: IVFS = (() => {
                         });
                     }
 
-                    // Populate C:\HADOS\DESKTOP\GAMES
                     let windows = root.children['HADOS'];
                     if (!windows) {
                         root.children['HADOS'] = { name: 'HADOS', type: 'dir', children: {} };
@@ -378,6 +405,9 @@ export const VFS: IVFS = (() => {
         Utils.Logger.log('VFS: Initialized');
     }
 
+    /**
+     * Executes the VFS database write transaction immediately.
+     */
     async function persist(): Promise<void> {
         if (!root) return;
         try {
@@ -391,6 +421,9 @@ export const VFS: IVFS = (() => {
         }
     }
 
+    /**
+     * Debounces and schedules a lazy auto-save write routine.
+     */
     function save(): void {
         if (saveTimer) {
             clearTimeout(saveTimer);
@@ -401,7 +434,6 @@ export const VFS: IVFS = (() => {
         }, 100);
     }
 
-    /** Persists pending changes immediately; awaitable. */
     function flush(): Promise<void> {
         if (saveTimer) {
             clearTimeout(saveTimer);
@@ -410,19 +442,10 @@ export const VFS: IVFS = (() => {
         return persist();
     }
 
-    /**
-     * Best-effort immediate persist for unload paths. IndexedDB cannot flush
-     * synchronously, so durability on abrupt close is best-effort — the
-     * `visibilitychange → hidden` handler below is the more reliable trigger.
-     */
     function flushSync(): void {
         void flush();
     }
 
-    /**
-     * Resolves a path string to a VFS node
-     * @param {string} path - Absolute path (e.g. "C:\HADOS\SYSTEM")
-     */
     function resolve(path: string): IVFSNode | null {
         if (!path || path === 'C:' || path === 'C:\\') return root;
 
@@ -439,11 +462,20 @@ export const VFS: IVFS = (() => {
         return current;
     }
 
+    /**
+     * Helper to sanitize file names using VFS directory specifications.
+     * @param name Path name string.
+     */
     function sanitize(name: string): string {
         return (typeof Utils !== 'undefined' && Utils.sanitizePath)
             ? Utils.sanitizePath(name) : name;
     }
 
+    /**
+     * Utility mapping system directory boundaries to evaluate directory modifications.
+     * @param parentPath Target folder directory path.
+     * @param name Directory name check.
+     */
     function isSystemPath(parentPath: string, name: string): boolean {
         const fullPath = parentPath + (parentPath.endsWith('\\') ? '' : '\\') + name;
         const upper = fullPath.toUpperCase();
@@ -457,9 +489,7 @@ export const VFS: IVFS = (() => {
         if (parent && parent.type === 'dir' && parent.children) {
             const existing = parent.children[safeName];
             if (existing) {
-                // Directory already present → keep its subtree (idempotent).
                 if (existing.type === 'dir') return true;
-                // Refuse to clobber a file of the same name with a directory.
                 Utils.Logger.warn(`VFS: cannot mkdir "${safeName}" — a file with that name exists`);
                 return false;
             }
@@ -481,13 +511,10 @@ export const VFS: IVFS = (() => {
         const parent = resolve(path);
         if (parent && parent.type === 'dir' && parent.children) {
             const existing = parent.children[safeName];
-            // Never let a file silently replace a directory (which destroys its
-            // whole subtree). Overwriting an existing file is fine.
             if (existing && existing.type !== 'file') {
                 Utils.Logger.warn(`VFS: cannot write "${safeName}" — a ${existing.type} with that name exists`);
                 return false;
             }
-            // Overwriting a blob-backed file with inline text: free the old blob.
             releaseBlob(existing);
             const hidden = isSystemPath(path, safeName);
             parent.children[safeName] = { name: safeName, type: 'file', content, ...(hidden ? { hidden: true } : {}) };
@@ -497,14 +524,11 @@ export const VFS: IVFS = (() => {
         return false;
     }
 
-    /** Reads a file's content: a Blob when blob-backed, else its inline text. */
     async function readFileAsync(path: string): Promise<string | Blob | null> {
         const node = resolve(path);
         if (!node || node.type !== 'file') return null;
         if (node.blobRef) {
             const blob = await VFSBlobStore.get(node.blobRef);
-            // OPFS Files carry no MIME; restore it from the node metadata so
-            // callers see the type they wrote (the IDB backend already preserves it).
             if (blob && !blob.type && node.mime) {
                 return new Blob([blob], { type: node.mime });
             }
@@ -513,11 +537,6 @@ export const VFS: IVFS = (() => {
         return node.content ?? '';
     }
 
-    /**
-     * Writes a file. A string is stored inline (delegates to writeFile); a Blob is
-     * written to the out-of-tree blob store (OPFS/IndexedDB) with only metadata kept
-     * in the tree, so large binaries don't bloat the serialized JSON.
-     */
     async function writeFileAsync(path: string, name: string, data: string | Blob): Promise<boolean> {
         if (typeof data === 'string') {
             return writeFile(path, name, data);
@@ -541,12 +560,9 @@ export const VFS: IVFS = (() => {
             Utils.Logger.error(`VFS: failed to store blob for "${safeName}"`, err);
             return false;
         }
-        // Re-resolve AFTER the await: a concurrent write to the same path could
-        // have swapped the node while the blob was being stored, and releasing a
-        // stale reference would free the winner's blob.
         const current = resolve(path);
         if (!current || current.type !== 'dir' || !current.children) {
-            void VFSBlobStore.delete(blobRef); // parent vanished — don't orphan our blob
+            void VFSBlobStore.delete(blobRef);
             return false;
         }
         releaseBlob(current.children[safeName]);
@@ -564,7 +580,6 @@ export const VFS: IVFS = (() => {
     function deleteNode(parentPath: string, name: string): boolean {
         const parent = resolve(parentPath);
         if (parent && parent.type === 'dir' && parent.children && parent.children[name]) {
-            // Free any blob content held by the node (or its subtree) to avoid orphans.
             releaseSubtreeBlobs(parent.children[name]);
             delete parent.children[name];
             save();
@@ -573,24 +588,20 @@ export const VFS: IVFS = (() => {
         return false;
     }
 
-    // ─── Recycle bin ───────────────────────────────────────────────────────────
-    // A real trash: user deletes move here instead of vanishing, keep their blobs,
-    // and can be restored to their origin or purged. Stored as a hidden dir in the
-    // tree (so it persists and needs no separate store), with each item carrying
-    // its origin path in trashOrigin. System deletes (uninstall, session cleanup)
-    // stay on deleteNode — they must not fill the bin.
     const RECYCLE_PARENT = 'C:\\HADOS\\SYSTEM';
     const RECYCLE_NAME = 'RECYCLED';
     const RECYCLE_PATH = RECYCLE_PARENT + '\\' + RECYCLE_NAME;
 
-    /** Notifies the desktop icon / dialog that the bin changed. No-op off-window. */
+    /** Dispatches a global event notifying the shell that recycle bin contents have changed. */
     function signalTrashChanged(): void {
         if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
             window.dispatchEvent(new CustomEvent('vfs:trash-changed'));
         }
     }
 
-    /** The bin directory, created under SYSTEM on first use. */
+    /**
+     * Ensures that the virtual recycle bin directory exists.
+     */
     function ensureRecycleBin(): IVFSNode | null {
         const existing = resolve(RECYCLE_PATH);
         if (existing && existing.type === 'dir') return existing;
@@ -599,7 +610,11 @@ export const VFS: IVFS = (() => {
         return (bin && bin.type === 'dir') ? bin : null;
     }
 
-    /** A key not already taken in `container`, appending " (2)", " (3)"… on clash. */
+    /**
+     * Appends an incremental index to a duplicate directory entry name.
+     * @param container Parent node containing child list.
+     * @param base Starting name query.
+     */
     function uniqueKey(container: IVFSNode, base: string): string {
         if (!container.children || !container.children[base]) return base;
         let i = 2;
@@ -608,10 +623,8 @@ export const VFS: IVFS = (() => {
     }
 
     function trashNode(parentPath: string, name: string): boolean {
-        // Refuse to trash items already inside the bin (no double-nesting).
         if (parentPath.toUpperCase().startsWith(RECYCLE_PATH.toUpperCase())) return false;
 
-        // L5: Refuse to trash C:\HADOS\SYSTEM itself or any item inside it.
         const fullPath = parentPath + (parentPath.endsWith('\\') ? '' : '\\') + name;
         const fullPathUpper = fullPath.toUpperCase();
         const systemPathUpper = 'C:\\HADOS\\SYSTEM';
@@ -628,7 +641,6 @@ export const VFS: IVFS = (() => {
         node.trashedAt = Date.now();
         bin.children[key] = node;
         delete parent.children[name];
-        // Blobs are intentionally kept — restore needs them. emptyTrash frees them.
         save();
         signalTrashChanged();
         return true;
@@ -660,11 +672,10 @@ export const VFS: IVFS = (() => {
         const origin = node.trashOrigin;
         if (!origin) return false;
         const dest = resolve(origin);
-        // The origin folder may have been deleted since; refuse rather than guess.
         if (!dest || dest.type !== 'dir' || !dest.children) return false;
 
         const targetKey = uniqueKey(dest, node.name);
-        if (targetKey !== node.name) node.name = targetKey; // collided → renamed copy
+        if (targetKey !== node.name) node.name = targetKey;
         delete node.trashOrigin;
         delete node.trashedAt;
         dest.children[targetKey] = node;
@@ -684,15 +695,12 @@ export const VFS: IVFS = (() => {
     }
 
     function rename(parentPath: string, oldName: string, newName: string): boolean {
-        // Sanitize the new name for parity with mkdir/writeFile — otherwise
-        // rename is a back door for the dangerous chars (`<>:"/\|?*`, `..`) the
-        // rest of the API forbids.
         const safeName = sanitize(newName);
         if (!safeName) return false;
         const parent = resolve(parentPath);
         if (!parent || parent.type !== 'dir' || !parent.children || !parent.children[oldName]) return false;
-        if (safeName === oldName) return true; // no-op
-        if (parent.children[safeName]) return false; // Name already taken
+        if (safeName === oldName) return true;
+        if (parent.children[safeName]) return false;
 
         const node = parent.children[oldName];
         node.name = safeName;
@@ -705,9 +713,6 @@ export const VFS: IVFS = (() => {
     function listDir(path: string): string[] | null {
         const node = resolve(path);
         if (node && node.type === 'dir' && node.children) {
-            // Bound to a local so the narrowing survives into the callback:
-            // noUncheckedIndexedAccess types an index read as possibly undefined,
-            // even when the key came from Object.keys.
             const children = node.children;
             return Object.keys(children).filter(name => !children[name]?.hidden);
         }

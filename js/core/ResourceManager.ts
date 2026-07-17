@@ -1,12 +1,22 @@
 import { Utils } from '../utils.js';
 import { Services } from './ServiceContainer.js';
 
+/**
+ * Interface representing a disposable resource that can release its assets.
+ */
 export interface Disposable {
+    /** Release/dispose the resource. */
     dispose(): void;
 }
 
+/**
+ * Standard classification categories for managed system resources.
+ */
 export type ResourceKind = 'webgl' | 'audio' | 'listener' | 'timer' | 'other';
 
+/**
+ * Interface detailing the resource lifecycle tracking manager.
+ */
 export interface IResourceManager {
     /**
      * Registers a resource with the manager under a specific owner.
@@ -16,16 +26,26 @@ export interface IResourceManager {
      * @returns An unregister function that removes the resource from the tracker without invoking dispose().
      */
     register(owner: string, kind: ResourceKind, resource: Disposable): () => void;
+    /** Disposes all tracked resources under a specific owner in LIFO order. */
     disposeOwner(owner: string): void;
+    /** Disposes all tracked resources under every owner registered in the manager. */
     disposeAll(): void;
+    /** Computes statistics tracking current resource allocation counts by owner and kind. */
     stats(): Record<ResourceKind, number> & { total: number; owners: number };
 }
 
+/**
+ * Registry container tracking and releasing disposable resources (WebGL contexts, audio channels, timers, etc.).
+ */
 class ResourceManager implements IResourceManager {
+    /** Private registry map mapping owner identifiers to list of disposable resources. */
     private registry: Map<string, Array<{ kind: ResourceKind; resource: Disposable }>> = new Map();
 
     /**
      * Registers a resource with the manager under a specific owner.
+     * @param owner Owner identifier name.
+     * @param kind Resource type category.
+     * @param resource Resource instance.
      * @returns An unregister function that removes the resource from the tracker without invoking dispose().
      */
     public register(owner: string, kind: ResourceKind, resource: Disposable): () => void {
@@ -55,6 +75,10 @@ class ResourceManager implements IResourceManager {
         };
     }
 
+    /**
+     * Releases all active resources tracked under a specific owner, executing in LIFO order.
+     * @param owner Owner identifier.
+     */
     public disposeOwner(owner: string): void {
         const ownerResources = this.registry.get(owner);
         if (!ownerResources) return;
@@ -76,6 +100,9 @@ class ResourceManager implements IResourceManager {
         this.registry.delete(owner);
     }
 
+    /**
+     * Releases every tracked resource registered in the system.
+     */
     public disposeAll(): void {
         Utils.Logger.log(`[ResourceManager] Disposing all owners (count: ${this.registry.size})`);
         const owners = Array.from(this.registry.keys());
@@ -84,6 +111,9 @@ class ResourceManager implements IResourceManager {
         }
     }
 
+    /**
+     * Captures statistics detailing the active kind and owner counts.
+     */
     public stats(): Record<ResourceKind, number> & { total: number; owners: number } {
         const counts: Record<ResourceKind, number> = {
             webgl: 0,

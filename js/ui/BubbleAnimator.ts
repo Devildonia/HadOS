@@ -1,20 +1,37 @@
 import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
 
+/**
+ * Interface detailing animation operations for popup bubbles (fade, wobble, shake, eased LERP).
+ */
 export interface IBubbleAnimator {
+    /** Animates a bubble fading in and expanding. */
     fadeIn(id: string, duration?: number, onUpdate?: (data: { scale: number, alpha: number, progress: number }) => void, onComplete?: () => void): void;
+    /** Animates a bubble fading out and shrinking. */
     fadeOut(id: string, duration?: number, onUpdate?: (data: { scale: number, alpha: number, progress: number }) => void, onComplete?: () => void): void;
+    /** Executes a decaying rotational/positional wave sway movement. */
     wobble(id: string, duration?: number, amplitude?: number, onUpdate?: (data: { offsetX: number, offsetY: number, progress: number }) => void, onComplete?: () => void): void;
+    /** Executes a high-frequency linear shake translation. */
     shake(id: string, duration?: number, intensity?: number, onUpdate?: (data: { offsetX: number, offsetY: number, progress: number }) => void, onComplete?: () => void): void;
+    /** Sequences a complete bubble loop (fadeIn + stay + fadeOut) with optional wobble. */
     fullBubble(id: string, stayDuration?: number, options?: { fadeInDuration?: number, fadeOutDuration?: number, wobble?: boolean }, onUpdate?: (data: any) => void, onComplete?: () => void): void;
+    /** Aborts a running animation by ID. */
     cancel(id: string): void;
+    /** Aborts all in-flight animations. */
     cancelAll(): void;
+    /** Performs a basic linear interpolation. */
     lerp(start: number, end: number, t: number): number;
+    /** Performs an eased linear interpolation using a specified equation key. */
     easedLerp(start: number, end: number, t: number, easing?: string): number;
 }
 
+/**
+ * Utility executing requestAnimationFrame loops to animate dynamic scaling, opacity, and positioning of UI bubbles.
+ */
 class BubbleAnimator implements IBubbleAnimator {
+    /** Map storing active requestAnimationFrame identifiers mapped to unique animation string IDs. */
     private animations: Map<string, number>;
+    /** Collection containing standard mathematical easing equations. */
     private easingFunctions: Record<string, (t: number) => number>;
 
     constructor() {
@@ -25,7 +42,7 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Create easing functions
+     * Create easing functions.
      */
     private createEasingFunctions(): Record<string, (t: number) => number> {
         return {
@@ -61,11 +78,11 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Start fade in animation with scale
-     * @param {string} id - Unique animation ID
-     * @param {number} duration - Duration in ms
-     * @param {Function} onUpdate - Callback with progress (scale, alpha)
-     * @param {Function} onComplete - Callback on completion
+     * Start fade in animation with scale.
+     * @param id Unique animation ID.
+     * @param duration Duration in ms.
+     * @param onUpdate Callback with progress (scale, alpha).
+     * @param onComplete Callback on completion.
      */
     fadeIn(id: string, duration: number = 200, onUpdate?: (data: { scale: number, alpha: number, progress: number }) => void, onComplete?: () => void): void {
         const startTime = Date.now();
@@ -99,11 +116,11 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Start fade out animation
-     * @param {string} id - Unique animation ID
-     * @param {number} duration - Duration in ms
-     * @param {Function} onUpdate - Callback with progress
-     * @param {Function} onComplete - Callback on completion
+     * Start fade out animation.
+     * @param id Unique animation ID.
+     * @param duration Duration in ms.
+     * @param onUpdate Callback with progress.
+     * @param onComplete Callback on completion.
      */
     fadeOut(id: string, duration: number = 300, onUpdate?: (data: { scale: number, alpha: number, progress: number }) => void, onComplete?: () => void): void {
         const startTime = Date.now();
@@ -138,12 +155,12 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Wobble animation
-     * @param {string} id - Unique ID
-     * @param {number} duration - Total duration
-     * @param {number} amplitude - Wobble amplitude in px
-     * @param {Function} onUpdate - Callback with offset {x, y}
-     * @param {Function} onComplete - Callback on completion
+     * Wobble animation.
+     * @param id Unique ID.
+     * @param duration Total duration.
+     * @param amplitude Wobble amplitude in px.
+     * @param onUpdate Callback with offset {x, y}.
+     * @param onComplete Callback on completion.
      */
     wobble(id: string, duration: number = 500, amplitude: number = 3, onUpdate?: (data: { offsetX: number, offsetY: number, progress: number }) => void, onComplete?: () => void): void {
         const startTime = Date.now();
@@ -182,12 +199,12 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Shake animation
-     * @param {string} id - Unique ID
-     * @param {number} duration - Duration
-     * @param {number} intensity - Intensity
-     * @param {Function} onUpdate - Callback
-     * @param {Function} onComplete - Callback
+     * Shake animation.
+     * @param id Unique ID.
+     * @param duration Duration.
+     * @param intensity Intensity.
+     * @param onUpdate Callback.
+     * @param onComplete Callback.
      */
     shake(id: string, duration: number = 300, intensity: number = 5, onUpdate?: (data: { offsetX: number, offsetY: number, progress: number }) => void, onComplete?: () => void): void {
         const startTime = Date.now();
@@ -225,12 +242,12 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Full bubble animation (fade in + stay + fade out)
-     * @param {string} id - Unique ID
-     * @param {number} stayDuration - Visible time in ms
-     * @param {Object} options - Options
-     * @param {Function} onUpdate - Callback
-     * @param {Function} onComplete - Final callback
+     * Full bubble animation (fade in + stay + fade out).
+     * @param id Unique ID.
+     * @param stayDuration Visible time in ms.
+     * @param options Options.
+     * @param onUpdate Callback.
+     * @param onComplete Final callback.
      */
     fullBubble(id: string, stayDuration: number = 2000, options: { fadeInDuration?: number, fadeOutDuration?: number, wobble?: boolean } = {}, onUpdate?: (data: any) => void, onComplete?: () => void): void {
         const fadeInDuration = options.fadeInDuration || 200;
@@ -253,8 +270,8 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Cancel animation
-     * @param {string} id - Animation ID
+     * Cancel animation.
+     * @param id Animation ID.
      */
     cancel(id: string): void {
         const animId = this.animations.get(id);
@@ -265,7 +282,7 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Cancel all animations
+     * Cancel all animations.
      */
     cancelAll(): void {
         this.animations.forEach(animId => cancelAnimationFrame(animId));
@@ -273,23 +290,23 @@ class BubbleAnimator implements IBubbleAnimator {
     }
 
     /**
-     * Linear interpolation (LERP)
-     * @param {number} start - Start value
-     * @param {number} end - End value
-     * @param {number} t - Progress (0-1)
-     * @returns {number} Interpolated value
+     * Linear interpolation (LERP).
+     * @param start Start value.
+     * @param end End value.
+     * @param t Progress (0-1).
+     * @returns Interpolated value.
      */
     lerp(start: number, end: number, t: number): number {
         return start + (end - start) * t;
     }
 
     /**
-     * Eased interpolation
-     * @param {number} start - Start value
-     * @param {number} end - End value
-     * @param {number} t - Progress (0-1)
-     * @param {string} easing - Easing type
-     * @returns {number} Eased interpolated value
+     * Eased interpolation.
+     * @param start Start value.
+     * @param end End value.
+     * @param t Progress (0-1).
+     * @param easing Easing type.
+     * @returns Eased interpolated value.
      */
     easedLerp(start: number, end: number, t: number, easing: string = 'easeInOut'): number {
         const easingFunc = this.easingFunctions[easing] ?? this.easingFunctions.linear ?? ((t: number) => t);

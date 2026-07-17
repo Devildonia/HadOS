@@ -11,6 +11,9 @@ import { i18n } from '../services/i18n';
 import { updateRecycleBinUI } from './StickyNotesController';
 import { setupDebugMenu } from './DebugMenuController';
 
+/**
+ * Configurations mapping legacy dialog window IDs to their title generators and inner body HTML generators.
+ */
 const DIALOG_CONFIGS: Record<string, { title: () => string, html: () => string }> = {
     'dialog-mycomputer': {
         title: () => i18n.t('dialog.error.title'),
@@ -75,6 +78,10 @@ const DIALOG_CONFIGS: Record<string, { title: () => string, html: () => string }
     }
 };
 
+/**
+ * Creates and appends the dialog window element to the desktop container if it doesn't already exist.
+ * @param dialogId The ID of the dialog to ensure.
+ */
 function _ensureDialog(dialogId: string): void {
     if (document.getElementById(dialogId)) return;
     const config = DIALOG_CONFIGS[dialogId];
@@ -107,6 +114,9 @@ function _ensureDialog(dialogId: string): void {
     }
 }
 
+/**
+ * Type defining the reactive state mapping bound to the legacy window interface.
+ */
 type LegacyStateBridge = {
     lang: string;
     screen: string;
@@ -116,6 +126,9 @@ type LegacyStateBridge = {
     [key: string]: unknown;
 };
 
+/**
+ * Type defining the actions/functions bound to the legacy window interface for backward compatibility.
+ */
 type LegacyWindowActions = {
     playBlip?: (freq?: number) => void;
     openDialog?: (dialogId: string) => void;
@@ -129,6 +142,9 @@ type LegacyWindowActions = {
     updateClock?: () => void;
 };
 
+/**
+ * Type defining control and system instance references attached to the legacy window interface.
+ */
 type LegacyWindowFlags = {
     state?: LegacyStateBridge;
     __legacyWrappersInitialized?: boolean;
@@ -142,6 +158,9 @@ const legacyWindowTarget = legacyWindow as Window & LegacyWindowActions & Legacy
 // ============================================
 // 1. GLOBAL OS STATE (reactive via Store proxy)
 // ============================================
+/**
+ * Initializes the global reactive state store bridge and loads localizations.
+ */
 export function initSystemState(): void {
     if (typeof createStateBridge === 'function') {
         legacyWindow.state = createStateBridge() as LegacyStateBridge;
@@ -165,6 +184,9 @@ export function initSystemState(): void {
 // ============================================
 // 2. AUDIO BRIDGE
 // ============================================
+/**
+ * Binds the legacy `playBlip` system sound player helper to the global window object.
+ */
 export function initAudioBridge(): void {
     legacyWindow.playBlip = (freq: number = 800): void => {
         const isModern = getThemeManager()?.currentTheme === 'modern';
@@ -177,20 +199,32 @@ export function initAudioBridge(): void {
     };
 }
 
+/**
+ * Resolves the global ThemeManager service.
+ */
 function getThemeManager() {
     return Services.get('ThemeManager');
 }
 
-// Simplified resolution without legacy fallback
+/**
+ * Resolves the global AudioManager service without legacy fallback.
+ */
 function getAudioManager(): AudioManager | undefined {
     return Services.get('AudioManager') ?? undefined;
 }
 
+/**
+ * Helper to bind a custom handler method to a legacy action name in the global window context.
+ */
 function bindLegacyAction<T extends unknown[]>(name: keyof LegacyWindowActions, handler: (...args: T) => void): void {
     (legacyWindowTarget as Record<string, unknown>)[name as string] = (...args: T): void => handler(...args);
 }
 
-// Helper to toggle dialog visibility
+/**
+ * Sets the display style visibility of a dialog element.
+ * @param dialogId ID of the dialog.
+ * @param visible Boolean visibility state flag.
+ */
 function setDialogVisibility(dialogId: string, visible: boolean): void {
     const dialog = document.getElementById(dialogId);
     if (dialog) dialog.style.display = visible ? 'block' : 'none';
@@ -199,6 +233,7 @@ function setDialogVisibility(dialogId: string, visible: boolean): void {
 // ============================================
 // 3. LEGACY WRAPPERS (decomposed sub-bridges)
 // ============================================
+/** Bridges service container modules (RagdollMemory, AudioManager) to legacy global window properties. */
 function _bridgeServices(): void {
     const ragdollMemory = Services.get('RagdollMemory');
     if (ragdollMemory) {
@@ -213,6 +248,7 @@ function _bridgeServices(): void {
     }
 }
 
+/** Bridges desktop customization actions (wallpaper, taskbar color) to global window helpers. */
 function _bridgeDesktop(): void {
     bindLegacyAction('setWallpaper', (url: string, silent: boolean = false): void => {
         Services.get('DesktopManager')?.setWallpaper(url, silent);
@@ -225,6 +261,7 @@ function _bridgeDesktop(): void {
     });
 }
 
+/** Bridges window management and dialog rendering operations to global window actions. */
 function _bridgeWindows(): void {
     bindLegacyAction('openWindow', (id: string): void => {
         legacyWindow.playBlip?.();
@@ -249,6 +286,7 @@ function _bridgeWindows(): void {
     });
 }
 
+/** Bridges system shutdown routine execution and shutdown sound feedback. */
 function _bridgeShutdown(): void {
     bindLegacyAction('handleShutdown', (): void => {
         const am = getAudioManager();
@@ -270,6 +308,7 @@ function _bridgeShutdown(): void {
     });
 }
 
+/** Bridges event bus actions to drive animations, skins, and emotional states for the 3D/2D Ragdoll companion. */
 function _bridgeRagdollEvents(): void {
     EventBus.on('action:shutdown', () => {
         legacyWindow.handleShutdown?.();
@@ -318,6 +357,9 @@ function _bridgeRagdollEvents(): void {
     });
 }
 
+/**
+ * Initializes and wires all decomposed legacy global window bridges and event routing.
+ */
 export function initLegacyWrappers(): void {
     if (legacyWindow.__legacyWrappersInitialized) return;
     legacyWindow.__legacyWrappersInitialized = true;
@@ -332,6 +374,9 @@ export function initLegacyWrappers(): void {
 // ============================================
 // 4. CLOCK
 // ============================================
+/**
+ * Starts the taskbar clock ticker interval, updating every second.
+ */
 export function initClock(): void {
     const existingInterval = legacyWindow.__clockIntervalId;
     if (typeof existingInterval === 'number') {

@@ -12,31 +12,48 @@
 /** Capabilities an app may declare. Mirrors the PermissionBroker's vocabulary. */
 import { Utils } from '../utils';
 
+/** List of verified system capabilities matching permission keys. */
 export const KNOWN_PERMISSIONS = ['fs:read', 'fs:write', 'notify', 'net', 'ai:infer'] as const;
 
+/**
+ * Representation of an application's JSON package manifest metadata.
+ */
 export interface AppManifest {
     /** Unique app id; also its home dir name (C:\APPS\<id>). */
     id: string;
+    /** The readable display name of the application. */
     name: string;
     /** Semver x.y.z — used to decide install vs update and reject downgrades. */
     version: string;
     /** Entry file within the package (the guest document/script). */
     entry: string;
+    /** Icon string or image path for shortcut representation. */
     icon?: string;
+    /** Optional detailed description of the application. */
     description?: string;
     /** Capabilities the app may request at runtime (the permission ceiling). */
     permissions?: string[];
 }
 
+/**
+ * Represents a parsed application installation package wrapper.
+ */
 export interface AppPackage {
+    /** Package manifest configuration data. */
     manifest: AppManifest;
-    /** Relative path within the package -> text content. */
+    /** Relative path mappings within the package mapping to file text contents. */
     files: Record<string, string>;
 }
 
+/** Regular expression validation identifier matching safe package ID constraints. */
 const ID_RE = /^[a-z0-9-]+$/;
+/** Regular expression matching semver structure. */
 const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
+/**
+ * Validates a parsed manifest object structure against type and semver rules.
+ * @param m Target manifest object structure.
+ */
 export function validateManifest(m: unknown): { ok: boolean; error?: string } {
     if (!m || typeof m !== 'object') return { ok: false, error: 'manifest must be an object' };
     const x = m as Partial<AppManifest>;
@@ -66,6 +83,10 @@ export function validateManifest(m: unknown): { ok: boolean; error?: string } {
     return { ok: true };
 }
 
+/**
+ * Validates the contents, files list, and path specifications inside an AppPackage.
+ * @param pkg Target package object structure.
+ */
 export function validatePackage(pkg: unknown): { ok: boolean; error?: string } {
     if (!pkg || typeof pkg !== 'object') return { ok: false, error: 'package must be an object' };
     const p = pkg as Partial<AppPackage>;
@@ -87,7 +108,12 @@ export function validatePackage(pkg: unknown): { ok: boolean; error?: string } {
     return { ok: true };
 }
 
-/** Compares semver strings: -1 (a<b), 0 (equal), 1 (a>b). */
+/**
+ * Compares two semantic version strings.
+ * @param a First version string.
+ * @param b Second version string.
+ * @returns -1 if a < b, 0 if equal, 1 if a > b.
+ */
 export function compareVersions(a: string, b: string): -1 | 0 | 1 {
     const pa = a.split('.').map(Number);
     const pb = b.split('.').map(Number);
@@ -101,8 +127,8 @@ export function compareVersions(a: string, b: string): -1 | 0 | 1 {
 }
 
 /**
- * SHA-256 hex of the package (integrity stamp recorded at install). Falls back
- * to a deterministic non-crypto hash where SubtleCrypto is unavailable (jsdom).
+ * Generates a SHA-256 hash or deterministic FNV-1a hash representation of the package contents to verify integrity.
+ * @param pkg Target application package.
  */
 export async function packageIntegrity(pkg: AppPackage): Promise<string> {
     const json = JSON.stringify({ manifest: pkg.manifest, files: pkg.files });

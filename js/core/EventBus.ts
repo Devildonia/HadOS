@@ -18,36 +18,51 @@ import type { IEventPayloadMap, IStoreStateMap, EventPayload } from './Types.js'
 // ============================================
 // EVENT BUS — Pub/Sub for decoupled communication
 // ============================================
-
+/**
+ * Type representing a generic event callback handler function.
+ */
 export type EventHandler<T extends unknown[] = unknown[]> = (...args: T) => void;
 
+/** Maps standard event payload names. */
 type KnownEventName = keyof IEventPayloadMap;
+/** Extracts standard arguments structure for a given event name. */
 type KnownEventArgs<K extends KnownEventName> = IEventPayloadMap[K] extends any[] ? IEventPayloadMap[K] : [IEventPayloadMap[K]];
 
+/**
+ * Interface detailing event publish-subscribe operations.
+ */
 export interface IEventBus {
+    /** Subscribes a listener callback to an event. */
     on<K extends KnownEventName>(event: K, handler: EventHandler<KnownEventArgs<K>>): () => void;
     on(event: string, handler: EventHandler<unknown[]>): () => void;
+    /** Subscribes a listener callback to an event that executes once and auto-unsubscribes. */
     once<K extends KnownEventName>(event: K, handler: EventHandler<KnownEventArgs<K>>): void;
     once(event: string, handler: EventHandler<unknown[]>): void;
+    /** Unsubscribes a listener callback from a target event. */
     off<K extends KnownEventName>(event: K, handler: EventHandler<KnownEventArgs<K>> | EventHandler<unknown[]>): void;
     off(event: string, handler: EventHandler<unknown[]>): void;
+    /** Dispatches an event notifying all active subscribers with the supplied payload. */
     emit<K extends KnownEventName>(event: K, ...args: KnownEventArgs<K>): void;
     emit(event: string, ...args: unknown[]): void;
+    /** Purges all registered listener callback sets. */
     clear(): void;
+    /** Purges all registered listener callback sets (primarily for testing). */
     __reset(): void;
+    /** Returns a registry audit of event names mapped to their subscriber counts. */
     debug(): Record<string, number>;
 }
 
 const EventBus: IEventBus = (() => {
     'use strict';
 
+    /** Maps event name strings to sets of listener callback references. */
     const listeners = new Map<string, Set<EventHandler<unknown[]>>>();
 
     /**
-     * Subscribe to an event
-     * @param {string} event - Event name
-     * @param {Function} handler - Callback
-     * @returns {Function} Unsubscribe function
+     * Subscribe to an event.
+     * @param event Event name.
+     * @param handler Callback.
+     * @returns Unsubscribe function.
      */
     function on(event: string, handler: EventHandler<unknown[]>): () => void {
         const eventName = String(event);
@@ -61,9 +76,9 @@ const EventBus: IEventBus = (() => {
     }
 
     /**
-     * Subscribe to an event (fires only once)
-     * @param {string} event - Event name
-     * @param {Function} handler - Callback
+     * Subscribe to an event (fires only once).
+     * @param event Event name.
+     * @param handler Callback.
      */
     function once(event: string, handler: EventHandler<unknown[]>): void {
         const wrapper: EventHandler<unknown[]> = (...args) => {
@@ -74,9 +89,9 @@ const EventBus: IEventBus = (() => {
     }
 
     /**
-     * Unsubscribe from an event
-     * @param {string} event - Event name
-     * @param {Function} handler - Callback to remove
+     * Unsubscribe from an event.
+     * @param event Event name.
+     * @param handler Callback to remove.
      */
     function off(event: string, handler: EventHandler<unknown[]>): void {
         const eventName = String(event);
@@ -88,9 +103,9 @@ const EventBus: IEventBus = (() => {
     }
 
     /**
-     * Emit an event to all subscribers
-     * @param {string} event - Event name
-     * @param {...*} args - Arguments to pass
+     * Emit an event to all subscribers.
+     * @param event Event name.
+     * @param args Arguments to pass.
      */
     function emit(event: string, ...args: unknown[]): void {
         const eventName = String(event);
@@ -110,21 +125,21 @@ const EventBus: IEventBus = (() => {
     }
 
     /**
-     * Remove all listeners (for cleanup/testing)
+     * Remove all listeners (for cleanup/testing).
      */
     function clear(): void {
         listeners.clear();
     }
 
     /**
-     * Identical to clear, for testing standard
+     * Identical to clear, for testing standard.
      */
     function __reset(): void {
         clear();
     }
 
     /**
-     * Debug: list all registered events
+     * Debug: list all registered events and listener counts.
      */
     function debug(): Record<string, number> {
         const info: Record<string, number> = {};
@@ -141,31 +156,42 @@ const EventBus: IEventBus = (() => {
 // STORE — Reactive state container
 // ============================================
 
+/**
+ * Interface detailing global reactive Store operations.
+ */
 export interface IStore {
+    /** Restores persisted key states from storage and merges initial values. */
     init(defaults?: Partial<IStoreStateMap>): void;
+    /** Fetches a state value under a given key, defaulting to the fallback if undefined. */
     get<K extends keyof IStoreStateMap, Fallback = IStoreStateMap[K]>(key: K, fallback?: Fallback): IStoreStateMap[K] | Fallback;
+    /** Modifies a state value under a given key, triggering local storage updates and change events on modification. */
     set<K extends keyof IStoreStateMap>(key: K, value: IStoreStateMap[K]): void;
+    /** Captures a read-only snapshot copy of the current state mapping. */
     getAll(): Partial<IStoreStateMap>;
+    /** Checks if a key is registered within the Store state dictionary. */
     has(key: string): boolean;
+    /** Listens for state modification events on a given key. */
     on<K extends string>(event: K, handler: EventHandler<EventPayload<K>>): () => void;
+    /** Detaches a listener callback from store change events. */
     off<K extends string>(event: K, handler: EventHandler<unknown[]>): void;
+    /** Resets the internal state dictionary (primarily for testing). */
     __reset(): void;
 }
 
 const Store: IStore = (() => {
     'use strict';
 
-    // Internal state (private)
+    /** Map containing internal state values. */
     const _state: Record<string, any> = {};
 
-    // Persistence keys — these auto-save to localStorage
+    /** Storage keys configured to auto-save to browser local storage. */
     const PERSISTED_KEYS = new Set<string>([
         'wallpaper',
         'taskbarColor',
         'lang'
     ]);
 
-    // Map internal keys to legacy localStorage keys for backward compatibility
+    /** Maps state keys to legacy localStorage keys for backward compatibility. */
     const KEY_MAP: Record<string, string> = {
         'wallpaper': 'desktop-wallpaper',
         'taskbarColor': 'taskbar-color',
@@ -173,8 +199,8 @@ const Store: IStore = (() => {
     };
 
     /**
-     * Initialize store with defaults, restoring persisted values
-     * @param {object} defaults - Default state values
+     * Initialize store with defaults, restoring persisted values.
+     * @param defaults Default state values.
      */
     function init(defaults: Partial<IStoreStateMap> = {}): void {
         Object.entries(defaults).forEach(([key, value]) => {
@@ -198,19 +224,19 @@ const Store: IStore = (() => {
     }
 
     /**
-     * Get a value from state
-     * @param {string} key - State key
-     * @param {*} fallback - Default if not found
-     * @returns {*} Value
+     * Get a value from state.
+     * @param key State key.
+     * @param fallback Default if not found.
+     * @returns Value.
      */
     function get<K extends keyof IStoreStateMap, Fallback = IStoreStateMap[K]>(key: K, fallback?: Fallback): IStoreStateMap[K] | Fallback {
         return key in _state ? _state[key as string] as IStoreStateMap[K] : fallback!;
     }
 
     /**
-     * Set a value and emit change event
-     * @param {string} key - State key
-     * @param {*} value - New value
+     * Set a value and emit change event.
+     * @param key State key.
+     * @param value New value.
      */
     function set<K extends keyof IStoreStateMap>(key: K, value: IStoreStateMap[K]): void {
         const keyString = key as string;
@@ -240,24 +266,24 @@ const Store: IStore = (() => {
     }
 
     /**
-     * Get entire state snapshot (read-only copy)
-     * @returns {object} State copy
+     * Get entire state snapshot (read-only copy).
+     * @returns State copy.
      */
     function getAll(): Partial<IStoreStateMap> {
         return { ..._state } as Partial<IStoreStateMap>;
     }
 
     /**
-     * Check if a key exists
-     * @param {string} key - State key
-     * @returns {boolean}
+     * Check if a key exists.
+     * @param key State key.
+     * @returns True if exists, false otherwise.
      */
     function has(key: string): boolean {
         return key in _state;
     }
 
     /**
-     * Reset store (clear state) for testing
+     * Reset store (clear state) for testing.
      */
     function __reset(): void {
         Object.keys(_state).forEach(key => delete _state[key]);
@@ -266,11 +292,13 @@ const Store: IStore = (() => {
     return { init, get, set, getAll, has, on: EventBus.on, off: EventBus.off, __reset };
 })();
 
-
 // ============================================
 // BACKWARD COMPATIBILITY BRIDGE
 // Keep window.state working for existing code, but proxy mutations to Store
 // ============================================
+/**
+ * Creates a backward compatibility state proxy mapping old window.state mutations to Store operations.
+ */
 function createStateBridge(): Record<string, any> {
     // Initialize Store with the same defaults as old window.state
     Store.init({
@@ -310,7 +338,6 @@ function createStateBridge(): Record<string, any> {
 
     return stateProxy;
 }
-
 
 // ============================================
 // EXPORTS

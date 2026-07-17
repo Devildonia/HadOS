@@ -8,12 +8,21 @@ import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
 import { Store } from '../core/EventBus';
 
+/**
+ * Interface detailing the desktop manager component operations (wallpaper, colors, drag-and-drop uploads).
+ */
 export interface IDesktopManager {
+    /** Preloads startup audio clips, binds drag-and-drop uploads, and restores wallpaper and taskbar styles. */
     init(): void;
+    /** Releases drop zone event handlers and destroys variables. */
     destroy(): void;
+    /** Hides the bootloader splashscreen and reveals the desktop container. */
     showDesktop(): void;
+    /** Updates desktop background wallpaper styles. */
     setWallpaper(url: string | null, isSilent?: boolean): void;
+    /** Updates the CSS property defining taskbar background coloration. */
     setTaskbarColor(color: string, isSilent?: boolean): void;
+    /** Processes custom wallpaper image file uploads, restricting sizing to under 2MB. */
     handleWallpaperUpload(input: HTMLInputElement | { files: FileList | File[] }): void;
 }
 
@@ -27,28 +36,43 @@ const LEGACY_DEFAULT_TASKBAR_COLOR = '#c0c0c0';
 const DesktopManager: IDesktopManager = (() => {
     'use strict';
 
-    // Helper: resolve a service by name (avoids window.* lookups)
+    /** Helper resolving a service instance by key name. */
     const svc = (name: string): any => Services.get(name);
+    /** Guard tracking if the manager has initialized. */
     let initialized = false;
+    /** DOM node reference hosting file drop events for custom wallpapers. */
     let wallpaperDropZone: HTMLElement | null = null;
 
+    /**
+     * Prevents standard browser drag/drop behavior.
+     * @param e Event context.
+     */
     function preventDefaults(e: Event): void {
         e.preventDefault();
         e.stopPropagation();
     }
 
+    /**
+     * Colors the drop zone border on dragenter.
+     */
     function highlightDropZone(): void {
         if (!wallpaperDropZone) return;
         wallpaperDropZone.style.borderColor = '#000080';
         wallpaperDropZone.style.backgroundColor = '#e0e0e0';
     }
 
+    /**
+     * Resets the drop zone border on dragleave.
+     */
     function resetDropZone(): void {
         if (!wallpaperDropZone) return;
         wallpaperDropZone.style.borderColor = 'transparent';
         wallpaperDropZone.style.backgroundColor = 'transparent';
     }
 
+    /**
+     * Restores state and preloads desktop assets.
+     */
     function init(): void {
         if (initialized) return;
         initialized = true;
@@ -92,6 +116,9 @@ const DesktopManager: IDesktopManager = (() => {
         }
     }
 
+    /**
+     * Cleans up wallpaper drag and drop event listeners.
+     */
     function destroy(): void {
         if (wallpaperDropZone) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -113,6 +140,9 @@ const DesktopManager: IDesktopManager = (() => {
         initialized = false;
     }
 
+    /**
+     * Shows the desktop and fades out splash screen.
+     */
     function showDesktop(): void {
         const splashScreen = document.getElementById('splash-screen');
         const desktop = document.getElementById('desktop');
@@ -132,6 +162,10 @@ const DesktopManager: IDesktopManager = (() => {
         }
     }
 
+    /**
+     * Displays desktop container and plays startup sound.
+     * @param desktopElement Desktop DOM node.
+     */
     function revealDesktop(desktopElement: HTMLElement): void {
         desktopElement.style.display = 'block';
 
@@ -153,6 +187,11 @@ const DesktopManager: IDesktopManager = (() => {
         }, 50);
     }
 
+    /**
+     * Sets the desktop background wallpaper.
+     * @param url Image location path or Base64 data URL.
+     * @param isSilent If true, plays no audios.
+     */
     function setWallpaper(url: string | null, isSilent: boolean = false): void {
         const desktop = document.getElementById('desktop');
         if (!desktop) return;
@@ -189,6 +228,11 @@ const DesktopManager: IDesktopManager = (() => {
         Utils.setStorage('taskbar-color', '');
     }
 
+    /**
+     * Sets taskbar background color style.
+     * @param color Target hex or CSS color string.
+     * @param isSilent If true, plays no audios.
+     */
     function setTaskbarColor(color: string, isSilent: boolean = false): void {
         document.documentElement.style.setProperty('--taskbar-bg', color);
         if (document.body) {
@@ -216,6 +260,7 @@ const DesktopManager: IDesktopManager = (() => {
         }
     }
 
+    /** Binds dragenter, dragover, dragleave, and drop event handlers on drop zone. */
     function setupWallpaperDragDrop(): void {
         wallpaperDropZone = document.getElementById('wallpaper-drop-zone');
         if (!wallpaperDropZone) return;
@@ -233,18 +278,25 @@ const DesktopManager: IDesktopManager = (() => {
         });
 
         wallpaperDropZone.addEventListener('drop', handleDrop, false);
-
     }
 
+    /**
+     * Handles dropping files.
+     * @param e Drag event metadata.
+     */
     function handleDrop(e: DragEvent): void {
-            const dt = e.dataTransfer;
-            if (!dt) return;
-            const files = dt.files;
-            if (files && files.length > 0) {
-                handleWallpaperUpload({ files: files });
-            }
+        const dt = e.dataTransfer;
+        if (!dt) return;
+        const files = dt.files;
+        if (files && files.length > 0) {
+            handleWallpaperUpload({ files: files });
+        }
     }
 
+    /**
+     * Validates and reads wallpaper files.
+     * @param input Input element containing file list.
+     */
     function handleWallpaperUpload(input: HTMLInputElement | { files: FileList | File[] }): void {
         if (input.files && input.files[0]) {
             const file = input.files[0];

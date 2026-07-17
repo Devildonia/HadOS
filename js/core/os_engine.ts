@@ -24,7 +24,9 @@ import { buildDynamicFolderWindows, buildDynamicGameWindows } from '../ui/Window
 
 Utils.Logger.log("[OS_ENGINE] Module loaded");
 
+/** Visibility change event handler to manage wallpaper performance when tab is backgrounded. */
 let visibilityHandler: ((event: Event) => void) | null = null;
+/** Timeout timer used to sync UI themes after initialization. */
 let themeSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
 // ============================================
@@ -38,8 +40,13 @@ initLegacyWrappers();
 // INITIALIZATION — SINGLE ENTRY POINT
 // Order: Audio → Boot → Desktop → Kernel → UI → Events → Clock
 // ============================================
+/** Flag tracking whether the OS boot phase has already completed. */
 let _booted = false;
 
+/**
+ * Initializes all core OS modules, window registries, touch controls, and event loop listeners.
+ * Orchestrates the full booting cycle of the HadOS environment.
+ */
 window.initOS = function (): void {
     const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
     if (_booted && !isTest) return;
@@ -52,9 +59,9 @@ window.initOS = function (): void {
     const errors: Array<{ step: string, error: Error }> = [];
 
     /**
-     * Error boundary: run a boot step, log and continue on failure.
-     * @param {string} name - Step name for logging
-     * @param {Function} fn - Step function
+     * Executes a single boot step inside a try-catch block, recording errors without crashing boot.
+     * @param name The descriptive name of the initialization step.
+     * @param fn The execution hook representing the boot step.
      */
     function bootStep(name: string, fn: () => void): void {
         try {

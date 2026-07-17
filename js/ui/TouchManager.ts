@@ -8,30 +8,47 @@ import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
 import { WindowManager } from './WindowManager';
 
+/**
+ * Interface detailing touch integration and double-tap gestures for mobile/tablet devices.
+ */
 export interface ITouchManager {
+    /** Hooks window and icon managers to support touch events. */
     init(): void;
+    /** Detaches all active touch listeners and overrides. */
     destroy(): void;
+    /** Releases touch drag listeners on the target window ID. */
     destroyDraggable(windowId: string): void;
+    /** Map handler bindings combining mouse and touch pointer triggers. */
     addPointerEvents(element: HTMLElement, handlers: { onStart?: (e: any) => void, onMove?: (e: any) => void, onEnd?: (e: any) => void }): void;
+    /** Time gap threshold in milliseconds to classify as a double-tap. */
     DOUBLE_TAP_DELAY: number;
+    /** Duration in milliseconds required to trigger a long-press. */
     LONG_PRESS_DELAY: number;
 }
-
 
 const TouchManager: ITouchManager = (() => {
     'use strict';
 
     // Double-tap detection
+    /** Time gap threshold in milliseconds to classify as a double-tap. */
     const DOUBLE_TAP_DELAY = 300; // ms
+    /** Duration in milliseconds required to trigger a long-press. */
     const LONG_PRESS_DELAY = 500; // ms
+    /** Pixel threshold movement to differentiate a tap from a drag. */
     const DRAG_THRESHOLD = 8;     // px before drag starts
 
+    /** Timestamp of the last touch tap. */
     let _lastTapTime = 0;
+    /** Element target of the last touch tap. */
     let _lastTapTarget: Element | null = null;
+    /** Timer reference scheduling long press actions. */
     let _longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Initialization guard. */
     let _initialized = false;
+    /** Original window titlebar drag hook override copy. */
     let _originalMakeDraggable: ((windowId: string) => void) | null = null;
 
+    /** Map storing active touch event handlers per window container ID. */
     const _touchDragRegistry = new Map<string, {
         header: HTMLElement;
         touchstart: EventListener;
@@ -39,13 +56,24 @@ const TouchManager: ITouchManager = (() => {
         touchend: EventListener;
     }>();
 
+    /** List containing references to attached listeners to avoid memory leaks. */
     const _registeredListeners: { element: any, event: string, handler: any }[] = [];
 
+    /**
+     * Binds an event listener tracking cleanup records.
+     * @param element Target DOM node.
+     * @param event Target event name.
+     * @param handler Listener function callback.
+     * @param options Listener configuration settings.
+     */
     function addListener(element: any, event: string, handler: any, options?: any): void {
         Utils.eventManager.add(element, event, handler, options);
         _registeredListeners.push({ element, event, handler });
     }
 
+    /**
+     * Detaches all registered listeners.
+     */
     function clearRegisteredListeners(): void {
         _registeredListeners.forEach(({ element, event, handler }) => {
             Utils.eventManager.remove(element, event, handler);
@@ -54,7 +82,7 @@ const TouchManager: ITouchManager = (() => {
     }
 
     /**
-     * Initialize touch support
+     * Initialize touch support.
      */
     function init(): void {
         if (_initialized) return;
@@ -73,6 +101,9 @@ const TouchManager: ITouchManager = (() => {
         Utils.Logger.log('[TouchManager] Initialized');
     }
 
+    /**
+     * Cleans up all hooks, overrides, and registers.
+     */
     function destroy(): void {
         if (_longPressTimer) {
             clearTimeout(_longPressTimer);
@@ -98,6 +129,10 @@ const TouchManager: ITouchManager = (() => {
         _initialized = false;
     }
 
+    /**
+     * Removes touch drag event listeners from the target window container.
+     * @param windowId Target window ID.
+     */
     function destroyDraggable(windowId: string): void {
         const entry = _touchDragRegistry.get(windowId);
         if (entry) {
@@ -109,7 +144,7 @@ const TouchManager: ITouchManager = (() => {
     }
 
     /**
-     * Patches WindowManager's draggable to support touch events
+     * Patches WindowManager's draggable to support touch events.
      */
     function patchWindowDragging(): void {
         // Override makeDraggable to add touch support
@@ -206,7 +241,7 @@ const TouchManager: ITouchManager = (() => {
     }
 
     /**
-     * Adds touch support to desktop icon dragging
+     * Adds touch support to desktop icon dragging.
      */
     function patchIconDragging(): void {
         // This supplements the existing mouse-based icon dragging in event_listeners.js
@@ -302,7 +337,7 @@ const TouchManager: ITouchManager = (() => {
     }
 
     /**
-     * Sets up double-tap detection for desktop icons (maps to dblclick action)
+     * Sets up double-tap detection for desktop icons (maps to dblclick action).
      */
     function setupDoubleTap(): void {
         const icons = document.querySelectorAll('#system-icons .icon, #app-launch-zone .icon');
@@ -339,9 +374,9 @@ const TouchManager: ITouchManager = (() => {
     }
 
     /**
-     * Utility: Add unified pointer events (mouse + touch) to an element
-     * @param {HTMLElement} element
-     * @param {object} handlers - { onStart, onMove, onEnd }
+     * Utility: Add unified pointer events (mouse + touch) to an element.
+     * @param element Target element node.
+     * @param handlers Set containing onStart, onMove, and onEnd callbacks.
      */
     function addPointerEvents(element: HTMLElement, handlers: { onStart?: (e: any) => void, onMove?: (e: any) => void, onEnd?: (e: any) => void }): void {
         const { onStart, onMove, onEnd } = handlers;

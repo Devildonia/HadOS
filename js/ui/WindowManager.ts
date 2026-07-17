@@ -14,32 +14,54 @@ import { WindowControls } from './WindowControls';
 // La API pública (IWindowManager) y el registro en Services NO cambian.
 // ============================================
 
+/**
+ * Interface coordinating the desktop window container lifecycle and snap/z-stack/drag interactions.
+ */
 export interface IWindowManager {
+    /** Instantiates or restores, and brings to focus, the window container matching the given ID. */
     open(windowId: string): void;
+    /** Triggers window closing animation sequences and releases associated resources. */
     close(windowId: string): void;
+    /** Hides the window container from view without removing it from active trackers. */
     minimize(windowId: string): void;
+    /** Toggles the maximized/fullscreen state styling classes for the container. */
     maximize(windowId: string): void;
+    /** Adjusts container layers to present the target window at the foreground. */
     bringToFront(win: HTMLElement | null): void;
+    /** Enables drag handlers on the window titlebar. */
     makeDraggable(windowId: string): void;
+    /** Removes drag handlers from the window titlebar. */
     destroyDraggable(windowId: string): void;
+    /** Removes resizing handlers from the window container borders. */
     destroyResizable(windowId: string): void;
+    /** Removes all resizing and dragging interactions from the target window container. */
     destroyWindowInteractions(windowId: string): void;
+    /** Attaches drag, maximize, minimize, and close click delegation triggers on the page. */
     initializeControls(): void;
+    /** Detaches global window controls click delegation handlers. */
     destroy(): void;
+    /** Captures the list of active window IDs. */
     getActive(): string[];
+    /** Recursively closes all active window containers. */
     closeAll(): void;
 }
 
 const WindowManager: IWindowManager = (function () {
     'use strict';
 
+    /** Map tracking active open window identifiers. */
     const activeWindows = new Set<string>();
 
     // Colaboradores (composición)
+    /** Layer stack manager regulating active window z-indexes. */
     const zstack = new WindowZStack();
+    /** Handles resizing and dragging interactions on target windows. */
     const interactions = new WindowInteractions((win) => zstack.bringToFront(win));
+    /** Lifecycle monitor tracking isolated iframe process lifespans. */
     const iframeProc = new IframeProcessManager();
+    /** Legacy process bridge linking kernel PIDs to desktop window closures. */
     const legacyBridge = new LegacyProcessBridge();
+    /** Coordinator executing snap actions triggered from header title bar button clicks. */
     const controls = new WindowControls({
         makeDraggable: (id) => interactions.makeDraggable(id),
         makeResizable: (id) => interactions.makeResizable(id),
@@ -49,7 +71,10 @@ const WindowManager: IWindowManager = (function () {
         close: (id) => closeWindow(id),
     });
 
-    /** Reproduce el sonido de ventana solo cuando el tema activo es "modern". */
+    /**
+     * Reproduce el sonido de ventana solo cuando el tema activo es "modern".
+     * @param name Name of the sound key to play.
+     */
     function playThemeSound(name: string): void {
         const tm: any = Services.get('ThemeManager');
         if (tm?.currentTheme === 'modern') {
@@ -59,7 +84,8 @@ const WindowManager: IWindowManager = (function () {
     }
 
     /**
-     * Opens a window by ID
+     * Opens a window by ID.
+     * @param windowId Target window identifier.
      */
     function openWindow(windowId: string): void {
         const win = Utils.getElement(windowId) as HTMLElement | null;
@@ -77,7 +103,11 @@ const WindowManager: IWindowManager = (function () {
         legacyBridge.registerLegacyProcess(win, windowId);
     }
 
-    /** Make window visible and manage z-index */
+    /**
+     * Make window visible and manage z-index.
+     * @param win Window element.
+     * @param windowId Unique window string key.
+     */
     function showWindow(win: HTMLElement, windowId: string): void {
         if (win.classList.contains('hados-window')) {
             win.style.display = 'flex';
@@ -108,7 +138,8 @@ const WindowManager: IWindowManager = (function () {
     }
 
     /**
-     * Closes a window by ID
+     * Closes a window by ID.
+     * @param windowId Unique window string key to close.
      */
     function closeWindow(windowId: string): void {
         const win = Utils.getElement(windowId) as HTMLElement | null;
@@ -182,7 +213,10 @@ const WindowManager: IWindowManager = (function () {
         }
     }
 
-    /** Toggles window maximized state */
+    /**
+     * Toggles window maximized state.
+     * @param windowId Target window key.
+     */
     function toggleMaximize(windowId: string): void {
         const win = Utils.getElement(windowId) as HTMLElement | null;
         if (!win) return;
@@ -198,7 +232,10 @@ const WindowManager: IWindowManager = (function () {
         }
     }
 
-    /** Minimizes window (hides it) */
+    /**
+     * Minimizes window (hides it).
+     * @param windowId Target window key.
+     */
     function minimizeWindow(windowId: string): void {
         const win = Utils.getElement(windowId) as HTMLElement | null;
         if (!win) return;
@@ -208,12 +245,16 @@ const WindowManager: IWindowManager = (function () {
         // We don't remove it from activeWindows so the taskbar button stays
     }
 
-    /** Gets list of active windows */
+    /**
+     * Gets list of active windows.
+     */
     function getActiveWindows(): string[] {
         return Array.from(activeWindows);
     }
 
-    /** Closes all windows */
+    /**
+     * Closes all windows.
+     */
     function closeAllWindows(): void {
         Utils.Logger.window('Closing all windows');
         activeWindows.forEach(windowId => closeWindow(windowId));

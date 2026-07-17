@@ -13,9 +13,13 @@
  * cleared. Phase 0.1 of the Web OS roadmap — see docs/webos-roadmap.
  */
 
+/** Unique database name for HadOS VFS storage. */
 const DB_NAME = 'hados-vfs';
+/** Schema version index for the IndexedDB backend. */
 const DB_VERSION = 1;
+/** Target object store name within the database. */
 const STORE_NAME = 'kv';
+/** Key used to store the serialized tree data. */
 const ROOT_KEY = 'root';
 
 /**
@@ -26,6 +30,9 @@ const ROOT_KEY = 'root';
 const LEGACY_DB_NAME = 'win95-vfs';        // Windows App Center ≤ v1.6.7
 const LEGACY_KEY = 'win95_vfs_root';       // even older: localStorage tree
 
+/**
+ * Checks whether IndexedDB is available and functional in the host browser environment.
+ */
 function idbAvailable(): boolean {
     try {
         return typeof indexedDB !== 'undefined' && indexedDB !== null;
@@ -34,6 +41,10 @@ function idbAvailable(): boolean {
     }
 }
 
+/**
+ * Opens a connection to the specified IndexedDB database, initializing object stores if needed.
+ * @param name Database name.
+ */
 function openDB(name: string = DB_NAME): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const req = indexedDB.open(name, DB_VERSION);
@@ -67,6 +78,11 @@ async function readLegacyDB(): Promise<string | null> {
     }
 }
 
+/**
+ * Helper wrapper to perform a read transaction against IndexedDB object store.
+ * @param db Database handle.
+ * @param key Target record key.
+ */
 function idbGet(db: IDBDatabase, key: string): Promise<string | null> {
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readonly');
@@ -76,6 +92,12 @@ function idbGet(db: IDBDatabase, key: string): Promise<string | null> {
     });
 }
 
+/**
+ * Helper wrapper to perform a write transaction against IndexedDB object store.
+ * @param db Database handle.
+ * @param key Target record key.
+ * @param value String data value to write.
+ */
 function idbPut(db: IDBDatabase, key: string, value: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -98,6 +120,11 @@ function deleteDatabase(name: string): Promise<void> {
     });
 }
 
+/**
+ * Helper wrapper to delete a record from the IndexedDB store.
+ * @param db Database handle.
+ * @param key Target record key.
+ */
 function idbDelete(db: IDBDatabase, key: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -107,6 +134,9 @@ function idbDelete(db: IDBDatabase, key: string): Promise<void> {
     });
 }
 
+/**
+ * Interface defining VFS Storage backend loader operations.
+ */
 export interface IVFSStore {
     /** Loads the serialized tree, or null if none is stored. */
     load(): Promise<string | null>;
@@ -121,14 +151,22 @@ export interface IVFSStore {
 }
 
 export const VFSStore: IVFSStore = (() => {
+    /** DB connection instance promise cache. */
     let dbPromise: Promise<IDBDatabase> | null = null;
+    /** Cached check status of IndexedDB browser availability. */
     const useIDB = idbAvailable();
 
+    /**
+     * Resolves the primary active database connection promise.
+     */
     function getDB(): Promise<IDBDatabase> {
         if (!dbPromise) dbPromise = openDB();
         return dbPromise;
     }
 
+    /**
+     * Asynchronously loads the VFS tree, migrating data from legacy formats if present.
+     */
     async function load(): Promise<string | null> {
         if (!useIDB) {
             return localStorage.getItem(LEGACY_KEY);
@@ -162,6 +200,10 @@ export const VFSStore: IVFSStore = (() => {
         }
     }
 
+    /**
+     * Persists the serialized file system tree. Falls back to localStorage on write failure.
+     * @param data Serialized VFS tree JSON string.
+     */
     async function save(data: string): Promise<void> {
         if (!useIDB) {
             localStorage.setItem(LEGACY_KEY, data);
@@ -176,6 +218,9 @@ export const VFSStore: IVFSStore = (() => {
         }
     }
 
+    /**
+     * Clears all VFS tree data records in both database and localStorage configurations.
+     */
     async function clear(): Promise<void> {
         localStorage.removeItem(LEGACY_KEY);
         if (!useIDB) return;

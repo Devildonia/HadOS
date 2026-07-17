@@ -18,14 +18,19 @@ import { AiService, AI_CAPABILITY } from '../ai/AiService';
 import { toFloat32 } from '../ai/aiRuntimeHandlers';
 import type { WorkerProcess } from './WorkerProcess';
 
+/**
+ * Represents the execution context tracking isolated process credentials during syscall execution.
+ */
 export interface SyscallContext {
+    /** Target app package identifier. */
     appId: string;
+    /** Process Identifier. */
     pid: number;
-    /** fs.* paths must stay under this root (the app's home dir). */
+    /** Virtual root path confining all filesystem operations (app home dir). */
     fsRoot: string;
 }
 
-/** The syscalls the broker can serve. */
+/** The default system calls served by the broker. */
 export const DEFAULT_SYSCALLS = ['sys.log', 'notify', 'fs.read', 'fs.list', 'fs.write', 'ai.loadModel', 'ai.infer'] as const;
 
 /**
@@ -46,6 +51,10 @@ const SYSCALL_CAPABILITY: Record<string, string | null> = {
 
 type Args = Record<string, unknown>;
 
+/**
+ * Coerces an unknown argument property value into a string.
+ * @param v Input value.
+ */
 function asString(v: unknown): string {
     return typeof v === 'string' ? v : '';
 }
@@ -55,12 +64,9 @@ function asString(v: unknown): string {
 const NOTIFY_LEVELS = new Set(['info', 'success', 'warn', 'error']);
 
 /**
- * Rejects fs.* paths that escape the process's fsRoot.
- *
- * Traversal (`..`) is refused explicitly at this boundary — NOT left to the VFS.
- * `VFS.resolve` currently treats `..` as a literal node name, so traversal fails
- * by accident; if that ever changed, a path like `<root>\..\..\WINDOWS` would
- * pass a naive prefix check. Reject first, then compare normalized paths.
+ * Enforces VFS root confinement constraints, preventing directory traversal escapes.
+ * @param path Canonical VFS path to evaluate.
+ * @param ctx Target execution context.
  */
 function assertInRoot(path: string, ctx: SyscallContext): void {
     if (Utils.hasTraversal(path)) {
@@ -73,11 +79,14 @@ function assertInRoot(path: string, ctx: SyscallContext): void {
     }
 }
 
+/** Syscall handlers implementation dictionary mapping syscall keys to execution functions. */
 const HANDLERS: Record<string, (args: Args, ctx: SyscallContext) => unknown | Promise<unknown>> = {
+    /** Logs messages output from isolated processes onto the system logger. */
     'sys.log': (args, ctx) => {
         Utils.Logger.log(`[proc ${ctx.pid} ${ctx.appId}] ${asString(args.message)}`);
         return true;
     },
+    /** Generates system notifications requested by guest applications. */
     'notify': (args) => {
         const notify = Services.get('Notify');
         if (!notify) return true;
@@ -88,16 +97,19 @@ const HANDLERS: Record<string, (args: Args, ctx: SyscallContext) => unknown | Pr
         (notify as unknown as Record<string, (m: string) => void>)[level]!(asString(args.message));
         return true;
     },
+    /** Reads file contents requested by guest applications. Confined to fsRoot. */
     'fs.read': (args, ctx) => {
         const path = asString(args.path);
         assertInRoot(path, ctx);
         return VFS.readFileAsync(path);
     },
+    /** Lists directory entries requested by guest applications. Confined to fsRoot. */
     'fs.list': (args, ctx) => {
         const path = asString(args.path);
         assertInRoot(path, ctx);
         return VFS.listDir(path);
     },
+    /** Writes data contents requested by guest applications. Confined to fsRoot. */
     'fs.write': async (args, ctx) => {
         const dir = asString(args.path);
         const name = asString(args.name);
@@ -112,7 +124,9 @@ const HANDLERS: Record<string, (args: Args, ctx: SyscallContext) => unknown | Pr
      * the registry allowlist. Handing a guest control of the URL would turn this
      * syscall into a download primitive on the OS's origin.
      */
+    /** Triggers AI model loading routine for the calling app. */
     'ai.loadModel': (args, ctx) => AiService.loadModel(ctx.appId, asString(args.id)),
+    /** Runs model inference work against inputs for the calling app. */
     'ai.infer': async (args, ctx) => {
         const input = toFloat32(args.input);
         const shape = Array.isArray(args.shape) ? args.shape.map(Number) : [];
@@ -124,6 +138,8 @@ const HANDLERS: Record<string, (args: Args, ctx: SyscallContext) => unknown | Pr
 /**
  * Registers the syscall handlers on a process handle. Every call is guarded by
  * the context's capability set before dispatch.
+ * @param proc Target isolated worker process handle.
+ * @param ctx Context credentials tracking app package details.
  */
 export function attachSyscalls(proc: WorkerProcess, ctx: SyscallContext): void {
     for (const name of Object.keys(HANDLERS)) {

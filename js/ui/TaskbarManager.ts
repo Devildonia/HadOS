@@ -4,21 +4,35 @@ import { WindowManager } from './WindowManager';
 import { Kernel } from '../core/Kernel';
 import type { IProcess } from '../core/Types';
 
+/**
+ * Interface coordinating the bottom taskbar component displaying active window shortcuts.
+ */
 export interface ITaskbarManager {
+    /** Attaches listeners tracking process start/stop triggers to append/remove taskbar buttons. */
     init(): void;
+    /** Triggers a simulation test update adding a taskbar button for a given process context. */
     __test_update(process: IProcess): void;
+    /** Triggers a simulation test cleanup removing a taskbar button for a given process context. */
     __test_remove(process: IProcess | { pid?: number, windowId?: string, appId?: string }): void;
 }
 
 const TaskbarManager: ITaskbarManager = (() => {
     'use strict';
 
+    /** DOM element ID containing taskbar shortcuts. */
     const containerId = 'taskbar-apps'; // We need to add this to index.html
+    /** Cached reference to taskbar apps DOM node. */
     let container: HTMLElement | null = null;
+    /** Guard ensuring kernel event listeners are attached once. */
     let listenersAttached = false;
+    /** Kernel process started event listener handle. */
     let onProcessStarted: ((e: Event) => void) | null = null;
+    /** Kernel process stopped event listener handle. */
     let onProcessStopped: ((e: Event) => void) | null = null;
 
+    /**
+     * Initializes the taskbar apps panel, mounting the node and binding kernel listeners.
+     */
     function init(): void {
         container = document.getElementById(containerId);
         if (!container) {
@@ -48,6 +62,10 @@ const TaskbarManager: ITaskbarManager = (() => {
         Utils.Logger.log('TaskbarManager: Initialized');
     }
 
+    /**
+     * Appends a shortcut button on the taskbar when a new process mounts.
+     * @param process Target process instance metadata.
+     */
     function update(process: IProcess): void {
         if (!process) return;
         if (!container) {
@@ -107,6 +125,10 @@ const TaskbarManager: ITaskbarManager = (() => {
         container.appendChild(btn);
     }
 
+    /**
+     * Removes the shortcut button of a process when it terminates.
+     * @param process Target process instance metadata or window identifier mapping.
+     */
     function remove(process: IProcess | { pid?: number, windowId?: string, appId?: string }): void {
         // Find by PID
         let btn: HTMLElement | null = typeof process.pid === 'number' ? document.getElementById(`task-btn-${process.pid}`) : null;
