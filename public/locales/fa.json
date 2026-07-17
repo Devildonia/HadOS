@@ -200,5 +200,17 @@
   "workshop.vfx_size": "اندازه افکت‌ها:",
   "workshop.visual_novelties": "افکت‌های بصری",
   "workshop.voice_commands": "فرمان‌های صوتی",
-  "workshop.width": "عرض"
+  "workshop.width": "عرض",
+  "dialog.error.title": "System Error",
+  "dialog.mycomputer.message": "Access Denied. Unauthorized User.",
+  "dialog.recyclebin.title": "Recycle Bin",
+  "dialog.recyclebin.message": "The Recycle Bin is empty.",
+  "dialog.shutdown.title": "Critical Error",
+  "dialog.shutdown.message": "FATAL ERROR: System shutdown failed. Rebooting...",
+  "dialog.debug.title": "Debug Menu",
+  "dialog.debug.reset_all": "Reset All",
+  "dialog.debug.restore_prompt": "Restore the desktop to its initial state?",
+  "dialog.debug.restore_hint": "(All positions and settings will be deleted)",
+  "dialog.encryption.title": "Secrets File",
+  "dialog.encryption.message": "This file is encrypted. Access denied."
 }

@@ -11,65 +11,65 @@ import { i18n } from '../services/i18n';
 import { updateRecycleBinUI } from './StickyNotesController';
 import { setupDebugMenu } from './DebugMenuController';
 
-const DIALOG_CONFIGS: Record<string, { title: string, html: string }> = {
+const DIALOG_CONFIGS: Record<string, { title: () => string, html: () => string }> = {
     'dialog-mycomputer': {
-        title: 'System Error',
-        html: `
+        title: () => i18n.t('dialog.error.title'),
+        html: () => `
             <div class="dialog-content">
                 <span class="dialog-icon">❌</span>
-                <span class="dialog-message">Access Denied. Unauthorized User.</span>
+                <span class="dialog-message">${i18n.t('dialog.mycomputer.message')}</span>
             </div>
             <div class="dialog-buttons">
-                <button class="hados-btn" data-close-dialog="dialog-mycomputer">OK</button>
+                <button class="hados-btn" data-close-dialog="dialog-mycomputer">${i18n.t('dialog.ok')}</button>
             </div>
         `
     },
     'dialog-recyclebin': {
-        title: 'Recycle Bin',
-        html: `
+        title: () => i18n.t('dialog.recyclebin.title'),
+        html: () => `
             <div class="dialog-content">
                 <span class="dialog-icon">🗑️</span>
-                <span class="dialog-message">The Recycle Bin is empty.</span>
+                <span class="dialog-message">${i18n.t('dialog.recyclebin.message')}</span>
             </div>
             <div class="dialog-buttons">
-                <button class="hados-btn" data-close-dialog="dialog-recyclebin">OK</button>
+                <button class="hados-btn" data-close-dialog="dialog-recyclebin">${i18n.t('dialog.ok')}</button>
             </div>
         `
     },
     'dialog-shutdown': {
-        title: 'Critical Error',
-        html: `
+        title: () => i18n.t('dialog.shutdown.title'),
+        html: () => `
             <div class="dialog-content">
                 <span class="dialog-icon">❌</span>
-                <span class="dialog-message">FATAL ERROR: System shutdown failed. Rebooting...</span>
+                <span class="dialog-message">${i18n.t('dialog.shutdown.message')}</span>
             </div>
         `
     },
     'dialog-debug': {
-        title: 'Debug Menu',
-        html: `
+        title: () => i18n.t('dialog.debug.title'),
+        html: () => `
             <div class="dialog-content" style="flex-direction: column; text-align: center; gap: 10px;">
                 <span class="dialog-icon">⚠</span>
-                <span class="dialog-message" style="width: 100%;">Debug Menu</span>
+                <span class="dialog-message" style="width: 100%;">${i18n.t('dialog.debug.title')}</span>
                 <hr style="width: 100%; border-top: 1px solid #808080; border-bottom: 1px solid #fff;">
-                <p>Restore the desktop to its initial state?</p>
-                <p style="font-size: 11px; color: #555;">(All positions and settings will be deleted)</p>
+                <p>${i18n.t('dialog.debug.restore_prompt')}</p>
+                <p style="font-size: 11px; color: #555;">${i18n.t('dialog.debug.restore_hint')}</p>
             </div>
             <div class="dialog-buttons">
-                <button class="hados-btn" id="btn-reset-desktop">Reset All</button>
-                <button class="hados-btn" data-close-dialog="dialog-debug">Cancel</button>
+                <button class="hados-btn" id="btn-reset-desktop">${i18n.t('dialog.debug.reset_all')}</button>
+                <button class="hados-btn" data-close-dialog="dialog-debug">${i18n.t('dialog.cancel')}</button>
             </div>
         `
     },
     'dialog-encryption': {
-        title: 'Secrets File',
-        html: `
+        title: () => i18n.t('dialog.encryption.title'),
+        html: () => `
             <div class="dialog-content">
                 <span class="dialog-icon">🔒</span>
-                <span class="dialog-message">This file is encrypted. Access denied.</span>
+                <span class="dialog-message">${i18n.t('dialog.encryption.message')}</span>
             </div>
             <div class="dialog-buttons">
-                <button class="hados-btn" data-close-dialog="dialog-encryption">OK</button>
+                <button class="hados-btn" data-close-dialog="dialog-encryption">${i18n.t('dialog.ok')}</button>
             </div>
         `
     }
@@ -92,11 +92,11 @@ function _ensureDialog(dialogId: string): void {
     const showClose = dialogId !== 'dialog-shutdown';
     dialog.innerHTML = `
         <div class="window-header">
-            <span>${config.title}</span>
+            <span>${config.title()}</span>
             ${showClose ? `<button class="close-btn" data-close-dialog="${dialogId}">×</button>` : ''}
         </div>
         <div class="window-body">
-            ${config.html}
+            ${config.html()}
         </div>
     `;
 
@@ -131,7 +131,6 @@ type LegacyWindowActions = {
 
 type LegacyWindowFlags = {
     state?: LegacyStateBridge;
-    familyData?: unknown;
     __legacyWrappersInitialized?: boolean;
     __clockIntervalId?: number;
     AudioManager?: typeof AudioManager;
@@ -161,14 +160,6 @@ export function initSystemState(): void {
     // Initialize i18n
     i18n.init();
     if (legacyWindow.state) legacyWindow.state.lang = i18n.getLang();
-
-    legacyWindow.familyData = {
-        parents: {
-            mother: { name: 'Mary', status: 'alive', occupation: 'System Admin', stats: { happiness: 85, health: 90, intelligence: 80, money: 70, appearance: 75 } },
-            father: { name: 'John', status: 'alive', occupation: 'Hardware Engineer', stats: { happiness: 80, health: 85, intelligence: 90, money: 80, appearance: 70 } }
-        },
-        heritageBonus: { intelligence: 5, appearance: 5, money: 100 }
-    };
 }
 
 // ============================================
@@ -186,66 +177,43 @@ export function initAudioBridge(): void {
     };
 }
 
-export function destroyAudioBridge(): void {
-    delete legacyWindow.playBlip;
-}
-
 function getThemeManager() {
     return Services.get('ThemeManager');
 }
 
+// Simplified resolution without legacy fallback
 function getAudioManager(): AudioManager | undefined {
-    const serviceAudio = Services.get('AudioManager');
-    if (serviceAudio) return serviceAudio;
-    if (legacyWindow.AudioManager && typeof legacyWindow.AudioManager.getInstance === 'function') {
-        return legacyWindow.AudioManager.getInstance();
-    }
-    return undefined;
+    return Services.get('AudioManager') ?? undefined;
 }
 
 function bindLegacyAction<T extends unknown[]>(name: keyof LegacyWindowActions, handler: (...args: T) => void): void {
     (legacyWindowTarget as Record<string, unknown>)[name as string] = (...args: T): void => handler(...args);
 }
 
+// Helper to toggle dialog visibility
 function setDialogVisibility(dialogId: string, visible: boolean): void {
     const dialog = document.getElementById(dialogId);
     if (dialog) dialog.style.display = visible ? 'block' : 'none';
 }
 
-export function destroyLegacyWrappers(): void {
-    if (!legacyWindow.__legacyWrappersInitialized) return;
-
-    ['setWallpaper', 'setTaskbarColor', 'handleWallpaperUpload', 'openWindow', 'closeWindow', 'openDialog', 'closeDialog', 'handleShutdown'].forEach((name) => {
-        delete legacyWindowTarget[name as string];
-    });
-
-    delete (legacyWindow as any).RagdollMemory;
-    delete (legacyWindow as any).AudioManager;
-
-    legacyWindow.__legacyWrappersInitialized = false;
-}
-
 // ============================================
-// 3. LEGACY WRAPPERS (for remaining HTML onclick handlers)
+// 3. LEGACY WRAPPERS (decomposed sub-bridges)
 // ============================================
-export function initLegacyWrappers(): void {
-    if (legacyWindow.__legacyWrappersInitialized) return;
-    legacyWindow.__legacyWrappersInitialized = true;
-
-    // Bridge RagdollMemory for legacy Stickman.js/RagdollPet.js code
+function _bridgeServices(): void {
     const ragdollMemory = Services.get('RagdollMemory');
     if (ragdollMemory) {
         (legacyWindow as any).RagdollMemory = ragdollMemory;
     }
 
-    // Bridge AudioManager for legacy games/code (like RagdollPet.js)
     const audioManager = Services.get('AudioManager');
     if (audioManager) {
         (legacyWindow as any).AudioManager = {
             getInstance: () => audioManager
         };
     }
+}
 
+function _bridgeDesktop(): void {
     bindLegacyAction('setWallpaper', (url: string, silent: boolean = false): void => {
         Services.get('DesktopManager')?.setWallpaper(url, silent);
     });
@@ -255,7 +223,9 @@ export function initLegacyWrappers(): void {
     bindLegacyAction('handleWallpaperUpload', (input: HTMLInputElement): void => {
         Services.get('DesktopManager')?.handleWallpaperUpload(input);
     });
+}
 
+function _bridgeWindows(): void {
     bindLegacyAction('openWindow', (id: string): void => {
         legacyWindow.playBlip?.();
         Services.get('WindowManager')?.open(id);
@@ -277,7 +247,9 @@ export function initLegacyWrappers(): void {
         legacyWindow.playBlip?.();
         setDialogVisibility(dialogId, false);
     });
+}
 
+function _bridgeShutdown(): void {
     bindLegacyAction('handleShutdown', (): void => {
         const am = getAudioManager();
         if (am) {
@@ -296,8 +268,9 @@ export function initLegacyWrappers(): void {
             setTimeout(() => location.reload(), 4000);
         }, 500);
     });
+}
 
-    // --- DELEGATED ACTIONS VIA EVENTBUS ---
+function _bridgeRagdollEvents(): void {
     EventBus.on('action:shutdown', () => {
         legacyWindow.handleShutdown?.();
     });
@@ -345,6 +318,17 @@ export function initLegacyWrappers(): void {
     });
 }
 
+export function initLegacyWrappers(): void {
+    if (legacyWindow.__legacyWrappersInitialized) return;
+    legacyWindow.__legacyWrappersInitialized = true;
+
+    _bridgeServices();
+    _bridgeDesktop();
+    _bridgeWindows();
+    _bridgeShutdown();
+    _bridgeRagdollEvents();
+}
+
 // ============================================
 // 4. CLOCK
 // ============================================
@@ -369,13 +353,4 @@ export function initClock(): void {
 
     updateClock();
     legacyWindow.__clockIntervalId = window.setInterval(updateClock, 1000);
-}
-
-export function destroyClock(): void {
-    const existingInterval = legacyWindow.__clockIntervalId;
-    if (typeof existingInterval === 'number') {
-        clearInterval(existingInterval);
-        delete legacyWindow.__clockIntervalId;
-    }
-    delete legacyWindow.updateClock;
 }

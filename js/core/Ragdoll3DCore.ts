@@ -163,6 +163,11 @@ export abstract class Ragdoll3DCore {
         });
     }
 
+    protected async initPhysicsWorld(gravity = { x: 0.0, y: -9.81, z: 0.0 }): Promise<void> {
+        await RAPIER.init();
+        this.world = new RAPIER.World(gravity);
+    }
+
     public abstract initAsync(): Promise<void>;
 
     public terminate(): void {

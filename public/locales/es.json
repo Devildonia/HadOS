@@ -200,5 +200,17 @@
   "workshop.vfx_size": "Tamaño VFX:",
   "workshop.visual_novelties": "Novedades visuales",
   "workshop.voice_commands": "Comandos de voz",
-  "workshop.width": "Ancho"
+  "workshop.width": "Ancho",
+  "dialog.error.title": "Error del Sistema",
+  "dialog.mycomputer.message": "Acceso denegado. Usuario no autorizado.",
+  "dialog.recyclebin.title": "Papelera de reciclaje",
+  "dialog.recyclebin.message": "La papelera de reciclaje está vacía.",
+  "dialog.shutdown.title": "Error Crítico",
+  "dialog.shutdown.message": "ERROR FATAL: El apagado del sistema falló. Reiniciando...",
+  "dialog.debug.title": "Menú de depuración",
+  "dialog.debug.reset_all": "Restaurar Todo",
+  "dialog.debug.restore_prompt": "¿Restaurar el escritorio a su estado inicial?",
+  "dialog.debug.restore_hint": "(Se eliminarán todas las posiciones y ajustes)",
+  "dialog.encryption.title": "Archivo Secreto",
+  "dialog.encryption.message": "Este archivo está encriptado. Acceso denegado."
 }

@@ -12,7 +12,7 @@
 /** Capabilities an app may declare. Mirrors the PermissionBroker's vocabulary. */
 import { Utils } from '../utils';
 
-export const KNOWN_PERMISSIONS = ['fs:read', 'fs:write', 'notify', 'net'] as const;
+export const KNOWN_PERMISSIONS = ['fs:read', 'fs:write', 'notify', 'net', 'ai:infer'] as const;
 
 export interface AppManifest {
     /** Unique app id; also its home dir name (C:\APPS\<id>). */

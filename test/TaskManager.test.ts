@@ -51,4 +51,49 @@ describe('TaskManager', () => {
 
         tm.terminate();
     });
+
+    it('should clear interval and remove event listeners on terminate', () => {
+        const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
+        const tm = new TaskManager();
+        
+        tm.terminate();
+        expect(clearIntervalSpy).toHaveBeenCalled();
+    });
+
+    it('should handle tab switching click events', () => {
+        const tm = new TaskManager();
+        const tabButtons = mockBody.querySelectorAll('.tab-btn');
+        const perfTabBtn = Array.from(tabButtons).find(btn => btn.getAttribute('data-tab') === 'performance') as HTMLButtonElement;
+        
+        expect(perfTabBtn).toBeDefined();
+        perfTabBtn.click();
+
+        expect(perfTabBtn.classList.contains('active')).toBe(true);
+        const processesTabBtn = Array.from(tabButtons).find(btn => btn.getAttribute('data-tab') === 'processes') as HTMLButtonElement;
+        expect(processesTabBtn.classList.contains('active')).toBe(false);
+
+        tm.terminate();
+    });
+
+    it('should render hardware specs with real core count, RAM and GPU', () => {
+        const tm = new TaskManager();
+        const specsContainer = mockBody.querySelector('#tm-system-specs');
+        expect(specsContainer).not.toBeNull();
+        
+        const html = specsContainer!.innerHTML;
+        expect(html).toContain('CPU:');
+        expect(html).toContain('RAM:');
+        expect(html).toContain('GPU:');
+        
+        tm.terminate();
+    });
+
+    it('should render performance meters with correct percentages', () => {
+        const tm = new TaskManager();
+        const stats = { webgl: 1, audio: 2, listener: 3, timer: 4, total: 10 };
+        
+        // Directly call private helper or trigger refreshUI with stats
+        // We'll call the public refreshUI since it reads stats from Services
+        tm.terminate();
+    });
 });

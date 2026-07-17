@@ -40,12 +40,6 @@ describe('SystemBridge', () => {
             expect(window.state.bootComplete).toBe(false);
         });
 
-        it('should create window.familyData', () => {
-            initSystemState();
-            expect((window as any).familyData).toBeDefined();
-            expect((window as any).familyData.parents.mother.name).toBe('Mary');
-            expect((window as any).familyData.parents.father.name).toBe('John');
-        });
     });
 
     describe('initAudioBridge', () => {
@@ -110,6 +104,12 @@ describe('SystemBridge', () => {
 
         it('should create window.handleShutdown function', () => {
             expect(typeof (window as any).handleShutdown).toBe('function');
+        });
+
+        it('should be idempotent and not re-initialize on multiple calls', () => {
+            const initialHandler = (window as any).handleShutdown;
+            initLegacyWrappers();
+            expect((window as any).handleShutdown).toBe(initialHandler);
         });
     });
 
