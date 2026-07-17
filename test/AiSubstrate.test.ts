@@ -46,6 +46,11 @@ const MODEL_ID = DEEPLAB_V3.id;
 const IN_SHAPE = [1, 257, 257, 3];
 const IN_LEN = IN_SHAPE.reduce((a, b) => a * b, 1);
 
+/** jsdom does not construct ImageData — the shape is all segment() reads. */
+function imageData(width: number, height: number): ImageData {
+    return { width, height, data: new Uint8ClampedArray(width * height * 4), colorSpace: 'srgb' } as ImageData;
+}
+
 /** A fetch that returns `n` bytes, enough to satisfy the registry's pinned spec. */
 function fetchOk(byteLength = DEEPLAB_V3.bytes!) {
     return vi.fn(async () => ({
@@ -295,6 +300,44 @@ describe('AiService (host facade)', () => {
 
         expect(seen).toContain('download');
         off();
+    });
+
+    it('segments an image end to end and reports coverage', async () => {
+        PermissionBroker.setPrompt(async () => 'granted');
+        // A fake whose shapes look like a real segmenter, but tiny.
+        const seg = new FakeInferenceRuntime({ inputShape: [1, 4, 4, 3], outputShape: [1, 4, 4, 21] });
+        AiService.__setSpawner(() => ({ pid: 9, worker: spawnFakeRuntime(seg) }));
+
+        const res = await AiService.segment('pinta', imageData(8, 6));
+
+        // The mask comes back at the MODEL's resolution, not the image's — upscaling
+        // is the caller's business.
+        expect(res.size).toBe(4);
+        expect(res.mask.length).toBe(16);
+        expect(res.coverage).toBeGreaterThanOrEqual(0);
+        expect(res.coverage).toBeLessThanOrEqual(1);
+        // coverage must actually describe the mask it shipped.
+        expect(res.coverage).toBeCloseTo([...res.mask].filter(Boolean).length / 16, 5);
+    });
+
+    it('sizes the input tensor from the compiled graph, not the registry hint', async () => {
+        PermissionBroker.setPrompt(async () => 'granted');
+        // The mocked registry says inputSize 257; the "graph" says 4. If segment()
+        // trusted the registry it would build a 257x257x3 tensor and the fake's own
+        // length check would reject it — so this passing IS the assertion.
+        const seg = new FakeInferenceRuntime({ inputShape: [1, 4, 4, 3], outputShape: [1, 4, 4, 21] });
+        AiService.__setSpawner(() => ({ pid: 10, worker: spawnFakeRuntime(seg) }));
+
+        await expect(AiService.segment('pinta', imageData(9, 3))).resolves.toMatchObject({ size: 4 });
+    });
+
+    it('will not segment without consent', async () => {
+        PermissionBroker.setPrompt(async () => 'denied');
+        const seg = new FakeInferenceRuntime({ inputShape: [1, 4, 4, 3], outputShape: [1, 4, 4, 21] });
+        AiService.__setSpawner(() => ({ pid: 11, worker: spawnFakeRuntime(seg) }));
+
+        await expect(AiService.segment('pinta', imageData(4, 4))).rejects.toThrow(/permission denied/);
+        expect(seg.loadedCount).toBe(0); // denied means the model is never even fetched
     });
 
     it('respawns the runtime after it is killed', async () => {

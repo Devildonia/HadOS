@@ -7,6 +7,8 @@
 import { Utils } from '../utils.js';
 import { Kernel } from '../core/Kernel.js';
 import { Services } from '../core/ServiceContainer.js';
+import { AiService } from '../ai/AiService.js';
+import { applySubjectMask } from '../ai/segmentation.js';
 
 const PAINT_BODY_HTML = `
     <div class="window-menu">
@@ -36,7 +38,10 @@ export interface IPaintParams {
     [key: string]: any;
 }
 
-export type PaintTool = 'pencil' | 'brush' | 'eraser' | 'rect' | 'line' | 'clear' | 'undo' | 'redo' | 'save' | 'separator';
+export type PaintTool = 'pencil' | 'brush' | 'eraser' | 'rect' | 'line' | 'clear' | 'undo' | 'redo' | 'save' | 'open' | 'cutout' | 'separator';
+
+/** Bitmaps the picker and the drop target accept. */
+const IMPORT_MIME = 'image/png,image/jpeg,image/webp,image/gif,image/bmp';
 
 class Paint {
     public windowId: string = 'win-paint';
@@ -259,7 +264,9 @@ class Paint {
             { id: 'separator', icon: '' },
             { id: 'undo', icon: '↩️' },
             { id: 'redo', icon: '↪️' },
-            { id: 'save', icon: '💾' }
+            { id: 'open', icon: '📂' },
+            { id: 'save', icon: '💾' },
+            { id: 'cutout', icon: '🪄' }
         ];
 
         tools.forEach(tool => {
@@ -291,12 +298,138 @@ class Paint {
                 btn.id = 'paint-save-btn';
                 btn.title = 'Save as PNG to My Documents';
                 btn.onclick = () => { void this.saveAsPng(); };
+            } else if (tool.id === 'open') {
+                btn.id = 'paint-open-btn';
+                btn.title = 'Open an image from your computer';
+                btn.onclick = () => this.pickImage();
+            } else if (tool.id === 'cutout') {
+                btn.id = 'paint-cutout-btn';
+                btn.title = 'Remove background';
+                btn.onclick = () => { void this.removeBackground(); };
             } else {
                 btn.onclick = () => this.selectTool(tool.id);
             }
 
             toolbar.appendChild(btn);
         });
+    }
+
+    /**
+     * Opens the OS file picker for an image. The user's own file, chosen by the user,
+     * decoded locally — it never leaves the browser.
+     */
+    private pickImage(): void {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = IMPORT_MIME;
+        input.onchange = () => {
+            const file = input.files?.[0];
+            if (file) void this.loadImageFile(file);
+        };
+        input.click();
+    }
+
+    /**
+     * Draws a bitmap onto the canvas, scaled to fit and centred, preserving its
+     * aspect ratio — stretching someone's photo to the canvas would wreck both the
+     * picture and the segmentation.
+     */
+    private async loadImageFile(file: File): Promise<void> {
+        const notify = Services.get('Notify');
+        if (!this.ctx || !this.canvas) return;
+
+        if (!file.type.startsWith('image/')) {
+            notify?.error(`Pinta: ${Utils.escapeHTML(file.name)} is not an image`);
+            return;
+        }
+
+        let bitmap: ImageBitmap | undefined;
+        try {
+            bitmap = await createImageBitmap(file);
+
+            const cw = this.canvas.width;
+            const ch = this.canvas.height;
+            const scale = Math.min(cw / bitmap.width, ch / bitmap.height);
+            const w = Math.round(bitmap.width * scale);
+            const h = Math.round(bitmap.height * scale);
+
+            this.ctx.clearRect(0, 0, cw, ch);
+            this.ctx.drawImage(bitmap, Math.round((cw - w) / 2), Math.round((ch - h) / 2), w, h);
+            this._saveState();
+
+            notify?.success(`Opened ${file.name}`);
+            Utils.Logger.log(`[Paint] Loaded ${file.name} (${bitmap.width}x${bitmap.height} -> ${w}x${h})`);
+        } catch (err) {
+            Utils.Logger.error('[Paint] loadImageFile failed', err);
+            notify?.error('Pinta: could not read that image');
+        } finally {
+            // Frees the decoded bitmap now rather than at the GC's convenience; a
+            // full-resolution photo is easily tens of MB.
+            bitmap?.close();
+        }
+    }
+
+    /**
+     * Replaces the canvas with just its subject, clearing the background to
+     * transparent. Runs DeepLab on-device via the ai-runtime process — the first
+     * consumer of the AI substrate.
+     *
+     * The whole thing is undoable: the state is saved after, so ↩️ brings the
+     * background back, which matters for a destructive one-click action.
+     */
+    private async removeBackground(): Promise<void> {
+        const notify = Services.get('Notify');
+        const btn = document.getElementById('paint-cutout-btn') as HTMLButtonElement | null;
+        if (!this.ctx || !this.canvas || !this.canvas.width || !this.canvas.height) return;
+
+        if (!AiService.isSupported()) {
+            notify?.error('Pinta: this browser cannot run on-device AI');
+            return;
+        }
+
+        // Re-entrancy guard: inference is seconds of work on a first run and the
+        // button stays clickable. Two runs would race on putImageData.
+        if (btn?.disabled) return;
+        if (btn) { btn.disabled = true; btn.title = 'Working…'; }
+
+        // The first ever run downloads and compiles a 2.65 MB model. Say so, with
+        // real numbers — a silent multi-second freeze reads as a hang.
+        const off = AiService.onProgress(p => {
+            if (!btn) return;
+            btn.title = p.phase === 'download'
+                ? `Downloading the model… ${Math.round(p.loaded / p.total * 100)}%`
+                : 'Preparing the model…';
+        });
+
+        try {
+            const img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            const { mask, size, coverage } = await AiService.segment('pinta', img);
+
+            // Nothing recognised: DeepLab knows 21 classes, so a doodle or a
+            // landscape is legitimately all background. Wiping the canvas to
+            // transparent would be a worse answer than declining.
+            if (coverage === 0) {
+                notify?.warn('Pinta: no subject found — the model recognises people, animals and vehicles');
+                return;
+            }
+
+            this.ctx.putImageData(applySubjectMask(img, mask, size), 0, 0);
+            this._saveState();
+            notify?.success(`Background removed — subject covers ${Math.round(coverage * 100)}% of the frame`);
+            Utils.Logger.log(`[Paint] Cutout done: ${Math.round(coverage * 100)}% subject at ${size}x${size}`);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            Utils.Logger.error('[Paint] removeBackground failed', err);
+            // A denied permission is a choice, not a fault — don't cry error at it.
+            notify?.[msg.includes('permission denied') ? 'warn' : 'error'](
+                msg.includes('permission denied')
+                    ? 'Pinta: AI access denied — allow it to remove backgrounds'
+                    : 'Pinta: could not remove the background'
+            );
+        } finally {
+            off();
+            if (btn) { btn.disabled = false; btn.title = 'Remove background'; }
+        }
     }
 
     /**
@@ -354,6 +487,18 @@ class Paint {
         this.canvas.addEventListener('mousedown', (e: MouseEvent) => this.startDrawing(e));
         this.canvas.addEventListener('mousemove', (e: MouseEvent) => this.draw(e));
         Utils.eventManager.add(document, 'mouseup', this.onMouseUp);
+
+        // Drop an image straight onto the canvas. dragover must preventDefault or the
+        // browser navigates away to the file — losing the whole OS in the process.
+        this.canvas.addEventListener('dragover', (e: DragEvent) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        });
+        this.canvas.addEventListener('drop', (e: DragEvent) => {
+            e.preventDefault();
+            const file = e.dataTransfer?.files?.[0];
+            if (file) void this.loadImageFile(file);
+        });
     }
 
     private startDrawing(e: MouseEvent): void {

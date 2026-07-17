@@ -171,8 +171,28 @@ revisit, not a prerequisite.
    knows LiteRT exists. `ai.worker.ts` now runs it instead of the fake.
    `npm i @litertjs/core@2.5.2` (lock fully regenerated; `npm ci` verified) +
    `scripts/copy-litert-wasm.js` self-hosts the wasm. `test/LiteRtRuntime.test.ts` — 17 tests.
-6. ⬜ Pinta "Quitar fondo" UI + integration. *(needs 5)*
+6. ✅ Pinta "Quitar fondo" (🪄) + **import from the PC** (📂 picker and drag-and-drop onto the
+   canvas). `js/ai/segmentation.ts` + `AiService.segment()`. `test/Segmentation.test.ts` — 24 tests.
 7. ✅ Browser verification of a real inference — see below.
+
+### Pinta could not open an image at all
+
+Step 6 turned out to need a feature nobody had listed: Pinta had **no way to load a bitmap** — no
+File > Open, no paste, no drop; its only `drawImage` calls were the resize-preserving temp canvas.
+And nothing in the OS is a photograph: 96 images, all icons and Win95 wallpaper patterns. So
+"quitar fondo" had nothing real to cut out — DeepLab knows people, animals and vehicles, and
+returns all-background for a pencil doodle (measured: 0% coverage on a drawn figure).
+
+So 📂 imports from the user's machine — their own file, chosen by them, decoded locally, never
+leaving the browser — and the canvas accepts a drop. Without that the feature is a demo.
+
+### The backdrop bug this exposed
+
+**Pinta's canvas never fills white.** The bitmap is transparent where nothing was drawn; the white
+the user sees is CSS `background` under it. Feed the raw buffer to the model and every untouched
+pixel arrives as RGB(0,0,0) — the model would segment a **black** frame while the user looks at a
+white one. `imageDataToTensor` therefore composites over `CANVAS_BACKDROP` (white), per bilinear
+tap, before normalising.
 
 ### Verified end to end in the browser
 
@@ -233,13 +253,34 @@ Written from the docs, `LiteRtRuntime` had two bugs that the typecheck caught be
 
 Which is the argument for reading a package's `.d.ts` over its documentation.
 
-### Still open for step 5/6
+### The tensor convention — settled, from the model file itself
 
-- The **exact tensor convention** for DeepLab v3 under LiteRT: input normalisation (`[0,1]` vs
-  `[-1,1]`) and layout (NHWC vs NCHW). `model.getInputDetails()` reports the truth at runtime —
-  read it rather than hardcoding, and let it disagree with the registry's `inputSize` hint.
-- The output is 21 per-pixel class scores; "remove background" is `argmax != backgroundClass`.
-  Whether it needs a softmax first depends on the graph's final op.
+The normalisation was read out of the `.tflite`'s own embedded **TFLITE_METADATA**
+(`NormalizationOptions`: two flatbuffer float vectors, each length 1, both `127.5`):
+
+```
+(px - 127.5) / 127.5   →   [-1, 1]      mean = std = 127.5
+```
+
+Confirmed empirically against a real photo (MediaPipe's own `cat.jpg` test asset, served
+same-origin to dodge the tainted-canvas trap — that bucket sends no `Access-Control-Allow-Origin`,
+unlike the models bucket):
+
+| normalisation | argmax over the frame |
+|---|---|
+| **`[-1,1]`** (the metadata's) | **sofa 47.7% · background 40.7% · cat 11.6%** |
+| `[0,1]` (the plausible guess) | background 64.5% · sofa 23.4% · cat 12.0% |
+
+The model names the animal that is actually in the picture — semantic proof the pipeline is
+right — and `47.7 + 11.6 = 59.3%` matches the reported coverage exactly (the cat is lying on a
+sofa, and sofa is one of the 21 classes, so the cutout correctly keeps both).
+
+Note what the wrong guess does: **it does not throw.** It quietly recognises less and collapses
+toward background. A wrong range buys you a plausible, confident, worse mask — which is exactly
+why this was read from the file rather than assumed.
+
+No softmax is applied: argmax is invariant under it (softmax is monotonic), so normalising 1.4M
+scores first would cost a pass to reach the same answer.
 
 ## How it plugs into the existing safety net
 

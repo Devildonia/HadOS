@@ -14,6 +14,8 @@ import { PermissionBroker } from '../core/PermissionBroker';
 import { workerTransportFromWorker, type WorkerProcess } from '../core/WorkerProcess';
 import { Utils } from '../utils';
 import { AI_REQUESTS, AI_EVENTS, type ILoadResult } from './aiRuntimeHandlers';
+import { getModelForTask } from './models';
+import { imageDataToTensor, subjectMask, maskCoverage, inputSizeFor } from './segmentation';
 import type { IInferOutput } from './InferenceRuntime';
 
 /** The capability every ai.* call is gated on. */
@@ -39,6 +41,15 @@ export interface IProgress {
 }
 
 export type ProgressListener = (p: IProgress) => void;
+
+export interface ISegmentResult {
+    /** One byte per pixel at the model's resolution: 1 = subject, 0 = background. */
+    mask: Uint8Array;
+    /** Side length of that square mask. */
+    size: number;
+    /** Fraction of the frame the subject covers, 0..1. */
+    coverage: number;
+}
 
 /** Builds the process. Swapped in tests, where jsdom has no Worker. */
 export type Spawner = () => { pid: number; worker: WorkerProcess };
@@ -111,6 +122,29 @@ export const AiService = (() => {
         return { data: out.data instanceof Float32Array ? out.data : Float32Array.from(out.data ?? []), shape: out.shape };
     }
 
+    /**
+     * Segments an image into subject and background — the one call a host app needs
+     * for "remove background". Returns a mask at the MODEL's resolution (1 = subject),
+     * not the image's: upscaling it is the caller's business, because only the caller
+     * knows whether it wants the pixels, an outline, or a selection.
+     */
+    async function segment(appId: string, img: ImageData): Promise<ISegmentResult> {
+        const model = getModelForTask('segmentation');
+        if (!model) throw new Error('ai: no segmentation model is registered');
+
+        // Consent, download, cache and compile all happen in here, once.
+        const loaded = await loadModel(appId, model.id);
+
+        // The compiled graph is the authority on its own shape; the registry only
+        // records what we believe we pinned.
+        const size = inputSizeFor(model, loaded.inputShape);
+        const out = await infer(appId, model.id, imageDataToTensor(img, size), [1, size, size, 3]);
+
+        const classes = out.shape[3] ?? model.classes;
+        const mask = subjectMask(out.data, size, classes, model.backgroundClass);
+        return { mask, size, coverage: maskCoverage(mask) };
+    }
+
     async function dispose(appId: string, id: string): Promise<void> {
         if (!handle || handle.worker.isTerminated) return;
         await requireConsent(appId);
@@ -139,5 +173,5 @@ export const AiService = (() => {
         spawner = fn ?? defaultSpawner;
     }
 
-    return { isSupported, loadModel, infer, dispose, info, onProgress, shutdown, __setSpawner };
+    return { isSupported, loadModel, infer, segment, dispose, info, onProgress, shutdown, __setSpawner };
 })();

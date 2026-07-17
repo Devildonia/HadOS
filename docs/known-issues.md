@@ -254,6 +254,18 @@ cannot (its screenshots hang).
   `snapshotPathTemplate` and accept that font rendering differs across OSes, which the screenshot
   assertions would then trip over (the text snapshots would be fine).
 
+- **A removed background is invisible on Pinta's white canvas.** "Quitar fondo" clears alpha, and
+  the CSS `background: white` under the bitmap shows straight through — so on a photo whose
+  background was already pale, nothing appears to happen, even though the saved PNG really is
+  transparent. Every real image editor answers this with a checkerboard behind the canvas. Not done
+  here because `#paint-canvas` is transparent from the moment it opens, so a checkerboard would
+  become the app's default look and would rewrite the css-baseline screenshots — a bigger change
+  than the cutout warranted.
+- **Pinta's cutout keeps every recognised class, not "the subject".** DeepLab labels 21 PASCAL VOC
+  classes and `subjectMask` keeps everything that is not background — so a cat on a sofa keeps the
+  sofa too (measured: 47.7% sofa + 11.6% cat). Correct by its own definition, surprising as a
+  product. Keeping only the largest connected class, or letting the user choose, would need a UI.
+
 ## Latent
 
 - **`base: './'` and root-absolute asset paths disagree.** `vite.config.js` sets `base: './'`,
