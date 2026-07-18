@@ -19,7 +19,7 @@ vi.mock('../js/core/ServiceContainer', () => {
 import { Services } from '../js/core/ServiceContainer';
 
 // We need to fetch the class after mocking its dependencies
-await import('../js/apps/FileExplorer');
+import { THIS_PC, openExplorerAt } from '../js/apps/FileExplorer';
 
 describe('FileExplorer', () => {
     let explorer: any;
@@ -149,6 +149,82 @@ describe('FileExplorer', () => {
 
             const mockWm = Services.get('WindowManager') as any;
             expect(mockWm.open).toHaveBeenCalledWith('win-test');
+        });
+    });
+
+    describe('This PC (the drive root)', () => {
+        it('renders a single honest HadOS drive, not a VFS folder', () => {
+            explorer.navigate(THIS_PC);
+            const view = document.getElementById('explorer-view-area')!;
+            const drive = view.querySelector('.explorer-drive');
+            expect(drive).toBeTruthy();
+            expect(drive!.querySelector('.drive-name')!.textContent).toBe('HadOS (C:)');
+            // The address bar and status reflect the drive view, not a path.
+            expect((document.getElementById('explorer-address-input') as HTMLInputElement).value).toBe(THIS_PC);
+            expect(document.getElementById('explorer-status')!.textContent).toBe('1 drive');
+        });
+
+        it('shows real storage from navigator.storage.estimate', async () => {
+            vi.stubGlobal('navigator', {
+                storage: { estimate: vi.fn().mockResolvedValue({ quota: 2_000_000_000, usage: 500_000_000 }) },
+            });
+            explorer.navigate(THIS_PC);
+            await Promise.resolve(); await Promise.resolve(); // let fillDriveCapacity settle
+            const caption = document.querySelector('.explorer-drive .drive-caption')!;
+            // 1.5 GB free of ~1.9 GB, and the meter reflects 25% used.
+            expect(caption.textContent).toMatch(/free of/);
+            const fill = document.querySelector('.explorer-drive .drive-meter-fill') as HTMLElement;
+            expect(parseInt(fill.style.width, 10)).toBe(25);
+            vi.unstubAllGlobals();
+        });
+
+        it('drilling into the drive navigates to C:\\, and Back returns to This PC', () => {
+            explorer.navigate(THIS_PC);
+            (document.querySelector('.explorer-drive') as HTMLElement).ondblclick!(new MouseEvent('dblclick'));
+            expect((document.getElementById('explorer-address-input') as HTMLInputElement).value).toBe('C:\\');
+            document.getElementById('explorer-back')!.click(); // Back is wired to goBack in init()
+            expect((document.getElementById('explorer-address-input') as HTMLInputElement).value).toBe(THIS_PC);
+        });
+    });
+
+    describe('Translated folder labels', () => {
+        it('shows the i18nKey translation as the label but keeps the raw name for navigation', async () => {
+            const { i18n } = await import('../js/services/i18n');
+            vi.spyOn(i18n, 't').mockImplementation((k: string) => (k === 'fs.documents' ? 'Documentos' : k));
+            vi.spyOn(VFS, 'resolve').mockReturnValue({
+                type: 'dir',
+                children: {
+                    // Translated folder…
+                    'DOCUMENTS': { name: 'DOCUMENTS', type: 'dir', i18nKey: 'fs.documents', children: {} },
+                    // …and a brand with no key stays raw.
+                    'HADOS': { name: 'HADOS', type: 'dir', children: {} },
+                },
+            } as any);
+
+            explorer.render();
+            const labels = [...document.querySelectorAll('.explorer-icon span')].map(s => s.textContent);
+            expect(labels).toContain('Documentos'); // translated display label
+            expect(labels).toContain('HADOS');      // no i18nKey → raw name
+            // The underlying node name is untouched, so double-click navigates by 'DOCUMENTS'.
+            const docsIcon = [...document.querySelectorAll('.explorer-icon')]
+                .find(el => el.querySelector('span')?.textContent === 'Documentos') as HTMLElement;
+            docsIcon.ondblclick!(new MouseEvent('dblclick'));
+            expect((document.getElementById('explorer-address-input') as HTMLInputElement).value).toBe('C:\\DOCUMENTS');
+        });
+    });
+
+    describe('openExplorerAt', () => {
+        it('navigates the already-open window instead of re-launching', () => {
+            // `explorer` from beforeEach is the live instance.
+            openExplorerAt('This PC');
+            expect((document.getElementById('explorer-address-input') as HTMLInputElement).value).toBe(THIS_PC);
+            // It did NOT spawn a second explorer.
+            expect(Kernel.launch).not.toHaveBeenCalledWith('explorer', expect.anything());
+        });
+
+        it('the explorer action type opens the explorer at a path', () => {
+            explorer.executeAction('explorer', 'This PC');
+            expect((document.getElementById('explorer-address-input') as HTMLInputElement).value).toBe(THIS_PC);
         });
     });
 });

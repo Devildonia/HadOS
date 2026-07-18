@@ -212,5 +212,7 @@
   "dialog.debug.restore_prompt": "¿Restaurar el escritorio a su estado inicial?",
   "dialog.debug.restore_hint": "(Se eliminarán todas las posiciones y ajustes)",
   "dialog.encryption.title": "Archivo Secreto",
-  "dialog.encryption.message": "Este archivo está encriptado. Acceso denegado."
+  "dialog.encryption.message": "Este archivo está encriptado. Acceso denegado.",
+  "fs.documents": "Documentos",
+  "fs.desktop": "Escritorio"
 }

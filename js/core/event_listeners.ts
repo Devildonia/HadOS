@@ -14,6 +14,7 @@ import { setupKeyboardNavigation, resetKeyboardNavigationState } from './Keyboar
 import { setupDebugMenu, resetDebugMenuState } from './DebugMenuController';
 import { setupStickyNotes, initRecycleBin } from './StickyNotesController';
 import { i18n } from '../services/i18n';
+import { openExplorerAt, THIS_PC } from '../apps/FileExplorer';
 
 export function setupEventListeners(): void {
     const openLegacyWindow = (windowId: string): void => {
@@ -51,7 +52,8 @@ export function setupEventListeners(): void {
     // --- Start Menu ---
     setupStartMenu();
 
-    setupIconAction('icon-games-folder', () => openLegacyWindow('win-games-folder'));
+    // Games is now a shortcut into the real explorer, not a bespoke window.
+    setupIconAction('icon-games-folder', () => openExplorerAt('C:\\GAMES'));
     setupIconAction('icon-vlrs-folder', () => closeWindowThenOpen('win-games-folder', 'win-vlrs-folder'));
     setupIconAction('icon-flappy-folder', () => closeWindowThenOpen('win-games-folder', 'win-flappy-folder'));
     setupIconAction('icon-football-folder', () => closeWindowThenOpen('win-games-folder', 'win-football-folder'));
@@ -79,14 +81,24 @@ export function setupEventListeners(): void {
         };
     };
 
-    setupBackBtn('back-to-games-from-flappy', 'win-flappy-folder', 'win-games-folder');
-    setupBackBtn('back-to-games-from-football', 'win-football-folder', 'win-games-folder');
-    setupBackBtn('back-to-games-from-doom', 'win-doom-folder', 'win-games-folder');
-    setupBackBtn('back-to-games-from-tetris', 'win-tetris-folder', 'win-games-folder');
-    setupBackBtn('back-to-games-from-chapas', 'win-chapas-folder', 'win-games-folder');
-    setupBackBtn('back-to-games-from-nocturna', 'win-nocturna-folder', 'win-games-folder');
-    setupBackBtn('back-to-games-from-gameboy', 'win-gameboy-folder', 'win-games-folder');
-    setupBackBtn('back-to-games', 'win-vlrs-folder', 'win-games-folder');
+    // "Back to games" now returns to the real explorer at C:\GAMES, not the retired
+    // bespoke games window — so a game folder opened from FileX loops back into FileX.
+    const backToGames = (btnId: string, hideId: string): void => {
+        const btn = document.getElementById(btnId);
+        if (btn) btn.onclick = () => {
+            WindowManager.close(hideId);
+            openExplorerAt('C:\\GAMES');
+        };
+    };
+
+    backToGames('back-to-games-from-flappy', 'win-flappy-folder');
+    backToGames('back-to-games-from-football', 'win-football-folder');
+    backToGames('back-to-games-from-doom', 'win-doom-folder');
+    backToGames('back-to-games-from-tetris', 'win-tetris-folder');
+    backToGames('back-to-games-from-chapas', 'win-chapas-folder');
+    backToGames('back-to-games-from-nocturna', 'win-nocturna-folder');
+    backToGames('back-to-games-from-gameboy', 'win-gameboy-folder');
+    backToGames('back-to-games', 'win-vlrs-folder');
     setupBackBtn('back-to-vlrs-from-project', 'win-project-folder', 'win-vlrs-folder');
     setupBackBtn('back-to-vlrs-from-family', 'win-family-folder', 'win-vlrs-folder');
 
@@ -116,7 +128,9 @@ export function setupEventListeners(): void {
     setupIconAction('icon-ragdoll-skins', () => launchKernelApp('ragdoll-skins'));
     setupIconAction('icon-secrets-file', () => openLegacyDialog('dialog-encryption'));
     setupIconAction('icon-winamp', () => launchKernelApp('webamp'));
-    setupIconAction('icon-mycomputer', () => openLegacyDialog('dialog-mycomputer'));
+    // "My Computer" now opens the real explorer at "This PC" (the drive list),
+    // replacing the old Access-Denied gag dialog.
+    setupIconAction('icon-mycomputer', () => openExplorerAt(THIS_PC));
     setupIconAction('icon-recyclebin', () => openLegacyDialog('dialog-recyclebin'));
 
     // Generic Close Buttons

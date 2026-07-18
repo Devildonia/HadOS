@@ -38,6 +38,12 @@ export interface IVFSNode {
     actionTarget?: string;
     /** If true, this node is hidden from directory listings. */
     hidden?: boolean;
+    /**
+     * i18n key for the DISPLAY label shown in the explorer. The node's `name` stays
+     * canonical (it is the path segment used for navigation), so translating the
+     * label never breaks a path. Absent for brand/proper names (HADOS, game titles).
+     */
+    i18nKey?: string;
     /** Original path of the node before it was moved to the recycle bin. */
     trashOrigin?: string;
     /** Epoch timestamp in milliseconds when the node was deleted. */
@@ -140,42 +146,21 @@ export const VFS: IVFS = (() => {
         children: {
             'HADOS': {
                 name: 'HADOS', type: 'dir', children: {
-                    'SYSTEM': { name: 'SYSTEM', type: 'dir', hidden: true, children: {} },
-                    'DESKTOP': {
-                        name: 'DESKTOP',
-                        type: 'dir',
-                        children: {
-                            'GAMES': {
-                                name: 'GAMES',
-                                type: 'dir',
-                                children: {
-                                    'Virtual Life Restart Simulator': { name: 'Virtual Life Restart Simulator', type: 'dir', children: {}, actionType: 'openWindow', actionTarget: 'win-vlrs-folder' },
-                                    'Flappy Neon': { name: 'Flappy Neon', type: 'dir', children: {}, actionType: 'openWindow', actionTarget: 'win-flappy-folder' },
-                                    'Football Rush': {
-                                        name: 'Football Rush',
-                                        type: 'dir',
-                                        children: {
-                                            'README.TXT': { name: 'README.TXT', type: 'file', content: 'FOOTBALL RUSH\n\nA high-speed football game for Windows 95.\nUse ARROW KEYS to move and SPACE to kick.\n\nGood luck!' }
-                                        },
-                                        actionType: 'openWindow',
-                                        actionTarget: 'win-football-folder'
-                                    },
-                                    'Ultimate DOOM': { name: 'Ultimate DOOM', type: 'dir', children: {}, actionType: 'openWindow', actionTarget: 'win-doom-folder' },
-                                    'Tetris Tryhard': { name: 'Tetris Tryhard', type: 'dir', children: {}, actionType: 'openWindow', actionTarget: 'win-tetris-folder' }
-                                }
-                            }
-                        }
-                    }
+                    // System dir — recycle bin and permissions.json live here; keep the
+                    // path stable. The old HADOS\DESKTOP\GAMES subtree was a stale
+                    // duplicate of C:\GAMES (fewer games) and has been removed.
+                    'SYSTEM': { name: 'SYSTEM', type: 'dir', hidden: true, children: {} }
                 }
             },
             'DOCUMENTS': {
-                name: 'DOCUMENTS', type: 'dir', children: {
+                name: 'DOCUMENTS', type: 'dir', i18nKey: 'fs.documents', children: {
                     'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS v1.1.0' }
                 }
             },
             'GAMES': {
                 name: 'GAMES',
                 type: 'dir',
+                i18nKey: 'app.games_folder',
                 children: {
                     'Virtual Life Restart Simulator': { name: 'Virtual Life Restart Simulator', type: 'dir', children: {}, actionType: 'openWindow', actionTarget: 'win-vlrs-folder' },
                     'Flappy Neon': { name: 'Flappy Neon', type: 'dir', children: {}, actionType: 'openWindow', actionTarget: 'win-flappy-folder' },
@@ -198,13 +183,14 @@ export const VFS: IVFS = (() => {
             'DESKTOP': {
                 name: 'DESKTOP',
                 type: 'dir',
+                i18nKey: 'fs.desktop',
                 children: {
-                    'My Computer': { name: 'My Computer', type: 'shortcut', icon: '💻', actionType: 'openDialog', actionTarget: 'dialog-mycomputer' },
-                    'Recycle Bin': { name: 'Recycle Bin', type: 'shortcut', icon: '🗑️', actionType: 'openDialog', actionTarget: 'dialog-recyclebin' },
-                    'Games': { name: 'Games', type: 'shortcut', icon: '📂', actionType: 'openWindow', actionTarget: 'win-games-folder' },
-                    'Notepad': { name: 'Notepad', type: 'shortcut', icon: '📝', actionType: 'launch', actionTarget: 'notepad' },
-                    'Paint': { name: 'Paint', type: 'shortcut', icon: '🎨', actionType: 'launch', actionTarget: 'paint' },
-                    'Explorer': { name: 'Explorer', type: 'shortcut', icon: '🗂️', actionType: 'launch', actionTarget: 'explorer' }
+                    'My Computer': { name: 'My Computer', type: 'shortcut', icon: '💻', i18nKey: 'app.mycomputer', actionType: 'explorer', actionTarget: 'This PC' },
+                    'Recycle Bin': { name: 'Recycle Bin', type: 'shortcut', icon: '🗑️', i18nKey: 'app.recyclebin', actionType: 'openDialog', actionTarget: 'dialog-recyclebin' },
+                    'Games': { name: 'Games', type: 'shortcut', icon: '📂', i18nKey: 'app.games_folder', actionType: 'explorer', actionTarget: 'C:\\GAMES' },
+                    'Notepad': { name: 'Notepad', type: 'shortcut', icon: '📝', i18nKey: 'app.notepad', actionType: 'launch', actionTarget: 'notepad' },
+                    'Paint': { name: 'Paint', type: 'shortcut', icon: '🎨', i18nKey: 'app.paint', actionType: 'launch', actionTarget: 'paint' },
+                    'Explorer': { name: 'Explorer', type: 'shortcut', icon: '🗂️', i18nKey: 'app.explorer', actionType: 'launch', actionTarget: 'explorer' }
                 }
             }
         }

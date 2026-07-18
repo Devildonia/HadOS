@@ -45,7 +45,10 @@ body.theme-hados .window-menu, body.theme-hados .context-menu, body.theme-hados 
 body.theme-hados .window-menu { border-bottom: 1px solid var(--hados-line); background: rgba(0, 0, 0, 0.2); font-size: 12px; padding: 4px 8px; }
 body.theme-hados .menu-item:hover, body.theme-hados .window-menu-item:hover, body.theme-hados .notepad-menu-label:hover, body.theme-hados .notepad-menu-entry.open .notepad-menu-label, body.theme-hados .notepad-dropdown-item:hover { background: var(--hados-blue-deep); color: rgb(255, 255, 255); border-radius: 4px; }
 body.theme-hados .ragdoll-text { color: var(--os-text-color); font-size: 12px; }
-body.theme-hados .ragdoll-pet-btn.active { background: rgba(59, 155, 240, 0.16); border: 1px solid var(--accent-color); color: var(--os-text-color); box-shadow: inset 0 -2px 0 var(--accent-color); }
+body.theme-hados #system-tray .ragdoll-pet-btn { width: 34px; height: 34px; padding: 0px; gap: 0px; justify-content: center; border-radius: 50%; background: var(--glass-bar); border: 1px solid var(--hados-line); flex: 0 0 auto; }
+body.theme-hados #system-tray .ragdoll-pet-btn .ragdoll-text { display: none; }
+body.theme-hados #system-tray .ragdoll-pet-btn:hover { background: rgba(127, 210, 255, 0.16); }
+body.theme-hados .ragdoll-pet-btn.active { background: rgba(59, 155, 240, 0.16); border: 1px solid var(--accent-color); color: var(--os-text-color); box-shadow: rgba(59, 155, 240, 0.3) 0px 0px 0px 2px; }
 body.theme-hados .ragdoll-pet-btn:active:not(.active) { background: rgba(127, 210, 255, 0.2); border: 1px solid var(--hados-line-strong); }
 body.theme-hados .notepad-menu-label { font-size: 12px; padding: 3px 8px; border-radius: 4px; }
 body.theme-hados .notepad-dropdown, body.theme-hados .notepad-dialog { background: var(--hados-elevated); color: var(--os-text-color); border: 1px solid var(--hados-line-strong); border-radius: 8px; box-shadow: var(--start-menu-shadow); font-size: 12px; padding: 6px; }
@@ -63,6 +66,8 @@ body.theme-hados .explorer-toolbar, body.theme-hados .explorer-address { backgro
 body.theme-hados .explorer-content { background: var(--window-content-bg); }
 body.theme-hados .explorer-icon { color: var(--os-text-color); }
 body.theme-hados .explorer-icon:hover { background: rgba(59, 155, 240, 0.16); }
+body.theme-hados .explorer-drive { border-color: var(--hados-line); background: var(--glass-bar); }
+body.theme-hados .explorer-drive:hover { background: rgba(59, 155, 240, 0.16); border-color: var(--accent-color); }
 body.theme-hados .ie-toolbar, body.theme-hados .ie-button-bar { background: var(--glass-bar); border-color: var(--hados-line); color: var(--os-text-color); }
 body.theme-hados .ie-btn { background: var(--control-bg); color: var(--os-text-color); border: 1px solid var(--hados-line); border-radius: 6px; }
 body.theme-hados .ie-btn:active { border-color: var(--accent-color); transform: none; }
@@ -859,6 +864,14 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .wallpaper-item:hover { background: rgb(0, 0, 128); color: white; border-color: var(--border-dark); }
 .wallpaper-preview { width: 60px; height: 45px; background-size: cover; background-position: center center; border: 1px solid black; margin-bottom: 5px; }
 .wallpaper-item span { font-size: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.explorer-drive { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin: 6px; border: 1px solid var(--border-dark); border-radius: 8px; cursor: pointer; max-width: 340px; }
+.explorer-drive:hover { background: rgba(0, 0, 128, 0.08); }
+.drive-icon { font-size: 40px; line-height: 1; }
+.drive-info { flex: 1 1 0%; min-width: 0px; }
+.drive-name { font-weight: bold; margin-bottom: 4px; }
+.drive-meter { height: 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.15); overflow: hidden; margin-bottom: 4px; }
+.drive-meter-fill { height: 100%; background: linear-gradient(90deg, rgb(59, 155, 240), rgb(127, 210, 255)); transition: width 0.3s; }
+.drive-caption { font-size: 11px; opacity: 0.75; }
 :root { --taskbar-size: var(--taskbar-height, 48px); --work-top: 0px; --work-right: 0px; --work-bottom: var(--taskbar-size); --work-left: 0px; }
 #taskbar { position: fixed; z-index: 1000; display: flex; align-items: center; background: var(--taskbar-bg); padding: 2px 4px; box-sizing: border-box; }
 #taskbar[data-edge="bottom"] { left: 0px; right: 0px; bottom: 0px; height: var(--taskbar-size); flex-direction: row; border-top: var(--taskbar-border-top); box-shadow: 0 -1px 0 0 var(--border-dark) inset; }
@@ -869,6 +882,7 @@ body, html { margin: 0px; padding: 0px; height: 100%; width: 100%; font-family: 
 .taskbar-trail { justify-content: flex-end; }
 .taskbar-center { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
 #taskbar[data-edge="left"] .taskbar-zone, #taskbar[data-edge="right"] .taskbar-zone, #taskbar[data-edge="left"] .taskbar-center, #taskbar[data-edge="right"] .taskbar-center, #taskbar[data-edge="left"] #system-tray, #taskbar[data-edge="right"] #system-tray { flex-direction: column; }
+#taskbar[data-edge="left"] #system-tray, #taskbar[data-edge="right"] #system-tray { height: auto; width: auto; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; padding: 6px 0px; gap: 4px; }
 #taskbar.dragging { transition: none; flex-direction: row; width: auto; height: var(--taskbar-size); right: auto; bottom: auto; border-radius: 14px; box-shadow: rgba(0, 0, 0, 0.55) 0px 20px 60px; opacity: 0.97; cursor: grabbing; }
 #taskbar.dragging .taskbar-zone { flex-direction: row; }
 #taskbar.dragging .taskbar-lead { display: none; }

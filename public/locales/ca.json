@@ -212,5 +212,7 @@
   "dialog.debug.restore_prompt": "Restore the desktop to its initial state?",
   "dialog.debug.restore_hint": "(All positions and settings will be deleted)",
   "dialog.encryption.title": "Secrets File",
-  "dialog.encryption.message": "This file is encrypted. Access denied."
+  "dialog.encryption.message": "This file is encrypted. Access denied.",
+  "fs.documents": "Documents",
+  "fs.desktop": "Escriptori"
 }

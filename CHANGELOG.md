@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **"This PC" and a real, unified explorer.** "My Computer" no longer opens the old
+  Access-Denied gag — it opens FileX at a **This PC** drive root showing one honest
+  drive, **HadOS (C:)**, whose capacity is the REAL storage quota/usage from
+  `navigator.storage.estimate()` (the browser sandbox cannot see the machine's
+  physical disks, so there is exactly one true drive rather than fake ones). Drilling
+  into the drive lands at `C:\`; Back returns to This PC.
+- **Games folds into the explorer.** The Games icon is now a shortcut that opens FileX
+  at `C:\GAMES` — same window, navigated in place — instead of a bespoke window. Opening
+  a game still launches its folder window, and its "Back to games" now loops back into
+  FileX at `C:\GAMES`. The old `win-games-folder` is functionally retired (no path
+  reaches it; its markup/registration remain as dead scaffolding to remove later).
+- **Explorer folder names are localized.** Documents, Desktop and Games (and the desktop
+  shortcuts) show a translated label in all 40 languages, updating live when the language
+  changes — while the folder's real name stays canonical, so a translated label never
+  breaks a path. Brand/proper names (HADOS, game titles) are left untranslated. VFS nodes
+  gained an optional `i18nKey`; the labels come from `i18n.t` at render time.
+
+### Changed
+
+- **VFS tidy.** Removed the stale `C:\HADOS\DESKTOP\GAMES` duplicate of `C:\GAMES`;
+  the DESKTOP shortcuts "My Computer" and "Games" now use a new `explorer` action type
+  that opens FileX at a path. System paths (`C:\HADOS\SYSTEM`, `C:\APPS`, `C:\DOCUMENTS`)
+  were left untouched, so the recycle bin and permissions are unaffected. Existing
+  installs keep their persisted tree; the cleanup is in the default only.
+
 - **A draggable, magnetic taskbar.** Grab an empty part of the bar and drag it loose;
   it snaps to whichever of the four desktop edges the cursor is nearest, turning
   horizontal (top/bottom) or vertical (left/right, icons stacked) to match, with a
@@ -21,8 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The taskbar cluster is centred**, Windows 11-style: the start button and running
   apps sit in the middle, the tray and clock in the trailing corner. In the main theme
-  the start button is now a round icon button (no "Start" label). The layout is global;
-  the circular restyle is HadOS-only, so the Modern theme keeps its own button.
+  the start button is now a round icon button (no "Start" label), and the HDR and pet
+  tray toggles became round icon buttons to match. The layout is global; the circular
+  restyle is HadOS-only, so the Modern theme keeps its own buttons. Dropping the tray
+  labels also fixed the toggles being clipped off when the bar docks vertically (the
+  tray no longer forces a fixed height there).
 
 ## [1.1.0] - 2026-07-17
 

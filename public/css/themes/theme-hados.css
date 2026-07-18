@@ -498,6 +498,32 @@ body.theme-hados .ragdoll-text {
     font-size: 12px;
 }
 
+/* Round icon-only tray toggles, matching the round start button. Hiding the labels
+   (scoped to the tray button — .ragdoll-text is also the pet's own toolbar label)
+   is also what lets the two toggles fit the 48px bar when it docks vertically,
+   instead of being clipped off.
+   Scoped through #system-tray so the ID outranks the theme's generic
+   `button:not(.window-btn):not(.start-btn)` (0,3,1), which was forcing a 6px radius. */
+body.theme-hados #system-tray .ragdoll-pet-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--glass-bar);
+    border: 1px solid var(--hados-line);
+    flex: 0 0 auto;
+}
+
+body.theme-hados #system-tray .ragdoll-pet-btn .ragdoll-text {
+    display: none;
+}
+
+body.theme-hados #system-tray .ragdoll-pet-btn:hover {
+    background: rgba(127, 210, 255, 0.16);
+}
+
 /* ===== TRAY TOGGLES (HDR, pet) =====
  * chrome/tray-buttons.css still dresses these in Windows 95 for their pressed and
  * toggled-on states, and unlike the rest of that partial those two declarations
@@ -505,14 +531,14 @@ body.theme-hados .ragdoll-text {
  * that supplies the button's normal look. Switching the pet on turned the button
  * #b0b0b0 with an inset white border, on a dark taskbar.
  *
- * Toggled-on borrows the taskbar's language for a running app — accent wash plus
- * an underline — so "this is on" reads the same everywhere in the system.
+ * Toggled-on borrows the taskbar's language for a running app — an accent wash and
+ * ring (a ring, not the app buttons' underline, since these are circles now).
  */
 body.theme-hados .ragdoll-pet-btn.active {
     background: rgba(59, 155, 240, 0.16);
     border: 1px solid var(--accent-color);
     color: var(--os-text-color);
-    box-shadow: inset 0 -2px 0 var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 155, 240, 0.3);
 }
 
 /* Momentary press, distinct from toggled-on. */
@@ -621,6 +647,16 @@ body.theme-hados .explorer-icon {
 
 body.theme-hados .explorer-icon:hover {
     background: rgba(59, 155, 240, 0.16);
+}
+
+body.theme-hados .explorer-drive {
+    border-color: var(--hados-line);
+    background: var(--glass-bar);
+}
+
+body.theme-hados .explorer-drive:hover {
+    background: rgba(59, 155, 240, 0.16);
+    border-color: var(--accent-color);
 }
 
 body.theme-hados .ie-toolbar,

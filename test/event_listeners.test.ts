@@ -3,7 +3,9 @@ import { Services } from '../js/core/ServiceContainer';
 import { WindowManager } from '../js/ui/WindowManager';
 
 vi.mock('../js/core/Kernel', () => ({
-    Kernel: { launch: vi.fn() }
+    // registerApp is needed because event_listeners now imports FileExplorer (for
+    // openExplorerAt), which registers itself with the Kernel at module load.
+    Kernel: { launch: vi.fn(), registerApp: vi.fn() }
 }));
 vi.mock('../js/ui/WindowManager', () => ({
     WindowManager: { close: vi.fn() }
@@ -91,8 +93,10 @@ describe('Global Event Listeners', () => {
         const vlrsFolder = document.getElementById('icon-vlrs-folder')!;
         const flappyExe = document.getElementById('icon-flappy-neon-exe')!;
 
+        // Games now opens the real explorer at C:\GAMES (no live instance in the
+        // test → openExplorerAt falls back to Kernel.launch), not the bespoke window.
         (gamesFolder as any).ondblclick();
-        expect((window as any).openWindow).toHaveBeenCalledWith('win-games-folder');
+        expect(Kernel.launch).toHaveBeenCalledWith('explorer', { path: 'C:\\GAMES' });
 
         (vlrsFolder as any).ondblclick();
         expect(WindowManager.close).toHaveBeenCalledWith('win-games-folder');
@@ -106,8 +110,10 @@ describe('Global Event Listeners', () => {
     it('should handle back buttons correctly', () => {
         const backBtn = document.getElementById('back-to-games-from-flappy')!;
         (backBtn as any).onclick();
+        // "Back to games" closes the game folder and returns to the explorer at
+        // C:\GAMES, not the retired bespoke window.
         expect(WindowManager.close).toHaveBeenCalledWith('win-flappy-folder');
-        expect((window as any).openWindow).toHaveBeenCalledWith('win-games-folder');
+        expect(Kernel.launch).toHaveBeenCalledWith('explorer', { path: 'C:\\GAMES' });
     });
 
     it('should toggle themes and play sound on theme button click', () => {
@@ -173,6 +179,6 @@ describe('Global Event Listeners', () => {
         const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
         gamesFolder.dispatchEvent(enterEvent);
 
-        expect((window as any).openWindow).toHaveBeenCalledWith('win-games-folder');
+        expect(Kernel.launch).toHaveBeenCalledWith('explorer', { path: 'C:\\GAMES' });
     });
 });

@@ -92,6 +92,18 @@
     flex-direction: column;
 }
 
+/* The tray's base rule fixes height:26px and a horizontal inset border for the
+   bottom bar. Stacked into a column that clipped the HDR and pet buttons off the
+   bottom — the reported bug. Let it grow and drop the sideways border. */
+#taskbar[data-edge="left"] #system-tray,
+#taskbar[data-edge="right"] #system-tray {
+    height: auto;
+    width: auto;
+    border: none;
+    padding: 6px 0;
+    gap: 4px;
+}
+
 /* While dragging, the bar detaches from its edge into a compact floating slab that
    follows the cursor (JS sets left/top). Freed from the edge sizing, it shrinks to its
    content and always floats horizontal, whatever edge it came from. */

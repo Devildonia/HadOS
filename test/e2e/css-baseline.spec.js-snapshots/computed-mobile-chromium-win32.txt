@@ -1385,7 +1385,7 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 152.5px
+  width: 132px
   height: 24px
   min-height: auto
   max-height: none
@@ -1434,23 +1434,23 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 50px
-  height: 24px
+  width: 34px
+  height: 34px
   min-height: 24px
   max-height: none
-  padding: 6px 16px
+  padding: 0px
   margin: 2px
   top: auto
   left: auto
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgba(28, 36, 49, 0.55)
+  background-color: rgba(255, 255, 255, 0.05)
   background-image: none
   border-width: 1px
   border-style: solid
   border-color: rgba(127, 210, 255, 0.14)
-  border-radius: 6px
+  border-radius: 50%
   box-shadow: none
   outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
@@ -1463,10 +1463,10 @@ body
   text-shadow: none
   white-space: normal
   flex-direction: row
-  justify-content: normal
+  justify-content: center
   align-items: center
-  gap: 6px
-  flex: 0 1 auto
+  gap: 0px
+  flex: 0 0 auto
   transform: none
   transition: background, border-color, transform
   animation-name: none
@@ -1480,23 +1480,23 @@ body
   overflow: visible
   visibility: visible
   opacity: 0.6
-  width: 38.5px
-  height: 24px
+  width: 34px
+  height: 34px
   min-height: 24px
   max-height: none
-  padding: 6px 16px
+  padding: 0px
   margin: 2px
   top: auto
   left: auto
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgba(28, 36, 49, 0.55)
+  background-color: rgba(255, 255, 255, 0.05)
   background-image: none
   border-width: 1px
   border-style: solid
   border-color: rgba(127, 210, 255, 0.14)
-  border-radius: 6px
+  border-radius: 50%
   box-shadow: none
   outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
@@ -1509,10 +1509,10 @@ body
   text-shadow: none
   white-space: normal
   flex-direction: row
-  justify-content: normal
+  justify-content: center
   align-items: center
-  gap: 6px
-  flex: 0 1 auto
+  gap: 0px
+  flex: 0 0 auto
   transform: none
   transition: background, border-color, transform
   animation-name: none
@@ -1768,23 +1768,23 @@ body
   overflow: visible
   visibility: visible
   opacity: 0.6
-  width: 38.5px
-  height: 24px
+  width: 34px
+  height: 34px
   min-height: 24px
   max-height: none
-  padding: 6px 16px
+  padding: 0px
   margin: 2px
   top: auto
   left: auto
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgba(28, 36, 49, 0.55)
+  background-color: rgba(255, 255, 255, 0.05)
   background-image: none
   border-width: 1px
   border-style: solid
   border-color: rgba(127, 210, 255, 0.14)
-  border-radius: 6px
+  border-radius: 50%
   box-shadow: none
   outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
@@ -1797,10 +1797,10 @@ body
   text-shadow: none
   white-space: normal
   flex-direction: row
-  justify-content: normal
+  justify-content: center
   align-items: center
-  gap: 6px
-  flex: 0 1 auto
+  gap: 0px
+  flex: 0 0 auto
   transform: none
   transition: background, border-color, transform
   animation-name: none
