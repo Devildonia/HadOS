@@ -59,27 +59,36 @@ body.theme-hados {
     --start-menu-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
     --start-sidebar-bg: linear-gradient(180deg, var(--hados-blue-deep), var(--hados-blue));
 
-    /* Windows */
-    --window-bg: var(--hados-surface);
-    --window-content-bg: #10141b;
+    /* Windows — the macOS-style glass. Same hue as the solid swatches (hados-surface
+       #161b22, content #10141b), only translucent, so the backdrop-filter blur on
+       .hados-window shows the wallpaper through it. The window shell is the ONE glass
+       layer; the body goes transparent (below) so opacities never stack into mud. */
+    --window-bg: rgba(22, 27, 34, 0.72);
+    --window-bg-solid: #161b22;            /* for surfaces that must stay opaque (maximized) */
+    --window-content-bg: rgba(16, 20, 27, 0.55);
+    /* Chrome bars (toolbars, colour bars, tab strips) sit ON the window glass, so they
+       must NOT re-apply --window-bg — a second 0.72 fill would stack to ~0.9 and kill
+       the glass. A faint light wash separates them from the body without going solid. */
+    --glass-bar: rgba(255, 255, 255, 0.05);
     --window-border: 1px solid;
     --window-border-color: var(--hados-line-strong);
-    --window-border-radius: 10px;
+    --window-border-radius: 12px;
     --window-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
 
-    /* Window Header */
-    --window-header-bg: linear-gradient(180deg, #1b2330, #141a24);
+    /* Window Header — translucent too, so the titlebar is part of the glass. */
+    --window-header-bg: linear-gradient(180deg, rgba(27, 35, 48, 0.66), rgba(20, 26, 36, 0.66));
     --window-header-color: #e6edf7;
     --window-header-height: 38px;
 
-    /* Dialogs */
-    --dialog-bg: var(--hados-surface);
+    /* Dialogs — a touch more solid than windows: they are modal and must stay legible
+       over whatever they interrupt. */
+    --dialog-bg: rgba(22, 27, 34, 0.82);
     --dialog-border: 1px solid;
     --dialog-border-color: var(--hados-line-strong);
     --dialog-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
 
     /* Controls */
-    --control-bg: var(--hados-elevated);
+    --control-bg: rgba(28, 36, 49, 0.55);
     --control-border: 1px solid;
     --control-border-color: var(--hados-line);
     --control-shadow: none;
@@ -100,13 +109,21 @@ body.theme-hados .hados-window,
 body.theme-hados .hados-dialog {
     /* The radius has to clip the header's gradient and the content beneath it. */
     overflow: hidden;
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    /* The glass. A stronger blur than before (was 20px) because the fill is now
+       translucent, so the blur is finally visible — this is what reads as macOS
+       vibrancy. The inset highlight is the thin light top edge macOS windows carry. */
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+    box-shadow: var(--window-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 body.theme-hados .hados-window.maximized {
     border-radius: 0 !important;
-    background: var(--window-bg) !important;
+    /* Fullscreen goes opaque: a translucent sheet the size of the screen would smear
+       the wallpaper shader across everything and wreck readability. */
+    background: var(--window-bg-solid) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 body.theme-hados .window-header {
@@ -118,9 +135,10 @@ body.theme-hados .window-header {
     border-bottom: 1px solid var(--hados-line);
 }
 
-/* The active window earns the accent; the rest recede. */
+/* The active window earns the accent; the rest recede. Translucent so the titlebar
+   is glass with the rest of the window, not an opaque band across it. */
 body.theme-hados .hados-window.active-window .window-header {
-    background: linear-gradient(180deg, #223049, #161e2b);
+    background: linear-gradient(180deg, rgba(34, 48, 73, 0.55), rgba(22, 30, 43, 0.5));
     box-shadow: inset 0 1px 0 rgba(127, 210, 255, 0.14);
 }
 
@@ -153,8 +171,12 @@ body.theme-hados .window-btn[data-action="close"]:hover {
     color: #ffffff;
 }
 
+/* Transparent, deliberately: the window shell is the single glass layer, and a fill
+   here would stack a second opacity onto it (0.55 over 0.72 ≈ 0.9 — no longer glass).
+   Apps that need a distinct, more solid panel (a file list, a document) paint their
+   own translucent surface on top; see the app sections below. */
 body.theme-hados .window-body {
-    background: var(--window-content-bg);
+    background: transparent;
     color: var(--os-text-color);
 }
 
@@ -222,7 +244,9 @@ body.theme-hados input[type="number"],
 body.theme-hados input:not([type]),
 body.theme-hados textarea,
 body.theme-hados select {
-    background: #0d1117;
+    /* Translucent inset (was solid #0d1117) so editable fields read as glass too —
+       same hue, and 0.55 keeps monospace/body text crisp over the blur. */
+    background: rgba(13, 17, 23, 0.55);
     color: var(--os-text-color);
     border: 1px solid var(--hados-line);
     border-radius: 6px;
@@ -573,7 +597,7 @@ body.theme-hados .icon:hover .icon-box {
  */
 body.theme-hados .explorer-toolbar,
 body.theme-hados .explorer-address {
-    background: var(--window-bg);
+    background: var(--glass-bar);
     border-color: var(--hados-line);
     color: var(--os-text-color);
 }
@@ -592,7 +616,7 @@ body.theme-hados .explorer-icon:hover {
 
 body.theme-hados .ie-toolbar,
 body.theme-hados .ie-button-bar {
-    background: var(--window-bg);
+    background: var(--glass-bar);
     border-color: var(--hados-line);
     color: var(--os-text-color);
 }
@@ -620,11 +644,18 @@ body.theme-hados .ie-menu-bar span:hover {
     background: var(--hados-blue-deep);
 }
 
+/* The body and the canvas area tile the window interior — transparent, so the shell
+   glass shows through as one clean sheet. The tool and colour bars are chrome, so
+   they take the faint bar wash to stand apart. */
 body.theme-hados .paint-body,
+body.theme-hados .paint-canvas-container {
+    background: transparent;
+    border-color: var(--hados-line);
+}
+
 body.theme-hados .paint-toolbar,
-body.theme-hados .paint-canvas-container,
 body.theme-hados .paint-color-bar {
-    background: var(--window-bg);
+    background: var(--glass-bar);
     border-color: var(--hados-line);
 }
 
@@ -644,9 +675,14 @@ body.theme-hados #win-paint .paint-tool-btn.tool-active {
     box-shadow: inset 0 -2px 0 var(--accent-color);
 }
 
-body.theme-hados .workshop-tabs,
+/* The workshop body tiles the interior → transparent; its tab strip is chrome → wash. */
 body.theme-hados #win-ragdoll-skins .window-body {
-    background: var(--window-bg) !important;
+    background: transparent !important;
+    color: var(--os-text-color);
+}
+
+body.theme-hados .workshop-tabs {
+    background: var(--glass-bar) !important;
     border-color: var(--hados-line) !important;
     color: var(--os-text-color);
 }
@@ -658,8 +694,8 @@ body.theme-hados #win-ragdoll-skins .tab-btn {
 }
 
 body.theme-hados #win-ragdoll-skins .tab-btn.active {
-    background: #243044 !important;
-    border-bottom-color: #243044 !important;
+    background: rgba(36, 48, 68, 0.66) !important;
+    border-bottom-color: rgba(36, 48, 68, 0.66) !important;
 }
 
 body.theme-hados #win-ragdoll-skins .drop-zone,
@@ -676,6 +712,20 @@ body.theme-hados #win-ragdoll-skins [style*="#808080"] {
 
 body.theme-hados #win-ragdoll-skins #selected-part-label {
     color: var(--hados-blue-light) !important;
+}
+
+/* Task Manager and Settings still fell back to the solid --win-gray on two chrome
+   surfaces. The Settings sidebar takes the same faint wash as every other bar. The
+   Task Manager column header is STICKY, so it gets a more solid fill — a faint wash
+   would let scrolling rows bleed through it. */
+body.theme-hados .settings-nav {
+    background: var(--glass-bar);
+    border-color: var(--hados-line);
+}
+
+body.theme-hados .tm-table th {
+    background: rgba(22, 27, 34, 0.85);
+    border-color: var(--hados-line);
 }
 
 @media (prefers-reduced-motion: reduce) {
