@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-07-18
+
+The desktop grows a real file system and a movable bar. "My Computer" becomes a genuine
+explorer with a **This PC** drive root, the Games folder folds into it, folder names are
+localized in all 40 languages, and the whole thing gets the macOS-style glass. The taskbar
+detaches, snaps magnetically to any edge, and centers its cluster Windows 11-style.
+
 ### Added
 
 - **"This PC" and a real, unified explorer.** "My Computer" no longer opens the old
@@ -52,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   labels also fixed the toggles being clipped off when the bar docks vertically (the
   tray no longer forces a fixed height there).
 
-## [1.1.0] - 2026-07-17
+## [1.0.4] - 2026-07-17
 
 HadOS learns to run AI in the browser, and Pinta uses it to cut a subject out of a photo — on
 device, with the model downloaded once and cached, gated behind user consent like any other

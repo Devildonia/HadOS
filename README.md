@@ -57,7 +57,7 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
 - 🤖 **On-device AI.** Real in-browser inference on **LiteRT.js** (WebGPU, WASM fallback): an isolated `ai-runtime` process, a consented `ai:infer` capability, and a download-once model cache in OPFS. Pinta uses it to **remove a photo's background** — the segmentation model runs entirely on your machine, nothing uploaded.
-- ✅ **895 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
+- ✅ **912 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
 - 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, acrylic and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
 - 🧩 **Built to be extended.** Auto-registering apps, a scaffolder (`npm run generate:app`), and a runtime plugin API.
 
@@ -184,9 +184,9 @@ Use `↑` / `↓` to navigate command history.
 
 ## ✅ Testing
 
-**895 tests across 77 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
+**912 tests across 78 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
-**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.js`](test/e2e/css-baseline.spec.js)). None of those 895 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
+**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.js`](test/e2e/css-baseline.spec.js)). None of those 912 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
 
 ```bash
 npm test              # watch mode

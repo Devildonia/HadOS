@@ -154,7 +154,7 @@ export const VFS: IVFS = (() => {
             },
             'DOCUMENTS': {
                 name: 'DOCUMENTS', type: 'dir', i18nKey: 'fs.documents', children: {
-                    'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS v1.1.0' }
+                    'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS v1.0.5' }
                 }
             },
             'GAMES': {
@@ -297,7 +297,7 @@ export const VFS: IVFS = (() => {
                 if (root && root.children && !needsReset) {
                     const docs = root.children['DOCUMENTS'];
                     if (docs && docs.children && docs.children['README.txt']) {
-                        docs.children['README.txt'].content = 'Welcome to HadOS v1.1.0';
+                        docs.children['README.txt'].content = 'Welcome to HadOS v1.0.5';
                     }
 
                     const games = root.children['GAMES'];

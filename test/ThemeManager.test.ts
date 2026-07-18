@@ -129,12 +129,12 @@ describe('ThemeManager', () => {
             // Modern theme text
             themeManager.applyTheme('modern');
             expect(startMenuTitle.textContent).toBe('HadOS UI');
-            expect(welcomeText.textContent).toBe('Welcome to HadOS UI v1.1.0!');
+            expect(welcomeText.textContent).toBe('Welcome to HadOS UI v1.0.5!');
 
             // Win95 theme text
             themeManager.applyTheme('win95');
             expect(startMenuTitle.textContent).toBe('HadOS');
-            expect(welcomeText.textContent).toBe('Welcome to HadOS v1.1.0!');
+            expect(welcomeText.textContent).toBe('Welcome to HadOS v1.0.5!');
         });
     });
 });
