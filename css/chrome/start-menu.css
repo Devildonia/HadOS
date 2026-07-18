@@ -21,10 +21,11 @@
 }
 
 /* ===== START MENU ===== */
+/* position:fixed, so a narrow vertical taskbar never clips it. It opens from the
+   docked edge, centred on the (centred) start button — the four rules below place it
+   per edge, keyed off the taskbar's data-edge. */
 #start-menu {
     position: fixed;
-    bottom: var(--taskbar-height);
-    left: 0;
     width: 220px;
     background: var(--start-menu-bg);
     border: var(--start-menu-border);
@@ -32,6 +33,30 @@
     box-shadow: var(--start-menu-shadow);
     z-index: 10000;
     display: flex;
+}
+
+#taskbar[data-edge="bottom"] #start-menu {
+    bottom: var(--taskbar-size);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#taskbar[data-edge="top"] #start-menu {
+    top: var(--taskbar-size);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#taskbar[data-edge="left"] #start-menu {
+    left: var(--taskbar-size);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#taskbar[data-edge="right"] #start-menu {
+    right: var(--taskbar-size);
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .start-sidebar {

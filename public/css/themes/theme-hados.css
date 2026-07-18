@@ -335,30 +335,39 @@ body.theme-hados .taskbar-button.active {
 
 /* ===== START BUTTON ===== */
 
+/* A round icon button in the middle of the bar, like a modern OS launcher — just the
+   mark, no "Start" label (hidden below). Square dimensions + a 50% radius make the
+   circle; it stays a circle whether the bar is horizontal or vertical. */
 body.theme-hados #start-button {
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 8px;
+    background: var(--glass-bar);
+    border: 1px solid var(--hados-line);
+    border-radius: 50%;
     box-shadow: none;
+    width: 38px;
     height: 38px;
-    padding: 0 12px 0 8px;
-    gap: 8px;
+    padding: 0;
+    gap: 0;
+    flex: 0 0 auto;
+    justify-content: center;
     color: var(--os-text-color);
     font-family: var(--os-font-display);
     font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    transition: background 0.15s ease, transform 0.08s ease;
+    transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+}
+
+body.theme-hados #start-button .start-text {
+    display: none;
 }
 
 body.theme-hados #start-button:hover {
-    background: rgba(127, 210, 255, 0.12);
+    background: rgba(127, 210, 255, 0.16);
+    box-shadow: 0 0 0 3px rgba(59, 155, 240, 0.18);
 }
 
 body.theme-hados #start-button:active {
-    background: rgba(127, 210, 255, 0.2);
-    transform: scale(0.96);
-    padding: 0 12px 0 8px;
+    background: rgba(127, 210, 255, 0.24);
+    transform: scale(0.94);
+    padding: 0;
 }
 
 body.theme-hados #start-button .start-icon {

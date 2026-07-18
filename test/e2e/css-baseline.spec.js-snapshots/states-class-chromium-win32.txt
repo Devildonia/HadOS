@@ -62,7 +62,7 @@
   right: auto
   bottom: auto
   color: rgb(230, 237, 247)
-  background-color: rgb(28, 36, 49)
+  background-color: rgba(28, 36, 49, 0.55)
   background-image: none
   border-width: 1px
   border-style: solid
@@ -88,7 +88,7 @@
   transition: background, border-color, transform
   animation-name: none
   backdrop-filter: none
-  cursor: not-allowed
+  cursor: pointer
 
 #hdr-toggle.active
   display: flex
@@ -134,4 +134,4 @@
   transition: background, border-color, transform
   animation-name: none
   backdrop-filter: none
-  cursor: not-allowed
+  cursor: pointer

@@ -15,6 +15,7 @@ import { HDRManager } from './HDRManager';
 import { WindowManager } from '../ui/WindowManager';
 import { DesktopManager } from '../ui/DesktopManager';
 import { TaskbarManager } from '../ui/TaskbarManager';
+import { TaskbarDock } from '../ui/TaskbarDock';
 import { TouchManager } from '../ui/TouchManager';
 import { ShaderWallpaper } from '../ui/ShaderWallpaper';
 import { AudioManager } from '../audio/AudioManager';
@@ -107,6 +108,7 @@ window.initOS = function (): void {
     bootStep('Kernel', () => { if (Kernel) Kernel.init(); });
     bootStep('HDR Manager', () => { if (HDRManager) HDRManager.init(); });
     bootStep('Taskbar Manager', () => { if (TaskbarManager) TaskbarManager.init(); });
+    bootStep('Taskbar Dock', () => { TaskbarDock.init(); });
 
     // 5. Event listeners (legacy icon handlers, start menu, sticky notes)
     bootStep('Event Listeners', () => {

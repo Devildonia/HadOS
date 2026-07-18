@@ -98,13 +98,16 @@
  * dragged carries an inline transform, and maximizing has to cancel it.
  */
 .hados-window.maximized {
-    top: 0 !important;
-    left: 0 !important;
+    /* Fills the usable area, leaving room for the taskbar on whichever edge it is
+       docked to — the --work-* insets are updated by TaskbarDock in step with the
+       bar's data-edge, so this stays correct as the bar moves. */
+    top: var(--work-top) !important;
+    left: var(--work-left) !important;
     transform: none !important;
-    width: 100% !important;
-    height: calc(100% - var(--taskbar-height)) !important;
-    max-width: 100% !important;
-    max-height: calc(100% - var(--taskbar-height)) !important;
+    width: calc(100% - var(--work-left) - var(--work-right)) !important;
+    height: calc(100% - var(--work-top) - var(--work-bottom)) !important;
+    max-width: calc(100% - var(--work-left) - var(--work-right)) !important;
+    max-height: calc(100% - var(--work-top) - var(--work-bottom)) !important;
     border: none !important;
     box-shadow: none !important;
     background: var(--win-gray) !important;

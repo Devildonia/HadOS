@@ -166,28 +166,43 @@ export class WindowInteractions {
         Utils.Logger.window(`Window ${windowId} is now draggable`);
     }
 
-    /** The usable desktop area (excludes the taskbar when #desktop is present). */
-    private workArea(): { width: number; height: number } {
-        const desktop = document.getElementById('desktop');
-        return {
-            width: desktop?.clientWidth || window.innerWidth,
-            height: desktop?.clientHeight || window.innerHeight,
+    /**
+     * The usable desktop area — the full viewport minus wherever the taskbar is
+     * docked. Reads the same --work-* insets that `.maximized` uses, so a snapped
+     * window and a maximized one agree, on every edge the bar can sit.
+     */
+    private workArea(): { left: number; top: number; width: number; height: number } {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const root = document.documentElement;
+        const px = (name: string): number => {
+            // getComputedStyle is the source of truth in a browser; fall back to the
+            // inline value TaskbarDock writes (jsdom's computed style omits custom props).
+            const v = getComputedStyle(root).getPropertyValue(name) || root.style.getPropertyValue(name);
+            const n = parseFloat(v);
+            return Number.isFinite(n) ? n : 0;
         };
+        const top = px('--work-top');
+        const right = px('--work-right');
+        const bottom = px('--work-bottom');
+        const left = px('--work-left');
+        return { left, top, width: vw - left - right, height: vh - top - bottom };
     }
 
     /**
      * Aero-style snapping (Fase 5): releasing a drag against the top edge
      * maximizes the window; against the left/right edge it fills that half of
      * the work area. Returns the applied geometry, or null when no snap applies.
+     * All geometry is offset by the work area's origin so it never overlaps the bar.
      */
     public applySnap(win: HTMLElement, x: number, y: number): { left: number; top: number; width: number; height: number } | null {
-        const { width: W, height: H } = this.workArea();
+        const { left: X0, top: Y0, width: W, height: H } = this.workArea();
         const E = WindowInteractions.SNAP_EDGE;
 
         let geo: { left: number; top: number; width: number; height: number } | null = null;
-        if (y <= E) geo = { left: 0, top: 0, width: W, height: H };                                      // maximize
-        else if (x <= E) geo = { left: 0, top: 0, width: Math.round(W / 2), height: H };                 // left half
-        else if (x >= W - E) geo = { left: Math.round(W / 2), top: 0, width: Math.round(W / 2), height: H }; // right half
+        if (y <= E) geo = { left: X0, top: Y0, width: W, height: H };                                       // maximize
+        else if (x <= E) geo = { left: X0, top: Y0, width: Math.round(W / 2), height: H };                  // left half
+        else if (x >= window.innerWidth - E) geo = { left: X0 + Math.round(W / 2), top: Y0, width: Math.round(W / 2), height: H }; // right half
         if (!geo) return null;
 
         win.style.transform = 'none';

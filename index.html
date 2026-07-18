@@ -215,7 +215,12 @@
     <!-- Window: Internet Explorer — built on demand by js/apps/InternetExplorer.ts -->
 
 
-    <div id="taskbar">
+    <div id="taskbar" data-edge="bottom">
+        <!-- Three zones: an empty lead zone balances the trailing tray so the center
+             cluster (start + apps) stays truly centered. flex-direction flips to column
+             when the bar docks to a side. -->
+        <div class="taskbar-zone taskbar-lead"></div>
+        <div class="taskbar-center">
         <button id="start-button" class="start-btn">
             <span id="start-menu-btn-icon" class="start-icon"
                 style="display:flex;align-items:center;justify-content:center;">
@@ -226,6 +231,7 @@
 
         <!-- Dynamic Taskbar Buttons Container -->
         <div id="taskbar-apps"></div>
+        </div><!-- .taskbar-center -->
 
         <div id="start-menu" style="display:none;">
             <!-- ThemeManager rewrites this per theme; the markup carries the
@@ -272,8 +278,7 @@
         </div>
 
 
-        <div class="taskbar-spacer"></div>
-
+        <div class="taskbar-zone taskbar-trail">
         <div id="system-tray">
 
             <button class="ragdoll-pet-btn" id="hdr-toggle" title="Toggle HDR Mode" data-action="hdr-toggle">
@@ -314,6 +319,7 @@
 
             <span id="taskbar-clock">00:00</span>
         </div>
+        </div><!-- .taskbar-trail -->
     </div>
     </div>
 

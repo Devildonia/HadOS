@@ -134,7 +134,7 @@ body
   transition: all
   animation-name: none
   backdrop-filter: blur(25px) saturate(1.2)
-  cursor: auto
+  cursor: grab
 
 #taskbar-apps
   display: flex
@@ -143,12 +143,12 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 430.109px
-  height: 42px
+  width: 89.5px
+  height: 23px
   min-height: auto
   max-height: none
   padding: 0px
-  margin: 0px 0px 0px 5px
+  margin: 0px
   top: auto
   left: auto
   right: auto
@@ -175,12 +175,12 @@ body
   justify-content: normal
   align-items: center
   gap: 2px
-  flex: 1 1 0%
+  flex: 0 1 auto
   transform: none
   transition: all
   animation-name: none
   backdrop-filter: none
-  cursor: auto
+  cursor: grab
 
 #start-button
   display: flex
@@ -190,7 +190,7 @@ body
   visibility: visible
   opacity: 1
   width: 95.2344px
-  height: 42px
+  height: 24px
   min-height: 24px
   max-height: none
   padding: 0px 12px
@@ -380,8 +380,8 @@ body
   padding: 0px
   margin: 0px
   top: -279.672px
-  left: 0px
-  right: 1058px
+  left: 639px
+  right: 419px
   bottom: 48px
   color: rgb(0, 0, 0)
   background-color: rgba(243, 243, 243, 0.75)
@@ -406,11 +406,11 @@ body
   align-items: normal
   gap: normal
   flex: 0 1 auto
-  transform: none
+  transform: matrix(1, 0, 0, 1, -110, 0)
   transition: all
   animation-name: none
   backdrop-filter: blur(25px) saturate(1.2)
-  cursor: auto
+  cursor: grab
 
 .start-sidebar
   display: flex
@@ -456,7 +456,7 @@ body
   transition: all
   animation-name: none
   backdrop-filter: none
-  cursor: auto
+  cursor: grab
 
 .menu-items-container
   display: flex
@@ -502,7 +502,7 @@ body
   transition: all
   animation-name: none
   backdrop-filter: none
-  cursor: auto
+  cursor: grab
 
 #start-menu .menu-item
   display: flex
@@ -1422,7 +1422,7 @@ body
   transition: all
   animation-name: none
   backdrop-filter: none
-  cursor: auto
+  cursor: grab
 
 #clock
   <absent>
@@ -1517,7 +1517,7 @@ body
   transition: none
   animation-name: none
   backdrop-filter: none
-  cursor: not-allowed
+  cursor: pointer
 
 .ragdoll-text
   display: block
@@ -1563,7 +1563,7 @@ body
   transition: all
   animation-name: none
   backdrop-filter: none
-  cursor: not-allowed
+  cursor: pointer
 
 .window-menu
   display: flex

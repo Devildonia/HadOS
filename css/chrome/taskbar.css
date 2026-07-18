@@ -1,28 +1,145 @@
 /* ===== TASKBAR ===== */
+
+/* The bar docks to any of the four desktop edges. `data-edge` (set by TaskbarDock)
+   drives BOTH its own position/orientation and the work-area insets below, so the
+   one attribute keeps the bar, window-maximize and window-snapping in agreement. */
+:root {
+    --taskbar-size: var(--taskbar-height, 48px);
+    /* Usable-desktop insets. Only the docked edge is non-zero. Default: bottom.
+       .hados-window.maximized and WindowInteractions both read these. */
+    --work-top: 0px;
+    --work-right: 0px;
+    --work-bottom: var(--taskbar-size);
+    --work-left: 0px;
+}
+
 #taskbar {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    /* Was hardcoded 32px, which pinned every theme to the Win95 bar height and
-       silently ignored --taskbar-height. */
-    height: var(--taskbar-height);
-    background: var(--taskbar-bg);
-    border-top: var(--taskbar-border-top);
+    z-index: 1000;
     display: flex;
     align-items: center;
+    background: var(--taskbar-bg);
     padding: 2px 4px;
-    z-index: 1000;
+    box-sizing: border-box;
+    /* No position transition on purpose: docking snaps instantly. Animating the edge
+       properties would jump anyway (top:auto → 0 is not interpolable), and a live
+       transition freezes mid-way under a stalled animation clock. The magnetic feel
+       comes from the drop-preview ghost, not from sliding the bar. */
+}
+
+/* ── Horizontal edges ─────────────────────────────────────────────── */
+#taskbar[data-edge="bottom"] {
+    left: 0; right: 0; bottom: 0;
+    height: var(--taskbar-size);
+    flex-direction: row;
+    border-top: var(--taskbar-border-top);
     box-shadow: 0 -1px 0 0 var(--border-dark) inset;
+}
+
+#taskbar[data-edge="top"] {
+    left: 0; right: 0; top: 0;
+    height: var(--taskbar-size);
+    flex-direction: row;
+    border-bottom: var(--taskbar-border-top);
+    box-shadow: 0 1px 0 0 var(--border-dark) inset;
+}
+
+/* ── Vertical edges: the whole bar turns into a column ─────────────── */
+#taskbar[data-edge="left"] {
+    top: 0; bottom: 0; left: 0;
+    width: var(--taskbar-size);
+    flex-direction: column;
+    border-right: var(--taskbar-border-top);
+    box-shadow: 1px 0 0 0 var(--border-dark) inset;
+}
+
+#taskbar[data-edge="right"] {
+    top: 0; bottom: 0; right: 0;
+    width: var(--taskbar-size);
+    flex-direction: column;
+    border-left: var(--taskbar-border-top);
+    box-shadow: -1px 0 0 0 var(--border-dark) inset;
+}
+
+/* ── Zones: [lead | center | trail]. The empty lead balances the tray so the
+      center cluster is truly centred; the tray sits in the far corner. ─── */
+.taskbar-zone {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    min-width: 0;
+    min-height: 0;
+}
+
+.taskbar-trail {
+    justify-content: flex-end;
+}
+
+.taskbar-center {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+/* Vertical: every zone and the tray stack top-to-bottom. */
+#taskbar[data-edge="left"] .taskbar-zone,
+#taskbar[data-edge="right"] .taskbar-zone,
+#taskbar[data-edge="left"] .taskbar-center,
+#taskbar[data-edge="right"] .taskbar-center,
+#taskbar[data-edge="left"] #system-tray,
+#taskbar[data-edge="right"] #system-tray {
+    flex-direction: column;
+}
+
+/* While dragging, the bar detaches from its edge into a compact floating slab that
+   follows the cursor (JS sets left/top). Freed from the edge sizing, it shrinks to its
+   content and always floats horizontal, whatever edge it came from. */
+#taskbar.dragging {
+    transition: none;
+    flex-direction: row;
+    width: auto;
+    height: var(--taskbar-size);
+    right: auto;
+    bottom: auto;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+    opacity: 0.97;
+    cursor: grabbing;
+}
+
+#taskbar.dragging .taskbar-zone {
+    flex-direction: row;
+}
+
+#taskbar.dragging .taskbar-lead {
+    display: none; /* no balancer needed while floating compact */
+}
+
+/* The bar shows a grab affordance on its bare areas (not on the buttons). */
+#taskbar,
+.taskbar-zone,
+.taskbar-center {
+    cursor: grab;
+}
+
+#taskbar button,
+#taskbar .taskbar-button {
+    cursor: pointer;
 }
 
 #taskbar-apps {
     display: flex;
     gap: 2px;
-    margin-left: 5px;
-    flex: 1;
-    height: 100%;
     align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+/* Vertical apps stack. */
+#taskbar[data-edge="left"] #taskbar-apps,
+#taskbar[data-edge="right"] #taskbar-apps {
+    flex-direction: column;
 }
 
 .taskbar-button {

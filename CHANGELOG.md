@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A draggable, magnetic taskbar.** Grab an empty part of the bar and drag it loose;
+  it snaps to whichever of the four desktop edges the cursor is nearest, turning
+  horizontal (top/bottom) or vertical (left/right, icons stacked) to match, with a
+  drop-preview ghost showing where it will land. The chosen edge persists.
+  `data-edge` on `#taskbar` is the single source of truth: it drives the bar's own
+  position/orientation AND the `--work-*` insets that `.hados-window.maximized` and
+  window-snapping read, so a moved bar never gets overlapped by a maximized or snapped
+  window, on any edge. (`js/ui/TaskbarDock.ts`.)
+
+### Changed
+
+- **The taskbar cluster is centred**, Windows 11-style: the start button and running
+  apps sit in the middle, the tray and clock in the trailing corner. In the main theme
+  the start button is now a round icon button (no "Start" label). The layout is global;
+  the circular restyle is HadOS-only, so the Modern theme keeps its own button.
+
 ## [1.1.0] - 2026-07-17
 
 HadOS learns to run AI in the browser, and Pinta uses it to cut a subject out of a photo — on
