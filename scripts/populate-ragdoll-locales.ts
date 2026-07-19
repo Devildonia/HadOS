@@ -986,19 +986,20 @@ async function main() {
             const filePath = path.join(localesDir, file);
             
             const content = fs.readFileSync(filePath, 'utf8');
-            const dict = JSON.parse(content);
+            const dict = JSON.parse(content) as Record<string, string>;
             
             // Populate keys
+            const translations = LOCALIZED_TRANSLATIONS as Record<string, Record<string, string>>;
             for (const [key, defaultVal] of Object.entries(RAGDOLL_KEYS_DEFAULTS)) {
                 let val = defaultVal;
-                if (LOCALIZED_TRANSLATIONS[lang] && LOCALIZED_TRANSLATIONS[lang][key]) {
-                    val = LOCALIZED_TRANSLATIONS[lang][key];
+                if (translations[lang] && translations[lang][key]) {
+                    val = translations[lang][key];
                 }
                 dict[key] = val;
             }
             
             // Write back in sorted order
-            const sortedDict = {};
+            const sortedDict: Record<string, string> = {};
             Object.keys(dict).sort().forEach(k => {
                 sortedDict[k] = dict[k];
             });

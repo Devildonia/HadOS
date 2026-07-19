@@ -138,14 +138,83 @@ vec3 calcNormal(vec3 p) {
     ));
 }
 
+vec4 fft(float time) {
+    // Generate organic procedural frequency bands (bass, mid, high, presence)
+    float bass = 0.5 + 0.3 * sin(time * 1.5) + 0.2 * cos(time * 2.8);
+    float mid = 0.4 + 0.25 * sin(time * 2.1 + 1.0) + 0.15 * cos(time * 0.9);
+    float high = 0.3 + 0.2 * sin(time * 3.8 + 0.5) + 0.1 * sin(time * 7.5);
+    float presence = 0.5 + 0.3 * cos(time * 0.8 + 2.0);
+    return vec4(bass, mid, high, presence);
+}
+
+vec3 safe_tanh(vec3 x) {
+    vec3 e = exp(clamp(x, -20.0, 20.0));
+    vec3 em = exp(clamp(-x, -20.0, 20.0));
+    return (e - em) / (e + em);
+}
+
+vec3 getVolumetricBg(vec2 fragCoord, float time) {
+    vec2 R = iResolution.xy;
+    float T = time;
+    
+    // Setup camera ray direction
+    vec3 r = normalize(vec3(fragCoord * 2.0 - R, R.x));
+    
+    // Rotate screenspace XY slightly with time
+    float rotAngle = T * 0.08;
+    float c = cos(rotAngle), s = sin(rotAngle);
+    r.xy *= mat2(c, -s, s, c);
+    
+    vec3 O = vec3(0.0);
+    float t = 0.0;
+    float v = 0.0;
+    
+    vec4 f = fft(T);
+    
+    // 64 raymarching steps for a perfect balance of quality and performance
+    for (int i = 0; i < 64; i++) {
+        vec3 p = t * r;
+        
+        // Twist along Z
+        float zRot = p.z * 1.2;
+        float cz = cos(zRot), sz = sin(zRot);
+        p.xy *= mat2(cz, -sz, sz, cz);
+        
+        // Warp coordinates fluidly
+        float a1 = 5.0 * sin(T * 0.1 + length(p)) * 0.3;
+        vec4 c1 = cos(a1 + vec4(0.0, 11.0, 33.0, 0.0));
+        mat2 m1 = mat2(c1.x, c1.y, c1.z, c1.w);
+        p += vec3(vec2(0.05, sin(p.z * 0.01 + 15.0) * 0.42) * m1, T * 0.2);
+        
+        p.x -= T * 0.05;
+        p = fract(p.zxy - 0.5) - 0.5;
+        
+        for (int j = 0; j < 6; j++) {
+            p = abs(p.xzy);
+            p *= 1.55;
+            p.x -= 1.45;
+        }
+        
+        v = abs(min(length(p.xz * 0.5 + 0.2 - smoothstep(0.0, 1.0, f.y) * 0.4 + p.x * 0.5), length(p.zy * 0.1 + p.y * 0.5)) + 0.02) / 250.0;
+        t += v;
+        
+        vec3 basePalette = mix(BLUE_DEEP, BLUE_MID, 0.5 + 0.5 * cos(6.28 * (sin(length(p * 0.4)) + p.z * 0.15 + r.y * 0.5)));
+        vec3 glowColor = mix(basePalette, BLUE_LIGHT, 0.3 * (1.0 + sin(T * 0.2)));
+        O += exp(1.8 * glowColor) / v;
+    }
+    
+    float pulse = pow(length(sin(r.xy * 4.0 + T * 0.4)), 2.0 * f.z);
+    vec3 col = safe_tanh(O * O / 1e12 / max(pulse, 0.01)) * 1.5;
+    
+    vec3 desktopBg = mix(BG_BOTTOM, BG_TOP, fragCoord.y / R.y);
+    return desktopBg + col * 0.45;
+}
+
 void main() {
     vec2 uv = (gl_FragCoord.xy - 0.5 * iResolution.xy) / iResolution.y;
 
-    // Backdrop: a vertical fade with a soft blue pool behind the mark, so the
-    // desktop has depth without competing with the icons on top of it.
-    float grad = gl_FragCoord.y / iResolution.y;
-    vec3 col = mix(BG_BOTTOM, BG_TOP, grad);
-    col += BLUE_DEEP * 0.14 * exp(-2.6 * dot(uv, uv));
+    // Render the procedural volumetric background
+    vec3 col = getVolumetricBg(gl_FragCoord.xy, iTime);
 
     vec3 ro = vec3(0.0, 0.0, 2.6);
     vec3 rd = normalize(vec3(uv, -1.6));

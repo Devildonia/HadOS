@@ -3,7 +3,7 @@ export default {
     content: [
         "./index.html",
         "./public/games/**/*.{html,js,jsx,ts,tsx}",
-        "./js/**/*.js",
+        "./js/**/*.ts",
     ],
     theme: {
         extend: {},

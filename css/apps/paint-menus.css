@@ -1,0 +1,46 @@
+/* ===== PAINT NATIVE INTERFACE STYLES ===== */
+#win-paint .window-menu {
+    position: relative;
+    z-index: 1000;
+}
+
+#win-paint .notepad-dropdown-item {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    text-align: left !important;
+    font-size: 11px !important;
+    min-width: 150px;
+    gap: 20px;
+}
+
+/* Floating text input on Canvas */
+.paint-canvas-container {
+    position: relative;
+}
+
+.paint-floating-text-input {
+    position: absolute;
+    background: transparent;
+    border: 1px dashed black;
+    outline: none;
+    font-family: "Outfit", sans-serif;
+    font-size: 14px;
+    padding: 2px;
+    z-index: 100;
+}
+
+.paint-brush-size-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 5px;
+    font-size: 11px;
+}
+
+.paint-brush-size-slider {
+    width: 60px;
+    height: 12px;
+    cursor: pointer;
+}

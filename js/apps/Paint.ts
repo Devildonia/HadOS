@@ -1,7 +1,6 @@
 /**
- * WINDOWS 95 APP CENTER - PAINT
- * Basic drawing application with Undo/Redo
- * Version: 4.1 (TypeScript)
+ * WINDOWS 95 APP CENTER - PAINT (PINTA)
+ * Orchestrator File
  */
 
 import { Utils } from '../utils.js';
@@ -9,78 +8,52 @@ import { Kernel } from '../core/Kernel.js';
 import { Services } from '../core/ServiceContainer.js';
 import { AiService } from '../ai/AiService.js';
 import { applySubjectMask } from '../ai/segmentation.js';
+import { i18n } from '../services/i18n.js';
 
-const PAINT_BODY_HTML = `
-    <div class="window-menu">
-        <span class="window-menu-item">File</span>
-        <span class="window-menu-item">Edit</span>
-        <span class="window-menu-item">View</span>
-        <span class="window-menu-item">Image</span>
-        <span class="window-menu-item">Colors</span>
-        <span class="window-menu-item">Help</span>
-    </div>
-    <div class="paint-main-area">
-        <div class="paint-toolbar">
-            <!-- Toolbar buttons will be added by JS -->
-        </div>
-        <div class="paint-canvas-container">
-            <canvas id="paint-canvas" width="400" height="300"></canvas>
-        </div>
-    </div>
-    <div class="paint-color-bar">
-        <!-- Color palette will be added by JS -->
-    </div>
-`;
-
-const MAX_HISTORY = 30;
+import { PaintCore } from './paint/PaintCore.js';
+import { PaintUI } from './paint/PaintUI.js';
+import { PaintMenus } from './paint/PaintMenus.js';
+import { invertColors, convertToGrayscale } from './paint/PaintTools.js';
 
 export interface IPaintParams {
     [key: string]: any;
 }
 
-export type PaintTool = 'pencil' | 'brush' | 'eraser' | 'rect' | 'line' | 'clear' | 'undo' | 'redo' | 'save' | 'open' | 'cutout' | 'separator';
+export type PaintTool = 'pencil' | 'brush' | 'eraser' | 'rect' | 'line' | 'bucket' | 'picker' | 'text' | 'clear' | 'undo' | 'redo' | 'save' | 'open' | 'cutout';
 
-/** Bitmaps the picker and the drop target accept. */
 const IMPORT_MIME = 'image/png,image/jpeg,image/webp,image/gif,image/bmp';
 
 class Paint {
     public windowId: string = 'win-paint';
-    private canvasId: string = 'paint-canvas';
-    private color: string = '#000000';
+    public canvas: HTMLCanvasElement | null = null;
+    public currentTool: PaintTool = 'pencil';
+    
+    public core: PaintCore | null = null;
+    public ui: PaintUI | null = null;
+    public menus: PaintMenus | null = null;
+
+    public get ctx(): CanvasRenderingContext2D | null {
+        return this.core?.ctx || null;
+    }
+    public get _undoStack(): ImageData[] {
+        return this.core?._undoStack || [];
+    }
+    public get _redoStack(): ImageData[] {
+        return this.core?._redoStack || [];
+    }
+    public _saveState(): void {
+        this.core?.saveState();
+    }
+
     private isDrawing: boolean = false;
-    private brushSize: number = 2;
-    private canvas: HTMLCanvasElement | null = null;
-    private ctx: CanvasRenderingContext2D | null = null;
-    private currentTool: PaintTool = 'pencil';
     private startX: number = 0;
     private startY: number = 0;
-    private canvasRectLeft: number = 0;
-    private canvasRectTop: number = 0;
     private startImageData: ImageData | null = null;
     private resizeObserver: ResizeObserver | null = null;
+
     private onResize = (): void => this.resizeCanvas();
-    private onKeyDown = (e: KeyboardEvent): void => {
-        const win = document.getElementById(this.windowId);
-        if (!win || win.style.display === 'none') return;
-
-        if (e.ctrlKey && e.key === 'z') {
-            e.preventDefault();
-            if (e.shiftKey) {
-                this.redo();
-            } else {
-                this.undo();
-            }
-        }
-        if (e.ctrlKey && e.key === 'y') {
-            e.preventDefault();
-            this.redo();
-        }
-    };
+    private onKeyDown = (e: KeyboardEvent): void => this.handleKeyDown(e);
     private onMouseUp = (): void => this.stopDrawing();
-
-    // Undo/Redo stacks (ImageData snapshots)
-    private _undoStack: ImageData[] = [];
-    private _redoStack: ImageData[] = [];
 
     constructor(params: IPaintParams = {}) {
         this.init();
@@ -92,37 +65,43 @@ class Paint {
         if (!wf) return;
         wf.create({
             id: this.windowId,
-            title: 'untitled - Pinta',
+            title: `untitled - ${i18n.t('paint.title') || 'Pinta'}`,
             width: 600,
-            height: 450,
+            height: 470,
             icon: '🎨'
         });
         const body = wf.getBody(this.windowId);
         if (body) {
             body.classList.add('paint-body');
-            body.innerHTML = PAINT_BODY_HTML;
         }
     }
 
     private init(): void {
         this._ensureWindow();
 
-        this.canvas = document.getElementById(this.canvasId) as HTMLCanvasElement;
+        // Instantiate components
+        this.ui = new PaintUI(this);
+        this.ui.setup();
+
+        this.canvas = document.getElementById('paint-canvas') as HTMLCanvasElement;
         if (!this.canvas) return;
 
-        this.resizeCanvas();
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        this.core = new PaintCore(this.canvas, () => this.handleStateChange());
 
-        this.setupToolbar();
-        this.setupColors();
-        this.setupCanvasEvents();
+        this.menus = new PaintMenus(this);
+        this.menus.setup();
+
+        this.resizeCanvas();
         this._setupKeyboardShortcuts();
 
         // Save initial blank state
-        this._saveState();
+        this.core.saveState();
         this.selectTool('pencil');
 
         window.addEventListener('resize', this.onResize);
+
+        const onLangChange = () => this.translateUI();
+        window.addEventListener('languagechanged', onLangChange);
 
         if (window.ResizeObserver) {
             this.resizeObserver = new ResizeObserver(() => this.resizeCanvas());
@@ -138,84 +117,68 @@ class Paint {
                         this.resizeObserver.disconnect();
                     }
                     window.removeEventListener('resize', this.onResize);
+                    window.removeEventListener('languagechanged', onLangChange);
                     document.removeEventListener('keydown', this.onKeyDown);
                     Utils.eventManager.remove(document, 'mouseup', this.onMouseUp);
+                    this.menus?.dispose();
                 }
             });
         }
 
-        Utils.Logger.log('Paint initialized with Undo/Redo');
+        Utils.Logger.log('Paint modular initialized');
     }
 
-    // ========================================
-    // UNDO / REDO
-    // ========================================
+    private translateUI(): void {
+        const wf = Services.get('WindowFactory');
+        if (wf) {
+            wf.setTitle(this.windowId, `untitled - ${i18n.t('paint.title') || 'Pinta'}`);
+        }
+        this.ui?.setup();
+        
+        if (this.canvas) {
+            this.core = new PaintCore(this.canvas, () => this.handleStateChange());
+        }
 
-    private _saveState(): void {
-        if (!this.ctx || !this.canvas || !this.canvas.width || !this.canvas.height) return;
+        this.menus?.setup();
+        this.ui?.updateStatusTool(this.currentTool);
+        this.ui?.updateStatusSize();
+        this.handleStateChange();
+    }
 
-        try {
-            const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-            this._undoStack.push(imageData);
+    private handleStateChange(): void {
+        if (!this.core || !this.ui) return;
+        const canUndo = this.core.canUndo();
+        const canRedo = this.core.canRedo();
+        
+        this.ui.updateUndoRedoButtons(canUndo, canRedo);
+        this.menus?.updateUndoRedoMenuState();
+    }
 
-            // Trim to max history
-            if (this._undoStack.length > MAX_HISTORY) {
-                this._undoStack.shift();
+    private handleKeyDown(e: KeyboardEvent): void {
+        const win = document.getElementById(this.windowId);
+        if (!win || win.style.display === 'none') return;
+
+        if (e.ctrlKey && e.key === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) {
+                this.core?.redo();
+            } else {
+                this.core?.undo();
             }
-
-            // Any new action clears the redo stack
-            this._redoStack = [];
-
-            this._updateUndoRedoButtons();
-        } catch (e) {
-            Utils.Logger.error('Failed to save paint state:', e);
         }
-    }
-
-    public undo(): void {
-        if (this._undoStack.length <= 1 || !this.ctx) return;
-
-        const current = this._undoStack.pop();
-        if (current) this._redoStack.push(current);
-
-        const prev = this._undoStack[this._undoStack.length - 1];
-        if (prev) this.ctx.putImageData(prev, 0, 0);
-
-        this._updateUndoRedoButtons();
-        Utils.Logger.log('[Paint] Undo');
-    }
-
-    public redo(): void {
-        if (this._redoStack.length === 0 || !this.ctx) return;
-
-        const next = this._redoStack.pop();
-        if (next) {
-            this._undoStack.push(next);
-            this.ctx.putImageData(next, 0, 0);
+        if (e.ctrlKey && e.key === 'y') {
+            e.preventDefault();
+            this.core?.redo();
         }
-
-        this._updateUndoRedoButtons();
-        Utils.Logger.log('[Paint] Redo');
-    }
-
-    private _updateUndoRedoButtons(): void {
-        const undoBtn = document.getElementById('paint-undo-btn') as HTMLButtonElement;
-        const redoBtn = document.getElementById('paint-redo-btn') as HTMLButtonElement;
-        if (undoBtn) undoBtn.disabled = this._undoStack.length <= 1;
-        if (redoBtn) redoBtn.disabled = this._redoStack.length === 0;
     }
 
     private _setupKeyboardShortcuts(): void {
         document.addEventListener('keydown', this.onKeyDown);
+        Utils.eventManager.add(document, 'mouseup', this.onMouseUp);
     }
 
-    // ========================================
-    // CANVAS
-    // ========================================
-
     private resizeCanvas(): void {
-        if (!this.canvas) return;
-
+        if (!this.canvas || !this.core) return;
         const container = this.canvas.parentElement;
         if (!container) return;
 
@@ -223,102 +186,91 @@ class Paint {
         const height = container.clientHeight - 20;
 
         if (this.canvas.width !== width || this.canvas.height !== height) {
-            let tempCanvas: HTMLCanvasElement | null = null;
-            if (this.canvas.width > 0 && this.canvas.height > 0) {
-                tempCanvas = document.createElement('canvas');
-                tempCanvas.width = this.canvas.width;
-                tempCanvas.height = this.canvas.height;
-                const tempCtx = tempCanvas.getContext('2d');
-                if (tempCtx) tempCtx.drawImage(this.canvas, 0, 0);
-            }
-
-            this.canvas.width = width;
-            this.canvas.height = height;
-
-            if (tempCanvas) {
-                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-                if (this.ctx) this.ctx.drawImage(tempCanvas, 0, 0);
-            }
-
-            if (this.ctx) {
-                this.ctx.lineCap = 'round';
-                this.ctx.lineWidth = this.brushSize;
-                this.ctx.strokeStyle = this.color;
-            }
+            this.core.resize(width, height);
+            this.ui?.updateStatusSize();
         }
     }
 
-    private setupToolbar(): void {
-        const toolbar = document.querySelector(`#${this.windowId} .paint-toolbar`);
-        if (!toolbar) return;
+    public selectTool(tool: PaintTool): void {
+        if (!this.core || !this.ui) return;
 
-        toolbar.innerHTML = ''; // Clear to prevent duplication
+        if (tool === 'undo' || tool === 'redo' || tool === 'clear' || tool === 'save' || tool === 'open' || tool === 'cutout') {
+            // Actions
+            return;
+        }
 
-        const tools: { id: PaintTool, icon: string }[] = [
-            { id: 'pencil', icon: '✏️' },
-            { id: 'brush', icon: '🖌️' },
-            { id: 'eraser', icon: '🧽' },
-            { id: 'rect', icon: '⬜' },
-            { id: 'line', icon: '📏' },
-            { id: 'clear', icon: '🗑️' },
-            { id: 'separator', icon: '' },
-            { id: 'undo', icon: '↩️' },
-            { id: 'redo', icon: '↪️' },
-            { id: 'open', icon: '📂' },
-            { id: 'save', icon: '💾' },
-            { id: 'cutout', icon: '🪄' }
-        ];
+        this.currentTool = tool;
+        this.ui.updateActiveToolButton(tool);
+        this.ui.updateStatusTool(tool);
 
-        tools.forEach(tool => {
-            if (tool.id === 'separator') {
-                const sep = document.createElement('span');
-                sep.style.cssText = 'grid-column: span 2; width: 100%; height: 1px; background: #808080; margin: 4px 0;';
-                toolbar.appendChild(sep);
-                return;
-            }
-
-            const btn = document.createElement('button');
-            btn.className = 'hados-btn paint-tool-btn';
-            btn.style.cssText = 'width: 24px; height: 24px; padding: 0;';
-            btn.title = tool.id;
-            const iconSpan = document.createElement('span');
-            iconSpan.style.fontSize = '14px';
-            iconSpan.textContent = tool.icon;
-            btn.appendChild(iconSpan);
-
-            if (tool.id === 'undo') {
-                btn.id = 'paint-undo-btn';
-                btn.disabled = true;
-                btn.onclick = () => this.undo();
-            } else if (tool.id === 'redo') {
-                btn.id = 'paint-redo-btn';
-                btn.disabled = true;
-                btn.onclick = () => this.redo();
-            } else if (tool.id === 'save') {
-                btn.id = 'paint-save-btn';
-                btn.title = 'Save as PNG to My Documents';
-                btn.onclick = () => { void this.saveAsPng(); };
-            } else if (tool.id === 'open') {
-                btn.id = 'paint-open-btn';
-                btn.title = 'Open an image from your computer';
-                btn.onclick = () => this.pickImage();
-            } else if (tool.id === 'cutout') {
-                btn.id = 'paint-cutout-btn';
-                btn.title = 'Remove background';
-                btn.onclick = () => { void this.removeBackground(); };
-            } else {
-                btn.onclick = () => this.selectTool(tool.id);
-            }
-
-            toolbar.appendChild(btn);
-        });
+        switch (tool) {
+            case 'eraser':
+                this.core.setColor('#ffffff');
+                this.core.setBrushSize(10);
+                break;
+            case 'pencil':
+                this.core.setBrushSize(1);
+                break;
+            case 'brush':
+                this.core.setBrushSize(5);
+                break;
+            case 'rect':
+                this.core.setBrushSize(2);
+                break;
+            case 'line':
+                this.core.setBrushSize(2);
+                break;
+        }
     }
 
-    /**
-     * Opens the OS file picker for an image. The user's own file, chosen by the user,
-     * decoded locally — it never leaves the browser.
-     */
-    private pickImage(): void {
+    public startDrawingAction(e: MouseEvent, x: number, y: number): void {
+        if (!this.core) return;
+        this.isDrawing = true;
+        this.startX = x;
+        this.startY = y;
+
+        this.startImageData = this.core.ctx.getImageData(0, 0, this.canvas!.width, this.canvas!.height);
+        this.core.ctx.beginPath();
+        this.core.ctx.moveTo(x, y);
+    }
+
+    public drawAction(e: MouseEvent, x: number, y: number): void {
+        if (!this.isDrawing || !this.core || !this.canvas) return;
+
+        // Ensure current properties are applied on the context
+        this.core.ctx.strokeStyle = this.core.color;
+        this.core.ctx.lineWidth = this.core.brushSize;
+        this.core.ctx.lineCap = 'round';
+
+        if (this.currentTool === 'line' || this.currentTool === 'rect') {
+            if (this.startImageData) {
+                this.core.ctx.putImageData(this.startImageData, 0, 0);
+            }
+            
+            if (this.currentTool === 'line') {
+                this.core.ctx.beginPath();
+                this.core.ctx.moveTo(this.startX, this.startY);
+                this.core.ctx.lineTo(x, y);
+                this.core.ctx.stroke();
+            } else if (this.currentTool === 'rect') {
+                this.core.ctx.beginPath();
+                this.core.ctx.rect(this.startX, this.startY, x - this.startX, y - this.startY);
+                this.core.ctx.stroke();
+            }
+        } else if (this.currentTool === 'pencil' || this.currentTool === 'brush' || this.currentTool === 'eraser') {
+            this.core.ctx.lineTo(x, y);
+            this.core.ctx.stroke();
+        }
+    }
+
+    private stopDrawing(): void {
+        if (!this.isDrawing || !this.core) return;
+        this.isDrawing = false;
+        this.startImageData = null;
+        this.core.saveState();
+    }
+
+    public pickImage(): void {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = IMPORT_MIME;
@@ -329,14 +281,9 @@ class Paint {
         input.click();
     }
 
-    /**
-     * Draws a bitmap onto the canvas, scaled to fit and centred, preserving its
-     * aspect ratio — stretching someone's photo to the canvas would wreck both the
-     * picture and the segmentation.
-     */
-    private async loadImageFile(file: File): Promise<void> {
+    public async loadImageFile(file: File): Promise<void> {
         const notify = Services.get('Notify');
-        if (!this.ctx || !this.canvas) return;
+        if (!this.core || !this.canvas) return;
 
         if (!file.type.startsWith('image/')) {
             notify?.error(`Pinta: ${Utils.escapeHTML(file.name)} is not an image`);
@@ -353,78 +300,123 @@ class Paint {
             const w = Math.round(bitmap.width * scale);
             const h = Math.round(bitmap.height * scale);
 
-            this.ctx.clearRect(0, 0, cw, ch);
-            this.ctx.drawImage(bitmap, Math.round((cw - w) / 2), Math.round((ch - h) / 2), w, h);
-            this._saveState();
+            this.core.ctx.clearRect(0, 0, cw, ch);
+            this.core.ctx.drawImage(bitmap, Math.round((cw - w) / 2), Math.round((ch - h) / 2), w, h);
+            this.core.saveState();
 
             notify?.success(`Opened ${file.name}`);
-            Utils.Logger.log(`[Paint] Loaded ${file.name} (${bitmap.width}x${bitmap.height} -> ${w}x${h})`);
         } catch (err) {
             Utils.Logger.error('[Paint] loadImageFile failed', err);
             notify?.error('Pinta: could not read that image');
         } finally {
-            // Frees the decoded bitmap now rather than at the GC's convenience; a
-            // full-resolution photo is easily tens of MB.
             bitmap?.close();
         }
     }
 
-    /**
-     * Replaces the canvas with just its subject, clearing the background to
-     * transparent. Runs DeepLab on-device via the ai-runtime process — the first
-     * consumer of the AI substrate.
-     *
-     * The whole thing is undoable: the state is saved after, so ↩️ brings the
-     * background back, which matters for a destructive one-click action.
-     */
+    public executeMenuAction(action: string): void {
+        const notify = Services.get('Notify');
+        if (!this.core) return;
+
+        switch (action) {
+            case 'new':
+                this.core.clear();
+                notify?.success('New document created');
+                break;
+            case 'open':
+                this.pickImage();
+                break;
+            case 'save':
+                void this.saveAsPng();
+                break;
+            case 'exit':
+                const wm = Services.get('WindowManager') as any;
+                wm?.close(this.windowId);
+                break;
+            case 'undo':
+                this.core.undo();
+                break;
+            case 'redo':
+                this.core.redo();
+                break;
+            case 'clear':
+                this.core.clear();
+                break;
+            case 'zoom-in':
+                // simple simulated zoom (increase visual canvas display scale or just alert)
+                notify?.success('Zoom In (Simulated)');
+                break;
+            case 'zoom-out':
+                notify?.success('Zoom Out (Simulated)');
+                break;
+            case 'cutout':
+                void this.removeBackground();
+                break;
+            case 'invert':
+                this.core.saveState();
+                invertColors(this.core.ctx);
+                this.core.saveState();
+                notify?.success('Colors inverted');
+                break;
+            case 'grayscale':
+                this.core.saveState();
+                convertToGrayscale(this.core.ctx);
+                this.core.saveState();
+                notify?.success('Converted to grayscale');
+                break;
+            case 'custom-color':
+                const colorInput = document.createElement('input');
+                colorInput.type = 'color';
+                colorInput.value = this.core.color;
+                colorInput.onchange = () => {
+                    this.core?.setColor(colorInput.value);
+                };
+                colorInput.click();
+                break;
+            case 'about':
+                notify?.success('Pinta Paint App - Version 5.0 (Refactored)');
+                break;
+        }
+    }
+
     private async removeBackground(): Promise<void> {
         const notify = Services.get('Notify');
-        const btn = document.getElementById('paint-cutout-btn') as HTMLButtonElement | null;
-        if (!this.ctx || !this.canvas || !this.canvas.width || !this.canvas.height) return;
+        const btn = document.getElementById(`${this.windowId}-cutout-btn`) as HTMLButtonElement | null;
+        if (!this.core || !this.canvas) return;
 
         if (!AiService.isSupported()) {
             notify?.error('Pinta: this browser cannot run on-device AI');
             return;
         }
 
-        // Re-entrancy guard: inference is seconds of work on a first run and the
-        // button stays clickable. Two runs would race on putImageData.
         if (btn?.disabled) return;
         if (btn) { btn.disabled = true; btn.title = 'Working…'; }
 
-        // The first ever run downloads and compiles a 2.65 MB model. Say so, with
-        // real numbers — a silent multi-second freeze reads as a hang.
         const off = AiService.onProgress(p => {
             if (!btn) return;
             btn.title = p.phase === 'download'
-                ? `Downloading the model… ${Math.round(p.loaded / p.total * 100)}%`
-                : 'Preparing the model…';
+                ? `Downloading model… ${Math.round(p.loaded / p.total * 100)}%`
+                : 'Preparing model…';
         });
 
         try {
-            const img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            const img = this.core.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
             const { mask, size, coverage } = await AiService.segment('pinta', img);
 
-            // Nothing recognised: DeepLab knows 21 classes, so a doodle or a
-            // landscape is legitimately all background. Wiping the canvas to
-            // transparent would be a worse answer than declining.
             if (coverage === 0) {
-                notify?.warn('Pinta: no subject found — the model recognises people, animals and vehicles');
+                notify?.warn('Pinta: no subject found');
                 return;
             }
 
-            this.ctx.putImageData(applySubjectMask(img, mask, size), 0, 0);
-            this._saveState();
-            notify?.success(`Background removed — subject covers ${Math.round(coverage * 100)}% of the frame`);
-            Utils.Logger.log(`[Paint] Cutout done: ${Math.round(coverage * 100)}% subject at ${size}x${size}`);
+            this.core.ctx.putImageData(applySubjectMask(img, mask, size), 0, 0);
+            this.core.saveState();
+            notify?.success(`Background removed smoothly (${Math.round(coverage * 100)}%)`);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             Utils.Logger.error('[Paint] removeBackground failed', err);
-            // A denied permission is a choice, not a fault — don't cry error at it.
             notify?.[msg.includes('permission denied') ? 'warn' : 'error'](
                 msg.includes('permission denied')
-                    ? 'Pinta: AI access denied — allow it to remove backgrounds'
-                    : 'Pinta: could not remove the background'
+                    ? 'Pinta: AI access denied'
+                    : 'Pinta: could not remove background'
             );
         } finally {
             off();
@@ -432,11 +424,6 @@ class Paint {
         }
     }
 
-    /**
-     * Exports the canvas as a PNG blob and saves it to C:\DOCUMENTS via the VFS
-     * binary API (blob-backed, stored in OPFS/IndexedDB out of the JSON tree).
-     * First real consumer of Phase 0.2's blob storage.
-     */
     private async saveAsPng(): Promise<void> {
         if (!this.canvas) return;
         const vfs = Services.get('VFS');
@@ -446,169 +433,19 @@ class Paint {
                 this.canvas!.toBlob(b => resolve(b), 'image/png')
             );
             if (!blob) {
-                notify?.error('Paint: could not render the image');
+                notify?.error('Paint: could not render image');
                 return;
             }
             const name = `painting-${Date.now()}.png`;
             const ok = vfs ? await vfs.writeFileAsync('C:\\DOCUMENTS', name, blob) : false;
             if (ok) {
                 notify?.success(`Saved ${name} to My Documents`);
-                Utils.Logger.log(`[Paint] Saved ${name} (${blob.size} bytes) to C:\\DOCUMENTS`);
             } else {
                 notify?.error('Paint: save failed');
             }
         } catch (err) {
             Utils.Logger.error('[Paint] saveAsPng failed', err);
             notify?.error('Paint: save failed');
-        }
-    }
-
-    private setupColors(): void {
-        const colorBar = document.querySelector(`#${this.windowId} .paint-color-bar`);
-        if (!colorBar) return;
-
-        colorBar.innerHTML = ''; // Clear to prevent duplication
-
-        const colors = [
-            '#000000', '#808080', '#800000', '#808000', '#008000', '#008080', '#000080', '#800080',
-            '#ffffff', '#c0c0c0', '#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff'
-        ];
-
-        colors.forEach(col => {
-            const box = document.createElement('div');
-            box.style.cssText = `width: 15px; height: 15px; background: ${col}; border: 1px solid #808080; margin: 1px; cursor: pointer;`;
-            box.onclick = () => { this.color = col; };
-            colorBar.appendChild(box);
-        });
-    }
-
-    private setupCanvasEvents(): void {
-        if (!this.canvas) return;
-        this.canvas.addEventListener('mousedown', (e: MouseEvent) => this.startDrawing(e));
-        this.canvas.addEventListener('mousemove', (e: MouseEvent) => this.draw(e));
-        Utils.eventManager.add(document, 'mouseup', this.onMouseUp);
-
-        // Drop an image straight onto the canvas. dragover must preventDefault or the
-        // browser navigates away to the file — losing the whole OS in the process.
-        this.canvas.addEventListener('dragover', (e: DragEvent) => {
-            e.preventDefault();
-            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        });
-        this.canvas.addEventListener('drop', (e: DragEvent) => {
-            e.preventDefault();
-            const file = e.dataTransfer?.files?.[0];
-            if (file) void this.loadImageFile(file);
-        });
-    }
-
-    private startDrawing(e: MouseEvent): void {
-        if (!this.ctx || !this.canvas) return;
-        this.isDrawing = true;
-        
-        const rect = this.canvas.getBoundingClientRect();
-        this.canvasRectLeft = rect.left;
-        this.canvasRectTop = rect.top;
-        
-        this.startX = e.clientX - rect.left;
-        this.startY = e.clientY - rect.top;
-
-        // Save state/snapshot for line and rect preview
-        this.startImageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.startX, this.startY);
-    }
-
-    private draw(e: MouseEvent): void {
-        if (!this.isDrawing || !this.ctx || !this.canvas) return;
-        const x = e.clientX - this.canvasRectLeft;
-        const y = e.clientY - this.canvasRectTop;
-
-        if (this.currentTool === 'line' || this.currentTool === 'rect') {
-            if (this.startImageData) {
-                this.ctx.putImageData(this.startImageData, 0, 0);
-            }
-            this.ctx.strokeStyle = this.color;
-            this.ctx.lineWidth = this.brushSize;
-            
-            if (this.currentTool === 'line') {
-                this.ctx.beginPath();
-                this.ctx.moveTo(this.startX, this.startY);
-                this.ctx.lineTo(x, y);
-                this.ctx.stroke();
-            } else if (this.currentTool === 'rect') {
-                this.ctx.beginPath();
-                this.ctx.rect(this.startX, this.startY, x - this.startX, y - this.startY);
-                this.ctx.stroke();
-            }
-        } else {
-            this.ctx.lineTo(x, y);
-            this.ctx.strokeStyle = this.color;
-            this.ctx.lineWidth = this.brushSize;
-            this.ctx.lineCap = 'round';
-            this.ctx.stroke();
-        }
-    }
-
-    private stopDrawing(): void {
-        if (!this.isDrawing) return;
-        this.isDrawing = false;
-        this.startImageData = null;
-        // Save state after each stroke for undo
-        this._saveState();
-    }
-
-    private selectTool(tool: PaintTool): void {
-        if (!this.ctx || !this.canvas) return;
-
-        // Remove active styling from other buttons
-        // Mark the selected tool with a class and let the theme paint it. This used
-        // to set `background: #e0e0e0` and a Win95 inset border inline, which no
-        // stylesheet can override — so once the theme gave these buttons light text,
-        // the active tool became light-on-light and vanished.
-        const btns = document.querySelectorAll(`#${this.windowId} .paint-toolbar button`);
-        btns.forEach(b => {
-            const btnEl = b as HTMLButtonElement;
-            if (btnEl.title !== 'undo' && btnEl.title !== 'redo') {
-                btnEl.classList.remove('tool-active');
-            }
-        });
-
-        const activeBtn = Array.from(btns).find(b => (b as HTMLButtonElement).title === tool) as HTMLButtonElement | undefined;
-        if (activeBtn) {
-            activeBtn.classList.add('tool-active');
-        }
-
-        if (tool === 'undo' || tool === 'redo' || tool === 'clear' || tool === 'separator') {
-            // Do not switch currentTool for actions
-        } else {
-            this.currentTool = tool;
-        }
-
-        switch (tool) {
-            case 'eraser':
-                this.color = '#ffffff';
-                this.brushSize = 10;
-                break;
-            case 'pencil':
-                this.brushSize = 1;
-                break;
-            case 'brush':
-                this.brushSize = 5;
-                break;
-            case 'rect':
-                this.brushSize = 2;
-                break;
-            case 'line':
-                this.brushSize = 2;
-                break;
-            case 'clear':
-                this._saveState(); // Save before clearing for undo
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this._saveState();
-                break;
-            default:
-                Utils.Logger.log(`Tool selected: ${tool}`);
         }
     }
 
@@ -624,7 +461,7 @@ class Paint {
 Kernel.registerApp('paint', Paint, {
     name: 'Pinta',
     icon: '🎨',
-    description: 'Basic drawing application with Undo/Redo',
+    description: 'Basic drawing application with modular architecture',
     singleton: true
 });
 

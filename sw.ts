@@ -4,6 +4,8 @@
  * v2.0 — Fase 4 Refactor
  */
 
+declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST?: Array<{ url: string }> };
+
 const CACHE_VERSION = '1.0.5';
 const CACHE_NAME = `hados-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `hados-dynamic-v${CACHE_VERSION}`;
@@ -92,7 +94,7 @@ self.addEventListener('fetch', (event) => {
 // CACHING STRATEGIES
 // ============================================
 
-async function cacheFirst(request) {
+async function cacheFirst(request: Request): Promise<Response> {
     const cached = await caches.match(request);
     if (cached) return cached;
 
@@ -108,7 +110,7 @@ async function cacheFirst(request) {
     }
 }
 
-async function networkFirst(request) {
+async function networkFirst(request: Request): Promise<Response> {
     try {
         const response = await fetch(request);
         if (response && response.status === 200) {
@@ -123,13 +125,13 @@ async function networkFirst(request) {
 
         // Offline fallback for navigation
         if (request.mode === 'navigate') {
-            return caches.match('/index.html');
+            return caches.match('/index.html').then(res => res || new Response('Offline', { status: 503 }));
         }
         return new Response('Offline', { status: 503 });
     }
 }
 
-async function staleWhileRevalidate(request) {
+async function staleWhileRevalidate(request: Request): Promise<Response> {
     const cached = await caches.match(request);
     const fetchPromise = fetch(request)
         .then(response => {
@@ -139,7 +141,7 @@ async function staleWhileRevalidate(request) {
             }
             return response;
         })
-        .catch(() => cached);
+        .catch(() => cached || new Response('Offline', { status: 503 }));
 
     return cached || fetchPromise;
 }
@@ -148,11 +150,11 @@ async function staleWhileRevalidate(request) {
 // HELPERS
 // ============================================
 
-function isStaticAsset(pathname) {
+function isStaticAsset(pathname: string): boolean {
     return /\.(js|css|webp|png|jpg|jpeg|gif|ico|opus|mp3|mp4|woff2?|ttf|svg)$/i.test(pathname);
 }
 
-async function trimCache(cacheName, maxItems) {
+async function trimCache(cacheName: string, maxItems: number): Promise<void> {
     const cache = await caches.open(cacheName);
     const keys = await cache.keys();
     if (keys.length > maxItems) {

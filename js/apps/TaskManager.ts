@@ -4,24 +4,25 @@ import { Utils } from '../utils.js';
 import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
+import { ProcessesTab } from './taskmanager/ProcessesTab.js';
+import { PerformanceTab } from './taskmanager/PerformanceTab.js';
+import { SystemTab } from './taskmanager/SystemTab.js';
 
 export class TaskManager implements IWindowsApp {
-    /** Refresh interval in milliseconds */
     private static readonly REFRESH_INTERVAL_MS = 1000;
-    /** Scale limit for performance meter bar */
     private static readonly PERF_SCALE_LIMIT = 20;
-    /** Maximum listeners for health meter normalization */
     private static readonly LISTENER_MAX = 100;
-    /** Default window dimensions */
     private static readonly WIN_WIDTH = 480;
     private static readonly WIN_HEIGHT = 420;
 
     public windowId: string = '';
     private intervalId: number | null = null;
     private container: HTMLElement | null = null;
-    private activeRowPid: number | null = null;
-    private _lastProcessesState: string = '';
     
+    private processesTab: ProcessesTab | null = null;
+    private performanceTab: PerformanceTab | null = null;
+    private systemTab: SystemTab | null = null;
+
     private boundProcessStarted: EventListener;
     private boundProcessStopped: EventListener;
     private boundTabClick: EventListener;
@@ -50,27 +51,8 @@ export class TaskManager implements IWindowsApp {
             }
         };
         this.boundProcessListClick = (e: Event) => {
-            const target = e.target as HTMLElement;
-            
-            // End task execution
-            if (target.classList.contains('tm-kill-btn') || target.closest('.tm-kill-btn')) {
-                const btn = target.classList.contains('tm-kill-btn') ? target : target.closest('.tm-kill-btn') as HTMLElement;
-                const pidStr = btn.getAttribute('data-pid');
-                if (pidStr) {
-                    Kernel.kill(parseInt(pidStr, 10));
-                }
-                e.stopPropagation();
-                return;
-            }
-
-            // Row selection
-            const tr = target.closest('tr');
-            if (tr) {
-                const pidStr = tr.getAttribute('data-pid');
-                if (pidStr) {
-                    this.activeRowPid = parseInt(pidStr, 10);
-                    this.highlightRow();
-                }
+            if (this.processesTab) {
+                this.processesTab.handleClick(e);
             }
         };
 
@@ -93,6 +75,12 @@ export class TaskManager implements IWindowsApp {
         if (!this.container) return;
 
         this.setupLayout();
+
+        // Instantiate tab sub-controllers
+        this.processesTab = new ProcessesTab(this.container);
+        this.performanceTab = new PerformanceTab(this.container, TaskManager.PERF_SCALE_LIMIT, TaskManager.LISTENER_MAX);
+        this.systemTab = new SystemTab(this.container);
+
         this.refreshUI();
 
         this.intervalId = window.setInterval(() => this.refreshUI(), TaskManager.REFRESH_INTERVAL_MS);
@@ -232,197 +220,6 @@ export class TaskManager implements IWindowsApp {
         }
     }
 
-    private highlightRow(): void {
-        if (!this.container) return;
-        const rows = this.container.querySelectorAll('#tm-process-list tr');
-        rows.forEach(tr => {
-            const pidStr = tr.getAttribute('data-pid');
-            if (pidStr && parseInt(pidStr, 10) === this.activeRowPid) {
-                tr.classList.add('active');
-            } else {
-                tr.classList.remove('active');
-            }
-        });
-    }
-
-    private renderMeterRow(label: string, value: number, limit: number): string {
-        const percent = Math.min(100, Math.round((value / limit) * 100));
-        return `
-            <div class="tm-meter-row">
-                <span class="tm-meter-label">${label}:</span>
-                <span class="tm-meter-val">${value}</span>
-                <div class="tm-meter-container">
-                    <div class="tm-meter-fill" style="width: ${percent}%;"></div>
-                </div>
-            </div>
-        `;
-    }
-
-    private renderProcessTable(processes: any[], apps: any): void {
-        const tbody = this.container?.querySelector('#tm-process-list') as HTMLElement | null;
-        if (!tbody) return;
-
-        // Incremental rendering check: compare PIDs/statuses
-        const stateStr = processes.map(p => `${p.pid}:${p.appId}:${p.status}:${p.windowId}`).join(',');
-        if (stateStr === this._lastProcessesState) {
-            return;
-        }
-        this._lastProcessesState = stateStr;
-
-        const endTaskLabel = i18n.t('taskmanager.endtask');
-        tbody.innerHTML = '';
-        processes.forEach(proc => {
-            const appEntry = apps[proc.appId];
-            const appName = appEntry ? appEntry.metadata.name : 'Unknown';
-            const icon = appEntry ? appEntry.metadata.icon || '⚙️' : '⚙️';
-
-            const tr = document.createElement('tr');
-            tr.setAttribute('data-pid', String(proc.pid));
-            tr.tabIndex = 0; // Focusable row
-
-            const statusClass = proc.status === 'running' ? 'tm-status-running' : 'tm-status-terminated';
-
-            tr.innerHTML = `
-                <td>${proc.pid}</td>
-                <td><span style="margin-right: 4px;">${icon}</span>${Utils.escapeHTML(appName)}</td>
-                <td>${Utils.escapeHTML(proc.windowId || '—')}</td>
-                <td class="${statusClass}">${proc.status}</td>
-                <td>
-                    <button class="hados-btn tm-kill-btn" data-pid="${proc.pid}" style="padding: 1px 6px; min-height: 18px; font-size: 10px;">
-                        ${endTaskLabel}
-                    </button>
-                </td>
-            `;
-
-            tbody.appendChild(tr);
-        });
-
-        this.highlightRow();
-
-        // Update process count footer
-        const footer = this.container?.querySelector('#tm-process-footer');
-        if (footer) {
-            footer.textContent = `Processes: ${Kernel.getActiveCount()}`;
-        }
-    }
-
-    private renderResourceMetrics(stats: any): void {
-        const metricsContainer = this.container?.querySelector('#tm-performance-metrics');
-        if (metricsContainer) {
-            metricsContainer.innerHTML = `
-                ${this.renderMeterRow('Tracked WebGL Contexts', stats.webgl, TaskManager.PERF_SCALE_LIMIT)}
-                ${this.renderMeterRow('Tracked Audio Contexts', stats.audio, TaskManager.PERF_SCALE_LIMIT)}
-                ${this.renderMeterRow('Tracked Event Listeners', stats.listener, TaskManager.PERF_SCALE_LIMIT)}
-                ${this.renderMeterRow('Tracked Timers/Intervals', stats.timer, TaskManager.PERF_SCALE_LIMIT)}
-                ${this.renderMeterRow('Total Active Disposables', stats.total, TaskManager.PERF_SCALE_LIMIT)}
-            `;
-        }
-    }
-
-    private renderSystemHealth(): void {
-        const totalListeners = Utils.eventManager.count();
-        const perfListeners = this.container?.querySelector('#tm-perf-listeners');
-        const fillListeners = this.container?.querySelector('#tm-fill-listeners') as HTMLElement | null;
-        if (perfListeners) perfListeners.textContent = String(totalListeners);
-        if (fillListeners) fillListeners.style.width = `${Math.min(100, Math.round((totalListeners / TaskManager.LISTENER_MAX) * 100))}%`;
-
-        const perfHeap = this.container?.querySelector('#tm-perf-heap');
-        const fillHeap = this.container?.querySelector('#tm-fill-heap') as HTMLElement | null;
-        const perf = (window.performance as any);
-        if (perf && perf.memory && typeof perf.memory.usedJSHeapSize === 'number') {
-            const usedMB = (perf.memory.usedJSHeapSize / (1024 * 1024)).toFixed(2);
-            const heapPercent = Math.min(100, Math.round((perf.memory.usedJSHeapSize / perf.memory.jsHeapSizeLimit) * 100));
-
-            if (perfHeap) perfHeap.textContent = `${usedMB} MB`;
-            if (fillHeap) fillHeap.style.width = `${heapPercent}%`;
-        } else {
-            if (perfHeap) perfHeap.textContent = 'n/a';
-            if (fillHeap) fillHeap.style.width = '0%';
-        }
-    }
-
-    private getGPUName(): string {
-        try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            if (gl) {
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info') as any;
-                if (debugInfo) {
-                    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_RENDERER_ID);
-                    if (renderer) return renderer;
-                }
-            }
-        } catch {
-            // Fallback on security/context errors
-        }
-        return 'Standard WebGL Renderer';
-    }
-
-    private renderHardwareSpecs(): void {
-        const specsContainer = this.container?.querySelector('#tm-system-specs');
-        if (specsContainer) {
-            const cpuCores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : 'Unknown Cores';
-            const ramGB = (navigator as any).deviceMemory ? `${(navigator as any).deviceMemory} GB` : 'Standard';
-            const gpuName = this.getGPUName();
-
-            specsContainer.innerHTML = `
-                <strong>CPU:</strong> Host CPU (${cpuCores})<br>
-                <strong>RAM:</strong> ${ramGB} RAM<br>
-                <strong>GPU:</strong> ${gpuName}<br>
-                <strong>OS Architecture:</strong> WebOS (HTML5/TS/JS)<br>
-                <strong>Graphics API:</strong> WebGL (Three.js Active)
-            `;
-        }
-    }
-
-    private renderRealtimeUsage(processesCount: number, stats: any): void {
-        const webglCount = stats.webgl || 0;
-        const timerCount = stats.timer || 0;
-        const tick = Math.floor(Date.now() / 1000);
-        
-        const timeFluctuation1 = Math.sin(tick) * 2 + Math.cos(tick * 0.7) * 1.5;
-        const timeFluctuation2 = Math.cos(tick * 1.2) * 1.8 + Math.sin(tick * 0.5) * 1.2;
-
-        const baseCpu = 5 + (processesCount * 3) + (webglCount * 8) + (timerCount * 0.5);
-        const cpuUsage = Math.max(1, Math.min(99, Math.round(baseCpu + timeFluctuation1)));
-
-        const perf = (window.performance as any);
-        let ramUsage: number;
-        if (perf && perf.memory && typeof perf.memory.usedJSHeapSize === 'number') {
-            ramUsage = Math.max(1, Math.min(99, Math.round((perf.memory.usedJSHeapSize / perf.memory.jsHeapSizeLimit) * 100)));
-        } else {
-            const baseRam = 15 + (processesCount * 4) + (webglCount * 10);
-            ramUsage = Math.max(1, Math.min(99, Math.round(baseRam + timeFluctuation2)));
-        }
-
-        const baseGpu = webglCount > 0 ? (25 + webglCount * 20) : (1 + processesCount * 2);
-        const gpuUsage = Math.max(1, Math.min(99, Math.round(baseGpu + timeFluctuation2)));
-
-        const baseVram = webglCount > 0 ? (20 + webglCount * 15) : (1 + processesCount * 1.5);
-        const vramUsage = Math.max(1, Math.min(99, Math.round(baseVram + timeFluctuation1)));
-
-        // Update UI meters
-        const cpuVal = this.container?.querySelector('#tm-sys-cpu-val');
-        const cpuFill = this.container?.querySelector('#tm-sys-cpu-fill') as HTMLElement | null;
-        if (cpuVal) cpuVal.textContent = `${cpuUsage}%`;
-        if (cpuFill) cpuFill.style.width = `${cpuUsage}%`;
-
-        const ramVal = this.container?.querySelector('#tm-sys-ram-val');
-        const ramFill = this.container?.querySelector('#tm-sys-ram-fill') as HTMLElement | null;
-        if (ramVal) ramVal.textContent = `${ramUsage}%`;
-        if (ramFill) ramFill.style.width = `${ramUsage}%`;
-
-        const gpuVal = this.container?.querySelector('#tm-sys-gpu-val');
-        const gpuFill = this.container?.querySelector('#tm-sys-gpu-fill') as HTMLElement | null;
-        if (gpuVal) gpuVal.textContent = `${gpuUsage}%`;
-        if (gpuFill) gpuFill.style.width = `${gpuUsage}%`;
-
-        const vramVal = this.container?.querySelector('#tm-sys-vram-val');
-        const vramFill = this.container?.querySelector('#tm-sys-vram-fill') as HTMLElement | null;
-        if (vramVal) vramVal.textContent = `${vramUsage}%`;
-        if (vramFill) vramFill.style.width = `${vramUsage}%`;
-    }
-
     private refreshUI(): void {
         if (!this.container) return;
 
@@ -433,11 +230,11 @@ export class TaskManager implements IWindowsApp {
         const resManager = Services.get('ResourceManager');
         const stats = resManager ? resManager.stats() : { webgl: 0, audio: 0, listener: 0, timer: 0, total: 0 };
 
-        this.renderProcessTable(processes, apps);
-        this.renderResourceMetrics(stats);
-        this.renderSystemHealth();
-        this.renderHardwareSpecs();
-        this.renderRealtimeUsage(processes.length, stats);
+        this.processesTab?.render(processes, apps);
+        this.performanceTab?.renderResourceMetrics(stats);
+        this.performanceTab?.renderSystemHealth();
+        this.systemTab?.renderHardwareSpecs();
+        this.systemTab?.renderRealtimeUsage(processes.length, stats);
     }
 
     public terminate(): void {

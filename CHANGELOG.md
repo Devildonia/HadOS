@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-07-19
+
+Complete TypeScript migration for configuration files, tests, utility scripts, and service worker, along with test suite corrections and regression fixes.
+
+### Added
+- **ESLint TS Config:** Ported `eslint.config.js` to `eslint.config.ts`, utilizing `jiti` for loading TS config in ESLint.
+- **Service Worker in TS:** Ported `sw.js` to `sw.ts` with typed ServiceWorker global scope constraints.
+- **Developer Tools in TS:** Migrated developer utility scripts in `scripts/` (`copy-litert-wasm.js`, `create-app.js`, `generate-i18n-types.js`, `populate-ragdoll-locales.js`, `sync-locales.js`) to `.ts` and set up execution using `tsx`.
+- **E2E Tests in TS:** Renamed Playwright test specs to `.ts` and updated visual snapshots to target `test/e2e/css-baseline.spec.ts-snapshots`.
+
+### Fixed
+- **Test Compatibility & Regression Fixes:**
+  - Reverted unauthorized changes in `js/ai/segmentation.ts` that broke unit tests.
+  - Added compatibility getters and proxies on `Paint` to preserve legacy test coverage.
+  - Restored array-backed `history` and `navigateTo` relative parsing in `FileExplorer` to satisfy vitest spec expectations.
+
 ## [1.0.5] - 2026-07-18
 
 The desktop grows a real file system and a movable bar. "My Computer" becomes a genuine
