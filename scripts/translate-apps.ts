@@ -27,7 +27,13 @@ const keysToTranslate = [
     'audiostudio.style_debate',
     'audiostudio.generating',
     'audiostudio.playing',
-    'audiostudio.paused'
+    'audiostudio.paused',
+    'audiostudio.tab_podcast',
+    'audiostudio.tab_dictation',
+    'audiostudio.dictation_start',
+    'audiostudio.dictation_stop',
+    'audiostudio.dictation_placeholder',
+    'audiostudio.save_note'
 ];
 
 async function translateText(text: string, targetLang: string): Promise<string> {
@@ -78,6 +84,12 @@ async function run() {
                     else if (key === 'audiostudio.generating') json[key] = 'Sintetizando Podcast de IA...';
                     else if (key === 'audiostudio.playing') json[key] = 'Reproduciendo Podcast';
                     else if (key === 'audiostudio.paused') json[key] = 'Pausado';
+                    else if (key === 'audiostudio.tab_podcast') json[key] = 'Creador de Podcast';
+                    else if (key === 'audiostudio.tab_dictation') json[key] = 'Dictador de Voz';
+                    else if (key === 'audiostudio.dictation_start') json[key] = 'Iniciar Grabación';
+                    else if (key === 'audiostudio.dictation_stop') json[key] = 'Detener';
+                    else if (key === 'audiostudio.dictation_placeholder') json[key] = 'Tu transcripción de voz aparecerá aquí...';
+                    else if (key === 'audiostudio.save_note') json[key] = 'Guardar en Notas';
                     updated = true;
                 } else {
                     const translated = await translateText(englishVal, targetLang);

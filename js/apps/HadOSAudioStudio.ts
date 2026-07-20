@@ -4,22 +4,19 @@ import { Utils } from '../utils.js';
 import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
-import { VFS } from '../core/VFS.js';
+import type { IAudioStudioTab } from './audiostudio/IAudioStudioTab.js';
+import { PodcastTab } from './audiostudio/PodcastTab.js';
+import { DictationTab } from './audiostudio/DictationTab.js';
 
 export class HadOSAudioStudio implements IWindowsApp {
     public windowId: string = '';
     private container: HTMLElement | null = null;
+    private tabContainer: HTMLElement | null = null;
+    private currentTab: IAudioStudioTab | null = null;
+    private activeTabId: 'podcast' | 'dictation' = 'podcast';
 
-    private isPlaying: boolean = false;
-    private isPaused: boolean = false;
-    private scriptQueue: { text: string; speaker: 'A' | 'B' }[] = [];
-    private queueIndex: number = 0;
-    private activeUtterance: SpeechSynthesisUtterance | null = null;
-
-    private boundGenerate = () => this.handleGeneratePodcast();
-    private boundPlay = () => this.handlePlay();
-    private boundPause = () => this.handlePause();
-    private boundStop = () => this.handleStop();
+    private boundSwitchPodcast = () => this.switchTab('podcast');
+    private boundSwitchDictation = () => this.switchTab('dictation');
 
     constructor() {
         this.init();
@@ -31,7 +28,7 @@ export class HadOSAudioStudio implements IWindowsApp {
         this.windowId = WindowFactory.create({
             title: title,
             width: 580,
-            height: 480,
+            height: 520,
             resizable: true,
             icon: '🎙️'
         });
@@ -39,312 +36,106 @@ export class HadOSAudioStudio implements IWindowsApp {
         this.container = WindowFactory.getBody(this.windowId);
         if (!this.container) return;
 
-        this.ensureVfsDirectory();
-        this.setupLayout();
+        this.setupTabNavigation();
+        this.switchTab('podcast');
     }
 
-    private ensureVfsDirectory(): void {
-        try {
-            VFS.mkdir('C:\\', 'HADOS');
-        } catch {}
-        try {
-            VFS.mkdir('C:\\HADOS', 'PODCASTS');
-        } catch {}
-    }
-
-    private setupLayout(): void {
+    private setupTabNavigation(): void {
         if (!this.container) return;
 
-        const generateText = i18n.t('audiostudio.generate') || 'Generar Podcast';
-        const placeholderText = i18n.t('audiostudio.url_placeholder') || 'Pega la URL o el texto aquí...';
-        const styleText = i18n.t('audiostudio.style') || 'Estilo de Podcast';
-        const narratorText = i18n.t('audiostudio.style_narrator') || 'Narrador Solitario';
-        const debateText = i18n.t('audiostudio.style_debate') || 'Debate Tecnológico';
+        const podcastTabText = i18n.t('audiostudio.tab_podcast') || 'Podcast Creator';
+        const dictationTabText = i18n.t('audiostudio.tab_dictation') || 'Voice Dictator';
 
         this.container.innerHTML = `
-            <div class="audiostudio-container">
-                <!-- Inputs -->
-                <div class="audiostudio-input-panel">
-                    <textarea class="audiostudio-textarea" id="audiostudio-text-input" placeholder="${placeholderText}">Why Rust is replacing C++ in high-performance WebGL systems</textarea>
-                    <div class="audiostudio-controls">
-                        <div>
-                            <label style="font-size: 11px; font-weight: bold; margin-right: 5px;">${styleText}:</label>
-                            <select class="audiostudio-select hados-select" id="audiostudio-style-select">
-                                <option value="narrator">${narratorText}</option>
-                                <option value="debate">${debateText}</option>
-                            </select>
-                        </div>
-                        <button class="hados-btn" id="audiostudio-gen-btn">${generateText}</button>
-                    </div>
+            <div style="display: flex; flex-direction: column; height: 100%;">
+                <!-- Classical Win95 Tab Headers -->
+                <div class="audiostudio-tabs" style="display: flex; gap: 2px; padding: 4px 4px 0 4px; background: var(--border-light); border-bottom: 2px solid var(--border-dark);">
+                    <button class="audiostudio-tab-btn active" id="tab-podcast" style="padding: 4px 10px; font-size: 11px; font-family: inherit; font-weight: bold; cursor: pointer; border: 2px solid; border-color: var(--border-light) var(--border-dark) transparent var(--border-light); background: var(--window-bg); margin-bottom: -2px; z-index: 2;">${podcastTabText}</button>
+                    <button class="audiostudio-tab-btn" id="tab-dictation" style="padding: 4px 10px; font-size: 11px; font-family: inherit; font-weight: bold; cursor: pointer; border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); background: var(--border-dark); margin-bottom: 0;">${dictationTabText}</button>
                 </div>
-
-                <!-- Cassette Deck -->
-                <div class="audiostudio-deck" id="audiostudio-deck">
-                    <!-- Cassette -->
-                    <div class="audiostudio-cassette">
-                        <div class="audiostudio-cassette-label">
-                            <span style="font-size: 10px; letter-spacing: 1px;">HAD-OS TAPE</span>
-                            <span id="audiostudio-label-title" style="font-size: 8px; opacity: 0.8; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Empty Tape</span>
-                        </div>
-                        <div class="audiostudio-reels">
-                            <div class="audiostudio-reel">
-                                <div class="audiostudio-reel-teeth"></div>
-                            </div>
-                            <div class="audiostudio-reel">
-                                <div class="audiostudio-reel-teeth"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Equalizer -->
-                    <div class="audiostudio-visualizer">
-                        ${Array.from({ length: 16 }).map(() => `<div class="audiostudio-bar"></div>`).join('')}
-                    </div>
-
-                    <!-- Tape Buttons -->
-                    <div class="audiostudio-buttons">
-                        <button class="audiostudio-deck-btn" id="audiostudio-play-btn">▶ PLAY</button>
-                        <button class="audiostudio-deck-btn" id="audiostudio-pause-btn">❚❚ PAUSE</button>
-                        <button class="audiostudio-deck-btn" id="audiostudio-stop-btn">■ STOP</button>
-                    </div>
-                </div>
-
-                <!-- Console Output -->
-                <div class="audiostudio-log" id="audiostudio-log">
-                    [System] Audio Studio initialized. Select style and click Generate to synthesize a podcast.
-                </div>
+                <!-- Dynamic Tab Content Panel -->
+                <div id="audiostudio-tab-panel" style="flex: 1; display: flex; flex-direction: column; background: var(--window-bg);"></div>
             </div>
         `;
 
-        // Bind buttons
-        const genBtn = this.container.querySelector('#audiostudio-gen-btn');
-        if (genBtn) Utils.eventManager.add(genBtn, 'click', this.boundGenerate);
+        this.tabContainer = this.container.querySelector('#audiostudio-tab-panel');
 
-        const playBtn = this.container.querySelector('#audiostudio-play-btn');
-        if (playBtn) Utils.eventManager.add(playBtn, 'click', this.boundPlay);
+        // Bind clicks
+        const tabPodcast = this.container.querySelector('#tab-podcast');
+        if (tabPodcast) {
+            Utils.eventManager.add(tabPodcast, 'click', this.boundSwitchPodcast);
+        }
 
-        const pauseBtn = this.container.querySelector('#audiostudio-pause-btn');
-        if (pauseBtn) Utils.eventManager.add(pauseBtn, 'click', this.boundPause);
-
-        const stopBtn = this.container.querySelector('#audiostudio-stop-btn');
-        if (stopBtn) Utils.eventManager.add(stopBtn, 'click', this.boundStop);
-    }
-
-    private logMessage(msg: string): void {
-        const log = this.container?.querySelector('#audiostudio-log');
-        if (log) {
-            log.innerHTML += `<br>${msg}`;
-            log.scrollTop = log.scrollHeight;
+        const tabDictation = this.container.querySelector('#tab-dictation');
+        if (tabDictation) {
+            Utils.eventManager.add(tabDictation, 'click', this.boundSwitchDictation);
         }
     }
 
-    private handleGeneratePodcast(): void {
-        const input = this.container?.querySelector('#audiostudio-text-input') as HTMLInputElement | null;
-        const styleSelect = this.container?.querySelector('#audiostudio-style-select') as HTMLSelectElement | null;
-        if (!input || !input.value.trim() || !styleSelect) return;
-
-        const rawText = input.value.trim();
-        const style = styleSelect.value;
-
-        // Cancel active playbacks
-        this.handleStop();
-
-        this.logMessage(`[HAD-OS RAG] Extracting content and synthesizing script...`);
-
-        // Generate script dialog
-        const labelTitle = this.container?.querySelector('#audiostudio-label-title');
-        if (labelTitle) {
-            labelTitle.textContent = rawText.length > 25 ? rawText.substring(0, 25) + '...' : rawText;
+    private switchTab(tabId: 'podcast' | 'dictation'): void {
+        if (this.currentTab) {
+            this.currentTab.terminate();
+            this.currentTab = null;
         }
 
-        const script = this.generateScript(rawText, style);
-        this.scriptQueue = script;
-        this.queueIndex = 0;
+        this.activeTabId = tabId;
 
-        // Write script text to VFS
-        const timestamp = Date.now();
-        const scriptText = script.map(line => `Speaker ${line.speaker}: ${line.text}`).join('\n');
-        try {
-            VFS.writeFile('C:\\HADOS\\PODCASTS', `podcast-${timestamp}.txt`, scriptText);
-            this.logMessage(`[VFS] Script saved to C:\\HADOS\\PODCASTS\\podcast-${timestamp}.txt`);
-        } catch (e) {
-            Utils.Logger.error("Failed to write podcast script to VFS:", e);
-        }
+        // Toggle Tab button styling
+        const btnPodcast = this.container?.querySelector('#tab-podcast') as HTMLElement | null;
+        const btnDictation = this.container?.querySelector('#tab-dictation') as HTMLElement | null;
 
-        // Start playback
-        this.handlePlay();
-    }
+        if (btnPodcast && btnDictation) {
+            if (tabId === 'podcast') {
+                btnPodcast.className = 'audiostudio-tab-btn active';
+                btnPodcast.style.borderColor = 'var(--border-light) var(--border-dark) transparent var(--border-light)';
+                btnPodcast.style.background = 'var(--window-bg)';
+                btnPodcast.style.marginBottom = '-2px';
+                btnPodcast.style.zIndex = '2';
 
-    private generateScript(text: string, style: string): { text: string; speaker: 'A' | 'B' }[] {
-        const lang = i18n.getLang();
-        const isSpanish = lang === 'es';
-
-        if (style === 'debate') {
-            if (isSpanish) {
-                return [
-                    { speaker: 'A', text: '¡Bienvenidos a HadOS Audio Studio! Hoy debatiremos un tema fascinante.' },
-                    { speaker: 'B', text: 'Así es. Analizaremos en profundidad la propuesta del usuario.' },
-                    { speaker: 'A', text: `El tema de hoy es: "${text}". ¿Qué opinas al respecto?` },
-                    { speaker: 'B', text: 'Creo que presenta desafíos lógicos interesantes, especialmente en sistemas distribuidos y optimización.' },
-                    { speaker: 'A', text: 'Totalmente de acuerdo. Los hilos de ejecución deben sincronizarse correctamente para evitar bloqueos.' },
-                    { speaker: 'B', text: '¡Excelente punto! Concluimos este debate por hoy. ¡Gracias por sintonizarnos!' }
-                ];
+                btnDictation.className = 'audiostudio-tab-btn';
+                btnDictation.style.borderColor = 'var(--border-light) var(--border-dark) var(--border-dark) var(--border-light)';
+                btnDictation.style.background = 'var(--border-light)';
+                btnDictation.style.marginBottom = '0';
+                btnDictation.style.zIndex = '1';
             } else {
-                return [
-                    { speaker: 'A', text: 'Welcome to HadOS Audio Studio! Today we discuss a fascinating topic.' },
-                    { speaker: 'B', text: 'Indeed. We are analyzing the user input in detail.' },
-                    { speaker: 'A', text: `The subject is: "${text}". What are your thoughts on this?` },
-                    { speaker: 'B', text: 'It presents interesting engineering tradeoffs, especially concerning browser WebAssembly overhead.' },
-                    { speaker: 'A', text: 'I agree. Low latency allocation is critical for these pipelines.' },
-                    { speaker: 'B', text: 'Exactly. That concludes our technical briefing. Thanks for listening!' }
-                ];
-            }
-        } else {
-            // Solo Narrator
-            if (isSpanish) {
-                return [
-                    { speaker: 'A', text: `Iniciando lectura de artículo en HadOS. Título del texto: "${text}".` },
-                    { speaker: 'A', text: 'El desarrollo tecnológico actual demuestra que la integración local de servicios simplifica el flujo operativo de los desarrolladores.' },
-                    { speaker: 'A', text: 'Al procesar recursos directamente sobre hilos lógicos en el cliente, eliminamos tiempos de latencia y mantenemos la privacidad del usuario.' },
-                    { speaker: 'A', text: 'Fin del boletín tecnológico.' }
-                ];
-            } else {
-                return [
-                    { speaker: 'A', text: `Initiating HadOS audio reading. Subject title: "${text}".` },
-                    { speaker: 'A', text: 'Modern technical design emphasizes on-device processing to reduce server round-trips and optimize client runtime.' },
-                    { speaker: 'A', text: 'By executing scripts directly on isolated client sandboxes, we ensure robust performance and security boundaries.' },
-                    { speaker: 'A', text: 'This concludes the audio briefing.' }
-                ];
-            }
-        }
-    }
+                btnPodcast.className = 'audiostudio-tab-btn';
+                btnPodcast.style.borderColor = 'var(--border-light) var(--border-dark) var(--border-dark) var(--border-light)';
+                btnPodcast.style.background = 'var(--border-light)';
+                btnPodcast.style.marginBottom = '0';
+                btnPodcast.style.zIndex = '1';
 
-    private handlePlay(): void {
-        if (this.scriptQueue.length === 0) {
-            this.logMessage(`[Error] No podcast script generated. Type text and click Generate.`);
-            return;
-        }
-
-        if (this.isPaused) {
-            window.speechSynthesis.resume();
-            this.isPaused = false;
-            this.isPlaying = true;
-            this.updateDeckUI(true);
-            return;
-        }
-
-        if (this.isPlaying) return;
-
-        this.isPlaying = true;
-        this.updateDeckUI(true);
-        this.logMessage(`[Audio Studio] Playback started.`);
-        this.speakNext();
-    }
-
-    private speakNext(): void {
-        if (this.queueIndex >= this.scriptQueue.length) {
-            this.handleStop();
-            this.logMessage(`[Audio Studio] Playback completed.`);
-            return;
-        }
-
-        const line = this.scriptQueue[this.queueIndex];
-        if (!line) return;
-        
-        const lang = i18n.getLang();
-        
-        const utterance = new SpeechSynthesisUtterance(line.text);
-        utterance.lang = lang;
-
-        // Choose voices for debate
-        const voices = window.speechSynthesis.getVoices();
-        const langVoices = voices.filter(v => v.lang.startsWith(lang));
-
-        if (langVoices.length > 0) {
-            if (line.speaker === 'B' && langVoices.length > 1) {
-                // Alternating voice
-                utterance.voice = langVoices[1] || null;
-            } else {
-                utterance.voice = langVoices[0] || null;
+                btnDictation.className = 'audiostudio-tab-btn active';
+                btnDictation.style.borderColor = 'var(--border-light) var(--border-dark) transparent var(--border-light)';
+                btnDictation.style.background = 'var(--window-bg)';
+                btnDictation.style.marginBottom = '-2px';
+                btnDictation.style.zIndex = '2';
             }
         }
 
-        utterance.onend = () => {
-            this.activeUtterance = null;
-            this.queueIndex++;
-            this.speakNext();
-        };
-
-        utterance.onerror = (e) => {
-            Utils.Logger.error("SpeechSynthesis error:", e);
-            this.handleStop();
-        };
-
-        this.activeUtterance = utterance;
-        window.speechSynthesis.speak(utterance);
-    }
-
-    private handlePause(): void {
-        if (!this.isPlaying || this.isPaused) return;
-
-        window.speechSynthesis.pause();
-        this.isPaused = true;
-        this.isPlaying = false;
-        this.updateDeckUI(false);
-        this.logMessage(`[Audio Studio] Playback paused.`);
-    }
-
-    private handleStop(): void {
-        window.speechSynthesis.cancel();
-        this.activeUtterance = null;
-        this.isPlaying = false;
-        this.isPaused = false;
-        this.queueIndex = 0;
-        this.updateDeckUI(false);
-    }
-
-    private updateDeckUI(playing: boolean): void {
-        const deck = this.container?.querySelector('#audiostudio-deck');
-        if (deck) {
-            if (playing) {
-                deck.classList.add('playing');
+        if (this.tabContainer) {
+            this.tabContainer.innerHTML = '';
+            if (tabId === 'podcast') {
+                this.currentTab = new PodcastTab();
             } else {
-                deck.classList.remove('playing');
+                this.currentTab = new DictationTab();
             }
-        }
-
-        // Highlight active buttons
-        const playBtn = this.container?.querySelector('#audiostudio-play-btn');
-        const pauseBtn = this.container?.querySelector('#audiostudio-pause-btn');
-        if (playBtn && pauseBtn) {
-            if (playing) {
-                playBtn.classList.add('active');
-                pauseBtn.classList.remove('active');
-            } else if (this.isPaused) {
-                playBtn.classList.remove('active');
-                pauseBtn.classList.add('active');
-            } else {
-                playBtn.classList.remove('active');
-                pauseBtn.classList.remove('active');
-            }
+            this.currentTab.render(this.tabContainer);
         }
     }
 
     public terminate(): void {
-        this.handleStop();
+        if (this.currentTab) {
+            this.currentTab.terminate();
+            this.currentTab = null;
+        }
 
+        // Clean up main tab button clicks
         if (this.container) {
-            const genBtn = this.container.querySelector('#audiostudio-gen-btn');
-            if (genBtn) Utils.eventManager.remove(genBtn, 'click', this.boundGenerate);
+            const tabPodcast = this.container.querySelector('#tab-podcast');
+            if (tabPodcast) Utils.eventManager.remove(tabPodcast, 'click', this.boundSwitchPodcast);
 
-            const playBtn = this.container.querySelector('#audiostudio-play-btn');
-            if (playBtn) Utils.eventManager.remove(playBtn, 'click', this.boundPlay);
-
-            const pauseBtn = this.container.querySelector('#audiostudio-pause-btn');
-            if (pauseBtn) Utils.eventManager.remove(pauseBtn, 'click', this.boundPause);
-
-            const stopBtn = this.container.querySelector('#audiostudio-stop-btn');
-            if (stopBtn) Utils.eventManager.remove(stopBtn, 'click', this.boundStop);
+            const tabDictation = this.container.querySelector('#tab-dictation');
+            if (tabDictation) Utils.eventManager.remove(tabDictation, 'click', this.boundSwitchDictation);
         }
 
         WindowFactory.destroy(this.windowId);

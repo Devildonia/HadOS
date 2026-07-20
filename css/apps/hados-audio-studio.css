@@ -238,3 +238,19 @@
     overflow-y: auto;
     border: 1px solid #333;
 }
+
+/* Tab buttons themed overrides */
+.theme-modern .audiostudio-tab-btn {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: 0 !important;
+}
+
+.theme-modern .audiostudio-tab-btn.active {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-bottom: transparent !important;
+    color: #fff !important;
+}
+
