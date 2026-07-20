@@ -134,6 +134,7 @@ export class ThemeManager {
                 'icon-hnscout': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">📰</span>',
                 'icon-messenger': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">💬</span>',
                 'icon-audiostudio': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">🎙️</span>',
+                'icon-docexplorer': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">🔍</span>',
                 // Start Menu Items
                 'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/icons/notapad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
@@ -163,6 +164,7 @@ export class ThemeManager {
                 'icon-hnscout': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">📰</span>',
                 'icon-messenger': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">💬</span>',
                 'icon-audiostudio': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">🎙️</span>',
+                'icon-docexplorer': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">🔍</span>',
                 // Start Menu Items
                 'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/themes/winui/notepad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),

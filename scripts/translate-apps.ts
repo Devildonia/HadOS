@@ -33,7 +33,14 @@ const keysToTranslate = [
     'audiostudio.dictation_start',
     'audiostudio.dictation_stop',
     'audiostudio.dictation_placeholder',
-    'audiostudio.save_note'
+    'audiostudio.save_note',
+    'app.docexplorer',
+    'docexplorer.open_file',
+    'docexplorer.drag_drop',
+    'docexplorer.ask_placeholder',
+    'docexplorer.vector_space',
+    'docexplorer.retrieving',
+    'docexplorer.answering'
 ];
 
 async function translateText(text: string, targetLang: string): Promise<string> {
@@ -90,6 +97,13 @@ async function run() {
                     else if (key === 'audiostudio.dictation_stop') json[key] = 'Detener';
                     else if (key === 'audiostudio.dictation_placeholder') json[key] = 'Tu transcripción de voz aparecerá aquí...';
                     else if (key === 'audiostudio.save_note') json[key] = 'Guardar en Notas';
+                    else if (key === 'app.docexplorer') json[key] = 'Explorador de Docs';
+                    else if (key === 'docexplorer.open_file') json[key] = 'Abrir Archivo';
+                    else if (key === 'docexplorer.drag_drop') json[key] = 'Selecciona un documento del VFS o arrástralo aquí...';
+                    else if (key === 'docexplorer.ask_placeholder') json[key] = 'Haz una pregunta sobre este documento...';
+                    else if (key === 'docexplorer.vector_space') json[key] = 'Espacio Vectorial Local LiteRT';
+                    else if (key === 'docexplorer.retrieving') json[key] = 'Recuperando fragmentos relevantes...';
+                    else if (key === 'docexplorer.answering') json[key] = 'Respuesta Fundamentada';
                     updated = true;
                 } else {
                     const translated = await translateText(englishVal, targetLang);
