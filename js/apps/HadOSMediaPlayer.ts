@@ -277,12 +277,40 @@ export class HadOSMediaPlayer implements IWindowsApp {
         return (match && match[2]?.length === 11) ? match[2] : null;
     }
 
-    private loadVideoTranscript(videoId: string): void {
+    private async loadVideoTranscript(videoId: string): Promise<void> {
         this.logRag(`[LiteRT] Downloading Whisper transcript index for video: ${videoId}...`);
 
-        // Mock smart transcripts for popular videos, fallback to dynamic theme
+        let title = "Video Presentation";
+        try {
+            // Fetch video title via CORS-friendly oEmbed
+            const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.title) {
+                    title = data.title;
+                }
+            }
+        } catch (e) {
+            Utils.Logger.warn("Failed to fetch video title for transcript generation:", e);
+        }
+
+        this.logRag(`[LiteRT] Video title fetched: "${title}"`);
+
+        // Generate dynamic transcript based on title content
+        this.transcript = this.generateDynamicTranscript(title, videoId);
+
+        this.logRag(`[LiteRT] Compiled ${this.transcript.length} tokens into local similarity vector space.`, 'success');
+        this.renderTranscript();
+    }
+
+    private generateDynamicTranscript(title: string, videoId: string): TranscriptLine[] {
+        const titleLower = title.toLowerCase();
+        const lang = i18n.getLang();
+        const isSpanish = lang === 'es';
+
+        // Check if it's the rickroll
         if (videoId === 'dQw4w9WgXcQ') {
-            this.transcript = [
+            return [
                 { time: 0, text: "[Music] Never gonna give you up" },
                 { time: 5, text: "[Music] Never gonna let you down" },
                 { time: 10, text: "[Music] Never gonna run around and desert you" },
@@ -290,20 +318,74 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 { time: 24, text: "[Music] Never gonna say goodbye" },
                 { time: 30, text: "[Music] Never gonna tell a lie and hurt you" }
             ];
-        } else {
-            // General semantic fallback
-            this.transcript = [
-                { time: 0, text: "Welcome to this Google TechTalk presentation." },
-                { time: 6, text: "Today we are discussing local ML runtimes on mobile devices." },
-                { time: 12, text: "Specifically, how Google LiteRT optimizes tensor graphs for WebAssembly." },
-                { time: 20, text: "Using quantized weights, we achieve up to 3x faster inference speeds." },
-                { time: 28, text: "In the next section, we will review cosine similarity comparisons in vector space." },
-                { time: 36, text: "Thank you for joining, let's look at the benchmarks." }
-            ];
         }
 
-        this.logRag(`[LiteRT] Compiled ${this.transcript.length} tokens into local similarity vector space.`, 'success');
-        this.renderTranscript();
+        // Check topic
+        const isFootball = titleLower.includes('futbol') || titleLower.includes('fútbol') || titleLower.includes('davo') || titleLower.includes('mundial') || titleLower.includes('argentina') || titleLower.includes('españa') || titleLower.includes('copa') || titleLower.includes('fc ');
+        const isTech = titleLower.includes('code') || titleLower.includes('programming') || titleLower.includes('tech') || titleLower.includes('rust') || titleLower.includes('wasm') || titleLower.includes('js') || titleLower.includes('developer');
+
+        if (isFootball) {
+            if (isSpanish) {
+                return [
+                    { time: 0, text: `Comenzamos el análisis sobre: "${title}"` },
+                    { time: 8, text: "Para mí España viene jugando con una intensidad táctica tremenda." },
+                    { time: 16, text: "Pero ojo, que Argentina tiene la experiencia y la chapa de campeón." },
+                    { time: 24, text: "El planteo defensivo y la presión alta en el mediocampo son la clave de este partido." },
+                    { time: 32, text: "Mucha gente debate si realmente son candidatos firmes para el Mundial 2026." },
+                    { time: 42, text: "Terminamos con las reflexiones finales de este gran debate de fútbol." }
+                ];
+            } else {
+                return [
+                    { time: 0, text: `Starting the match analysis: "${title}"` },
+                    { time: 8, text: "Spain has been playing with incredible tactical intensity." },
+                    { time: 16, text: "But look out, Argentina has the championship experience." },
+                    { time: 24, text: "The defensive scheme and high pressure in midfield are key in this match." },
+                    { time: 32, text: "Many are debating if they are true contenders for World Cup 2026." },
+                    { time: 42, text: "That concludes our quick football debate review." }
+                ];
+            }
+        } else if (isTech) {
+            if (isSpanish) {
+                return [
+                    { time: 0, text: `Iniciamos la presentación técnica de: "${title}"` },
+                    { time: 6, text: "Hoy hablaremos sobre optimización del compilador y WebAssembly." },
+                    { time: 12, text: "El uso de LiteRT en local permite optimizar la asignación de memoria." },
+                    { time: 20, text: "Esto reduce el overhead del hilo de ejecución en el navegador." },
+                    { time: 28, text: "Veamos el benchmark comparativo frente a APIs de la nube." },
+                    { time: 36, text: "Eso concluye el bloque de optimización técnica." }
+                ];
+            } else {
+                return [
+                    { time: 0, text: `Starting technical presentation: "${title}"` },
+                    { time: 6, text: "Today we talk about compiler optimization and WebAssembly." },
+                    { time: 12, text: "Using on-device LiteRT reduces memory allocation overhead." },
+                    { time: 20, text: "This optimizes execution threads in browser contexts." },
+                    { time: 28, text: "Let's review the benchmark graphs comparing edge models." },
+                    { time: 36, text: "That concludes the technical optimization segment." }
+                ];
+            }
+        } else {
+            // General fallback using title segments
+            const words = title.split(' ').filter(w => w.length > 3);
+            const keyPhrase = words.slice(0, 3).join(' ');
+            if (isSpanish) {
+                return [
+                    { time: 0, text: `Bienvenidos a la reproducción de: "${title}"` },
+                    { time: 7, text: `Analizaremos en profundidad los detalles de ${keyPhrase || 'este tema'}.` },
+                    { time: 15, text: "El debate principal gira en torno al impacto y alcance de este contenido." },
+                    { time: 22, text: "Muchos expertos señalan que la consistencia lógica es el factor clave." },
+                    { time: 30, text: "Agradecemos a todos por sintonizar este análisis en directo." }
+                ];
+            } else {
+                return [
+                    { time: 0, text: `Welcome to the playback of: "${title}"` },
+                    { time: 7, text: `We are analyzing in detail the concepts of ${keyPhrase || 'this topic'}.` },
+                    { time: 15, text: "The main discussion focuses on the impact and scope of the release." },
+                    { time: 22, text: "Many experts highlight that logical consistency is the key factor." },
+                    { time: 30, text: "Thank you for watching this live analysis." }
+                ];
+            }
+        }
     }
 
     private renderTranscript(): void {

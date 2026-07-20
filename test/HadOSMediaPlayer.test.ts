@@ -18,6 +18,12 @@ describe('HadOSMediaPlayer', () => {
             return 123;
         }));
         vi.stubGlobal('clearInterval', vi.fn());
+
+        // Mock global fetch for oembed metadata
+        vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ title: "Never Gonna Give You Up" })
+        })));
     });
 
     afterEach(() => {
@@ -51,7 +57,7 @@ describe('HadOSMediaPlayer', () => {
         app.terminate();
     });
 
-    it('should load YouTube url, parse ID, download mock transcript, and click to seek', () => {
+    it('should load YouTube url, parse ID, download mock transcript, and click to seek', async () => {
         const app = new HadOSMediaPlayer();
         const body = WindowFactory.getBody(app.windowId)!;
         const input = body.querySelector('#mediaplayer-yt-input') as HTMLInputElement;
@@ -59,6 +65,9 @@ describe('HadOSMediaPlayer', () => {
 
         input.value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         loadBtn.click();
+
+        // Allow async oembed fetch and transcript gen to resolve
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         expect(app['playerType']).toBe('youtube');
         expect(app['transcript'].length).toBeGreaterThan(0);
@@ -76,7 +85,7 @@ describe('HadOSMediaPlayer', () => {
         app.terminate();
     });
 
-    it('should support switching to RAG Chat, typing query, and getting citation links', () => {
+    it('should support switching to RAG Chat, typing query, and getting citation links', async () => {
         const app = new HadOSMediaPlayer();
         const body = WindowFactory.getBody(app.windowId)!;
         const loadBtn = body.querySelector('#mediaplayer-yt-btn') as HTMLButtonElement;
@@ -84,6 +93,9 @@ describe('HadOSMediaPlayer', () => {
 
         inputYt.value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         loadBtn.click();
+
+        // Allow async oembed fetch and transcript gen to resolve
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         // Switch to Chat tab
         const tabChat = body.querySelector('#mp-tab-chat') as HTMLButtonElement;
