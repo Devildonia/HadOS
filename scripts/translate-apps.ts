@@ -74,15 +74,15 @@ async function run() {
             if (json[key] === undefined || json[key] === englishVal) {
                 if (targetLang === 'es') {
                     // Spanish custom translates
-                    if (key === 'app.hnscout') json[key] = 'HN Scout';
+                    if (key === 'app.hnscout') json[key] = 'Nova';
                     else if (key === 'hnscout.summarize') json[key] = 'Resumir con IA';
-                    else if (key === 'app.messenger') json[key] = 'HadOS Messenger';
+                    else if (key === 'app.messenger') json[key] = 'Tavern Chat';
                     else if (key === 'messenger.import_char') json[key] = 'Importar personaje (.json)';
                     else if (key === 'messenger.select_contact') json[key] = 'Selecciona un contacto para chatear';
                     else if (key === 'messenger.send') json[key] = 'Enviar';
                     else if (key === 'messenger.status_online') json[key] = 'Conectado';
                     else if (key === 'messenger.type_msg') json[key] = 'Escribe un mensaje...';
-                    else if (key === 'app.audiostudio') json[key] = 'Estudio de Audio';
+                    else if (key === 'app.audiostudio') json[key] = 'Voxcribe';
                     else if (key === 'audiostudio.generate') json[key] = 'Generar Podcast';
                     else if (key === 'audiostudio.url_placeholder') json[key] = 'Pega la URL o el texto aquí...';
                     else if (key === 'audiostudio.style') json[key] = 'Estilo de Podcast';
@@ -97,7 +97,7 @@ async function run() {
                     else if (key === 'audiostudio.dictation_stop') json[key] = 'Detener';
                     else if (key === 'audiostudio.dictation_placeholder') json[key] = 'Tu transcripción de voz aparecerá aquí...';
                     else if (key === 'audiostudio.save_note') json[key] = 'Guardar en Notas';
-                    else if (key === 'app.docexplorer') json[key] = 'Explorador de Docs';
+                    else if (key === 'app.docexplorer') json[key] = 'Doc Query';
                     else if (key === 'docexplorer.open_file') json[key] = 'Abrir Archivo';
                     else if (key === 'docexplorer.drag_drop') json[key] = 'Selecciona un documento del VFS o arrástralo aquí...';
                     else if (key === 'docexplorer.ask_placeholder') json[key] = 'Haz una pregunta sobre este documento...';
