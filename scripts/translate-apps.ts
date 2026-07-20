@@ -40,7 +40,14 @@ const keysToTranslate = [
     'docexplorer.ask_placeholder',
     'docexplorer.vector_space',
     'docexplorer.retrieving',
-    'docexplorer.answering'
+    'docexplorer.answering',
+    'app.mediaplayer',
+    'mediaplayer.open_vfs',
+    'mediaplayer.load_yt',
+    'mediaplayer.tab_player',
+    'mediaplayer.tab_transcript',
+    'mediaplayer.tab_chat',
+    'mediaplayer.seek_tooltip'
 ];
 
 async function translateText(text: string, targetLang: string): Promise<string> {
@@ -104,6 +111,13 @@ async function run() {
                     else if (key === 'docexplorer.vector_space') json[key] = 'Espacio Vectorial Local LiteRT';
                     else if (key === 'docexplorer.retrieving') json[key] = 'Recuperando fragmentos relevantes...';
                     else if (key === 'docexplorer.answering') json[key] = 'Respuesta Fundamentada';
+                    else if (key === 'app.mediaplayer') json[key] = 'Reproductor';
+                    else if (key === 'mediaplayer.open_vfs') json[key] = 'Abrir Archivo Local';
+                    else if (key === 'mediaplayer.load_yt') json[key] = 'Cargar YouTube';
+                    else if (key === 'mediaplayer.tab_player') json[key] = 'Reproductor';
+                    else if (key === 'mediaplayer.tab_transcript') json[key] = 'Transcripción';
+                    else if (key === 'mediaplayer.tab_chat') json[key] = 'Chat RAG';
+                    else if (key === 'mediaplayer.seek_tooltip') json[key] = 'Haz clic para saltar a este momento';
                     updated = true;
                 } else {
                     const translated = await translateText(englishVal, targetLang);

@@ -135,6 +135,7 @@ export class ThemeManager {
                 'icon-messenger': '<img src="assets/icons/tavern_chat.webp" alt="Tavern Chat" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-audiostudio': '<img src="assets/icons/voxcribe.webp" alt="Voxcribe" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-docexplorer': '<img src="assets/icons/doc_query.webp" alt="Doc Query" style="width: 48px; height: 48px; object-fit: contain;">',
+                'icon-mediaplayer': '<img src="assets/icons/mediaplayer.png" alt="Media Player" style="width: 48px; height: 48px; object-fit: contain;">',
                 // Start Menu Items
                 'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/icons/notapad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
@@ -165,6 +166,7 @@ export class ThemeManager {
                 'icon-messenger': '<img src="assets/icons/tavern_chat.webp" alt="Tavern Chat" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-audiostudio': '<img src="assets/icons/voxcribe.webp" alt="Voxcribe" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-docexplorer': '<img src="assets/icons/doc_query.webp" alt="Doc Query" style="width: 48px; height: 48px; object-fit: contain;">',
+                'icon-mediaplayer': '<img src="assets/icons/mediaplayer.png" alt="Media Player" style="width: 48px; height: 48px; object-fit: contain;">',
                 // Start Menu Items
                 'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/themes/winui/notepad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),

@@ -50,7 +50,8 @@ export function initializeDraggableIcons(): void {
         'icon-hnscout': { x: 120, y: 520 },
         'icon-messenger': { x: 120, y: 620 },
         'icon-audiostudio': { x: 120, y: 720 },
-        'icon-docexplorer': { x: 220, y: 20 }
+        'icon-docexplorer': { x: 220, y: 20 },
+        'icon-mediaplayer': { x: 220, y: 120 }
     };
 
     // Every slot a default already claims — so auto-placed icons land beside them,
