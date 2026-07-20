@@ -1,0 +1,217 @@
+/* ===== HACKER NEWS SCOUT APP STYLES ===== */
+
+#win-hnscout .window-body {
+    background: var(--window-bg);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--os-font-family);
+}
+
+.hn-scout-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.hn-header {
+    background: #ff6600; /* Hacker News Orange */
+    color: white;
+    padding: 8px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    border-bottom: 2px solid var(--border-darkest);
+}
+
+.hn-header h3 {
+    margin: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hn-refresh-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    cursor: pointer;
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+.hn-refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.hn-main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Bento Grid of News */
+.hn-news-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+/* Bento Cards */
+.hn-card {
+    background: var(--window-bg);
+    border: 2px solid;
+    border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    min-height: 140px;
+}
+
+.theme-modern .hn-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+}
+
+.hn-card:hover {
+    transform: translateY(-2px);
+}
+
+.theme-modern .hn-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hn-card-title {
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.4;
+    color: var(--text-dark);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+}
+
+.hn-card-title:hover {
+    text-decoration: underline;
+}
+
+.hn-card-meta {
+    font-size: 10px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hn-card-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* LiteRT AI Summarizer Side Panel */
+.hn-side-panel {
+    width: 320px;
+    border-left: 2px solid var(--border-dark);
+    background: var(--window-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.theme-modern .hn-side-panel {
+    background: rgba(20, 24, 30, 0.95);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hn-panel-header {
+    background: var(--border-dark);
+    padding: 8px 12px;
+    font-weight: bold;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border-darkest);
+}
+
+.theme-modern .hn-panel-header {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.hn-panel-content {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Console Logger for LiteRT Initialization */
+.hn-litert-console {
+    background: #000;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 80px;
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid #333;
+}
+
+.hn-summary-text {
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.theme-modern .hn-summary-text {
+    color: #e0e0e0;
+}
+
+.hn-litert-badge {
+    background: #008080;
+    color: white;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.hn-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: hn-spin 1s ease-in-out infinite;
+}
+
+@keyframes hn-spin {
+    to { transform: rotate(360deg); }
+}

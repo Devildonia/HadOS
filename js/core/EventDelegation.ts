@@ -89,6 +89,12 @@ function onDocumentClick(e: MouseEvent): void {
     const actionEl = target.closest('[data-action]') as HTMLElement;
     if (actionEl) {
         const action = actionEl.dataset.action;
+        if (action === 'taskbar-color-reset') {
+            _playBlip();
+            const dm: any = Services.get('DesktopManager');
+            if (dm && dm.clearTaskbarColor) dm.clearTaskbarColor();
+            return;
+        }
         if (action) {
             _handleAction(action);
         }

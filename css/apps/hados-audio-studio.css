@@ -1,0 +1,240 @@
+/* ===== HADOS AUDIO STUDIO APP STYLES ===== */
+
+#win-audiostudio .window-body {
+    background: var(--window-bg);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--os-font-family);
+}
+
+.audiostudio-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 12px;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+/* Control Row: Input & Style selection */
+.audiostudio-input-panel {
+    background: var(--border-dark);
+    padding: 10px;
+    border: 2px solid;
+    border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.theme-modern .audiostudio-input-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.audiostudio-textarea {
+    width: 100%;
+    height: 60px;
+    resize: none;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 5px;
+    border: 2px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+    outline: none;
+}
+
+.theme-modern .audiostudio-textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 4px;
+}
+
+.audiostudio-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.audiostudio-select {
+    padding: 2px 5px;
+    font-size: 11px;
+    font-family: inherit;
+}
+
+/* Retro Cassette Player Deck */
+.audiostudio-deck {
+    background: #222;
+    border: 3px solid #111;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+    position: relative;
+}
+
+/* Cassette Shape */
+.audiostudio-cassette {
+    width: 240px;
+    height: 140px;
+    background: #333;
+    border: 2px solid #555;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+}
+
+.audiostudio-cassette-label {
+    background: #ffcc00;
+    color: #000;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: bold;
+    border: 1px solid #000;
+}
+
+/* Reels Container */
+.audiostudio-reels {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 50px;
+    position: relative;
+}
+
+.audiostudio-reel {
+    width: 36px;
+    height: 36px;
+    background: #fff;
+    border: 4px double #000;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audiostudio-reel-teeth {
+    width: 20px;
+    height: 20px;
+    background: #000;
+    border-radius: 50%;
+    position: relative;
+}
+
+/* Teeth spikes rotation animation */
+.audiostudio-reel-teeth::before,
+.audiostudio-reel-teeth::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 22px;
+    background: #fff;
+    margin-top: -11px;
+    margin-left: -2px;
+}
+.audiostudio-reel-teeth::after {
+    transform: rotate(90deg);
+}
+
+.playing .audiostudio-reel-teeth {
+    animation: audiostudio-rotate 3s linear infinite;
+}
+
+@keyframes audiostudio-rotate {
+    to { transform: rotate(360deg); }
+}
+
+/* Equalizer Visualizer */
+.audiostudio-visualizer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    height: 35px;
+    width: 100%;
+    background: #000;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.audiostudio-bar {
+    width: 6px;
+    height: 2px;
+    background: #00ff00;
+    transition: height 0.1s ease;
+}
+
+/* Physics Equalizer Dance when playing */
+.playing .audiostudio-bar {
+    animation: audiostudio-dance 0.5s ease infinite alternate;
+}
+
+.playing .audiostudio-bar:nth-child(2n) { animation-delay: 0.1s; }
+.playing .audiostudio-bar:nth-child(3n) { animation-delay: 0.25s; }
+.playing .audiostudio-bar:nth-child(4n) { animation-delay: 0.05s; }
+
+@keyframes audiostudio-dance {
+    0% { height: 4px; }
+    100% { height: 26px; }
+}
+
+/* Tape Deck Buttons */
+.audiostudio-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.audiostudio-deck-btn {
+    background: #555;
+    color: white;
+    border: 2px solid #333;
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0 3px 0 #222;
+}
+
+.audiostudio-deck-btn:active,
+.audiostudio-deck-btn.active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #222;
+    background: #444;
+}
+
+/* Log Terminal Panel */
+.audiostudio-log {
+    background: black;
+    color: #00ffcc;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 70px;
+    max-height: 100px;
+    overflow-y: auto;
+    border: 1px solid #333;
+}

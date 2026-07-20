@@ -131,6 +131,9 @@ export class ThemeManager {
                 'icon-terminal': '<img src="assets/icons/shell_core.webp" alt="Shell Core" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-taskmanager': '<img src="assets/icons/task_pilot.webp" alt="Task Pilot" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-pluginmanager': '<img src="assets/icons/plugin_manager.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
+                'icon-hnscout': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">📰</span>',
+                'icon-messenger': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">💬</span>',
+                'icon-audiostudio': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">🎙️</span>',
                 // Start Menu Items
                 'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/icons/notapad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
@@ -157,6 +160,9 @@ export class ThemeManager {
                 'icon-terminal': '<img src="assets/themes/winui/ms-dos.webp" alt="MS-DOS" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-taskmanager': '<img src="assets/themes/winui/task_manager.webp" alt="Task Manager" style="width: 48px; height: 48px; object-fit: contain;">',
                 'icon-pluginmanager': '<span style="font-size: 38px; display: block; text-align: center;">🧩</span>',
+                'icon-hnscout': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">📰</span>',
+                'icon-messenger': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">💬</span>',
+                'icon-audiostudio': '<span style="font-size: 38px; display: block; text-align: center; line-height: 48px;">🎙️</span>',
                 // Start Menu Items
                 'start-menu-btn-icon': hadosStartIcon,
                 'menu-icon-notepad': '<img src="assets/themes/winui/notepad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),

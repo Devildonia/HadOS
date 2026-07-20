@@ -46,7 +46,10 @@ export function initializeDraggableIcons(): void {
         'icon-terminal': { x: 120, y: 120 },
         'icon-taskmanager': { x: 120, y: 220 },
         'icon-pluginmanager': { x: 120, y: 320 },
-        'icon-primelab': { x: 120, y: 420 }
+        'icon-primelab': { x: 120, y: 420 },
+        'icon-hnscout': { x: 120, y: 520 },
+        'icon-messenger': { x: 120, y: 620 },
+        'icon-audiostudio': { x: 120, y: 720 }
     };
 
     // Every slot a default already claims — so auto-placed icons land beside them,

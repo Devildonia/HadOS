@@ -91,50 +91,7 @@
   cursor: pointer
 
 .window-menu .window-menu-item :hover
-  display: block
-  position: static
-  z-index: auto
-  overflow: visible
-  visibility: visible
-  opacity: 1
-  width: 39.4531px
-  height: 35.5px
-  min-height: auto
-  max-height: none
-  padding: 8px 10px
-  margin: 0px
-  top: auto
-  left: auto
-  right: auto
-  bottom: auto
-  color: rgb(255, 255, 255)
-  background-color: rgb(11, 94, 215)
-  background-image: none
-  border-width: 0px
-  border-style: solid
-  border-color: rgb(229, 231, 235)
-  border-radius: 4px
-  box-shadow: none
-  outline: rgb(255, 255, 255) none 3px
-  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
-  font-size: 13px
-  font-weight: 400
-  letter-spacing: normal
-  line-height: 19.5px
-  text-align: start
-  text-transform: none
-  text-shadow: none
-  white-space: normal
-  flex-direction: row
-  justify-content: normal
-  align-items: normal
-  gap: normal
-  flex: 0 1 auto
-  transform: none
-  transition: background
-  animation-name: none
-  backdrop-filter: none
-  cursor: pointer
+  <absent>
 
 #start-menu .menu-item :hover
   display: flex

@@ -121,6 +121,9 @@ export function setupEventListeners(): void {
 
     // Folder icons actions
     setupIconAction('icon-display', () => launchKernelApp('display-props'));
+    setupIconAction('icon-hnscout', () => launchKernelApp('hnscout'));
+    setupIconAction('icon-messenger', () => launchKernelApp('messenger'));
+    setupIconAction('icon-audiostudio', () => launchKernelApp('audiostudio'));
     setupIconAction('icon-notepad', () => launchKernelApp('notepad'));
     setupIconAction('icon-paint', () => launchKernelApp('paint'));
     setupIconAction('icon-explorer', () => launchKernelApp('explorer'));

@@ -1567,21 +1567,21 @@ body
 
 .window-menu
   display: flex
-  position: static
-  z-index: auto
+  position: relative
+  z-index: 1000
   overflow: visible
   visibility: visible
   opacity: 1
   width: 598px
-  height: 45.5px
+  height: 34px
   min-height: auto
   max-height: none
   padding: 4px 8px
   margin: 0px
-  top: auto
-  left: auto
-  right: auto
-  bottom: auto
+  top: 0px
+  left: 0px
+  right: 0px
+  bottom: 0px
   color: rgb(230, 237, 247)
   background-color: rgba(0, 0, 0, 0.2)
   background-image: none
@@ -1612,50 +1612,7 @@ body
   cursor: auto
 
 .window-menu .window-menu-item
-  display: block
-  position: static
-  z-index: auto
-  overflow: visible
-  visibility: visible
-  opacity: 1
-  width: 39.4531px
-  height: 35.5px
-  min-height: auto
-  max-height: none
-  padding: 8px 10px
-  margin: 0px
-  top: auto
-  left: auto
-  right: auto
-  bottom: auto
-  color: rgb(230, 237, 247)
-  background-color: rgba(0, 0, 0, 0)
-  background-image: none
-  border-width: 0px
-  border-style: solid
-  border-color: rgb(229, 231, 235)
-  border-radius: 6px
-  box-shadow: none
-  outline: rgb(230, 237, 247) none 3px
-  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
-  font-size: 13px
-  font-weight: 400
-  letter-spacing: normal
-  line-height: 19.5px
-  text-align: start
-  text-transform: none
-  text-shadow: none
-  white-space: normal
-  flex-direction: row
-  justify-content: normal
-  align-items: normal
-  gap: normal
-  flex: 0 1 auto
-  transform: none
-  transition: background
-  animation-name: none
-  backdrop-filter: none
-  cursor: pointer
+  <absent>
 
 .paint-tool-btn
   display: flex
@@ -1711,7 +1668,7 @@ body
   visibility: visible
   opacity: 1
   width: 56px
-  height: 324.5px
+  height: 332.5px
   min-height: auto
   max-height: none
   padding: 3px

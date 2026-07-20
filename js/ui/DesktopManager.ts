@@ -22,6 +22,8 @@ export interface IDesktopManager {
     setWallpaper(url: string | null, isSilent?: boolean): void;
     /** Updates the CSS property defining taskbar background coloration. */
     setTaskbarColor(color: string, isSilent?: boolean): void;
+    /** Removes a taskbar-colour override so the active theme paints the bar again. */
+    clearTaskbarColor(): void;
     /** Processes custom wallpaper image file uploads, restricting sizing to under 2MB. */
     handleWallpaperUpload(input: HTMLInputElement | { files: FileList | File[] }): void;
 }
@@ -327,6 +329,7 @@ const DesktopManager: IDesktopManager = (() => {
         showDesktop,
         setWallpaper,
         setTaskbarColor,
+        clearTaskbarColor,
         handleWallpaperUpload
     };
 })();
