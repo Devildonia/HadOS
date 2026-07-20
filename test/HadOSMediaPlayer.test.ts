@@ -44,11 +44,27 @@ describe('HadOSMediaPlayer', () => {
     it('should open VFS local media file on load', () => {
         const app = new HadOSMediaPlayer();
         const body = WindowFactory.getBody(app.windowId)!;
-        const select = body.querySelector('#mediaplayer-vfs-select') as HTMLSelectElement;
         const openBtn = body.querySelector('#mediaplayer-vfs-btn') as HTMLButtonElement;
 
-        expect(select.options.length).toBeGreaterThan(1);
-        select.value = "C:\\HADOS\\PODCASTS\\test-podcast.mp3";
+        // Stub document.createElement for input picker to simulate file picking
+        const mockFile = new File([''], 'test-podcast.mp3', { type: 'audio/mp3' });
+        const originalCreateElement = document.createElement.bind(document);
+        vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+            const el = originalCreateElement(tagName);
+            if (tagName === 'input') {
+                el.click = () => {
+                    Object.defineProperty(el, 'files', {
+                        value: [mockFile],
+                        writable: false
+                    });
+                    if (el.onchange) {
+                        el.onchange({ target: el } as any);
+                    }
+                };
+            }
+            return el;
+        });
+
         openBtn.click();
 
         expect(app['playerType']).toBe('local');

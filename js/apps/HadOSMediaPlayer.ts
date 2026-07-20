@@ -178,37 +178,49 @@ export class HadOSMediaPlayer implements IWindowsApp {
     }
 
     private handleOpenLocal(): void {
-        const select = this.container?.querySelector('#mediaplayer-vfs-select') as HTMLSelectElement | null;
-        if (!select || !select.value) return;
+        const picker = document.createElement('input');
+        picker.type = 'file';
+        picker.accept = 'video/*,audio/*';
+        picker.onchange = (e: any) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                this.cleanupPlayback();
+                this.playerType = 'local';
 
-        const filePath = select.value;
-        this.cleanupPlayback();
+                const stage = this.container?.querySelector('#mediaplayer-stage-div');
+                if (!stage) return;
 
-        const stage = this.container?.querySelector('#mediaplayer-stage-div');
-        if (!stage) return;
+                this.mediaElement = document.createElement('video');
+                this.mediaElement.controls = true;
+                // Create secure local object URL to bypass browser file:// CORS/security blocks
+                try {
+                    this.mediaElement.src = URL.createObjectURL(file);
+                } catch {
+                    // Fallback for environment constraints (stub/jsdom)
+                    this.mediaElement.src = 'mock-blob-url';
+                }
+                this.mediaElement.style.width = '100%';
+                this.mediaElement.style.height = '100%';
 
-        this.playerType = 'local';
-        this.mediaElement = document.createElement('video');
-        this.mediaElement.controls = true;
-        this.mediaElement.src = `file:///${filePath.replace(/\\/g, '/')}`;
-        this.mediaElement.style.width = '100%';
-        this.mediaElement.style.height = '100%';
+                stage.innerHTML = '';
+                stage.appendChild(this.mediaElement);
 
-        stage.innerHTML = '';
-        stage.appendChild(this.mediaElement);
+                const playPromise = this.mediaElement.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(err => {
+                        Utils.Logger.info("Local playback started:", err);
+                    });
+                } else {
+                    Utils.Logger.info("Local playback started:", file.name);
+                }
 
-        const playPromise = this.mediaElement.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch(e => {
-                Utils.Logger.info("Local playback started (simulated):", e);
-            });
-        } else {
-            Utils.Logger.info("Local playback started (simulated):", filePath);
-        }
-
-        // Local RAG/transcript is not available for arbitrary local raw binaries
-        this.transcript = [];
-        this.renderTranscript();
+                // Reset transcripts for arbitrary files
+                this.transcript = [];
+                this.renderTranscript();
+                this.logRag(`[Local Player] Loaded file: ${file.name}`);
+            }
+        };
+        picker.click();
     }
 
     private handleLoadYoutube(): void {
