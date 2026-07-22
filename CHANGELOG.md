@@ -6,6 +6,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Remediation of the v1.0.6 audit (A1–A8): the five new apps get honest labels, real
+security hygiene and documented behavior. No fake AI claims remain anywhere in the UI.
+
+### Added
+
+- **Five apps documented** (shipped in 1.0.6 without a CHANGELOG entry — audit A8):
+  - **AudioStudio** — scripted podcasts via browser `speechSynthesis`, plus voice
+    dictation via `webkitSpeechRecognition`.
+  - **Hacker News Scout** — live top stories from the official Firebase API, with a
+    *simulated* summary panel (canned text picked by title keywords).
+  - **Messenger** — chat with scripted characters (canned replies, no AI).
+  - **Media Player** — local files and YouTube, with a *simulated* transcript built
+    from the video title and a keyword-match "chat".
+  - **Doc Explorer** — indexes a VFS document into lines and answers queries by
+    word-overlap scoring (keyword search, no embeddings).
+- **`speech:cloud` capability in the PermissionBroker** (audit A1): dictation now asks
+  for consent before starting, warning that the browser's speech recognition may send
+  audio to the browser vendor's servers.
+
+### Changed
+
+- **Honest labels replace AI theatre** (audit A4): every `[LiteRT]`/"Whisper"/"RAG"
+  label in the five apps now says what actually happens — `Simulated summaries` badge
+  in HN Scout, `[Demo]` transcript logs in Media Player, `[Index]`/`[Search]` keyword
+  logs in Doc Explorer, honest app descriptions in the registry.
+- **No more silent mock fallback** (audit A3): when Hacker News is unreachable the app
+  shows a real error state with a Retry button; demo data is opt-in behind a button
+  labelled "Show demo data (fake)" and every demo title is stamped `[DEMO]`.
+- **YouTube without external scripts** (audit A3): the Media Player no longer injects
+  `https://www.youtube.com/iframe_api` (blocked by `script-src 'self'`). The embed is
+  a plain `enablejsapi=1` iframe driven directly via the postMessage widget protocol
+  (seek commands out, `infoDelivery` currentTime in), origin-checked both ways.
+- **CSP `connect-src` now allows the real endpoints** (audit A3):
+  `https://hacker-news.firebaseio.com` and `https://noembed.com`. The unofficial
+  `translate.googleapis.com` title-translation call was removed instead of allowed.
+
+### Fixed
+
+- **XSS: all remote/stored strings escaped before `innerHTML`** (audit A2): story
+  titles/authors/URLs in HN Scout (plus an http/https protocol allowlist on hrefs),
+  contact names/avatars and message text in Messenger, filenames/transcript lines/chat
+  input in Media Player, filenames and query/answer text in Doc Explorer.
+- **Blob URL leak in Media Player** (audit A5): the object URL of a local file is
+  tracked and revoked on media change and on window close.
+- **Unguarded `new URL()` in HN Scout** (audit A6): story URLs parse inside try/catch
+  with a safe `#` fallback; YouTube IDs must match `[\w-]{11}` before being embedded.
+- **Listener-killing `innerHTML +=` replaced with `insertAdjacentHTML`** (audit A7) in
+  HN Scout logs, Media Player chat and Doc Explorer feeds; the duplicated
+  `#mp-chat-citation` id became a class.
+- **Paint/FileExplorer 1.0.6 shims reviewed** (audit A8): verified they are honest
+  delegation to live state (`Paint` getters return `PaintCore`'s real undo/redo arrays;
+  `FileExplorer.history` backs the actual Back button) — no masked regressions.
+
+- **The version number now has a single source of truth in the UI too**: the sticky
+  note advertised *v1.0.5* on a v1.0.6 build because the release number was hardcoded
+  in all 40 locale files (plus the `<title>`, the service-worker cache name and the
+  default README.txt seed). Locales now carry a `{version}` placeholder and `i18n.t()`
+  always interpolates it from `CONFIG.APP.VERSION` (which reads `package.json`), so a
+  version bump can never strand the UI again. The ThemeManager test derives its
+  expectation the same way.
+
+### Documentation
+
+- **README fully refreshed for the public release**: current feature set (magnetic
+  taskbar, This PC explorer, glass material, 40-language i18n, the five media/demo apps
+  with their honesty labels), the `kernel/`/`vfs/` module splits in the structure tree,
+  932-test figures, and **new screenshots and hero GIF taken on the HadOS chrome**
+  (retiring the Windows 95-era set flagged in known-issues #13).
+- **`scripts/capture-screenshots.ts`**: a Playwright-driven capture tool for the README
+  shots and hero video (`npx tsx scripts/capture-screenshots.ts [step…|--gif]`) against
+  a running dev server, so the gallery can be retaken in one command after UI changes.
+
 ## [1.0.6] - 2026-07-19
 
 Complete TypeScript migration for configuration files, tests, utility scripts, and service worker, along with test suite corrections and regression fixes.

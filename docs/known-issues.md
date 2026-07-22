@@ -7,9 +7,9 @@ Each entry says what is wrong, the evidence it is real (not a suspicion), and wh
 Nothing here is speculative: every claim was measured or read out of the running system.
 
 > Before touching anything under `css/` or `public/css/themes/`, read
-> [`test/e2e/css-baseline.spec.js`](../test/e2e/css-baseline.spec.js). The unit suite never
+> [`test/e2e/css-baseline.spec.ts`](../test/e2e/css-baseline.spec.ts). The unit suite never
 > evaluates CSS — jsdom does not load external stylesheets, so `style.css` could be deleted and
-> all 704 tests would still pass. That spec is the only net.
+> all 932 tests would still pass. That spec is the only net.
 
 ---
 
@@ -67,7 +67,7 @@ now says "Shell Core" — part of the deferred modern-theme work).
 
 ### 4c. The VFS default desktop shortcuts still carry the old names
 
-`DEFAULT_FS` in [`js/core/VFS.ts`](../js/core/VFS.ts) still seeds `C:\...\DESKTOP` with shortcuts
+`DEFAULT_FS` in [`js/core/vfs/VFSCoreTree.ts`](../js/core/vfs/VFSCoreTree.ts) still seeds `C:\...\DESKTOP` with shortcuts
 named *Notepad*, *Paint*, *Recycle Bin*, *My Computer*, *Games*… and emoji icons — the file-system
 view (browsable in FileX) as opposed to the desktop chrome. Left untouched across every rename batch:
 it is the default *tree*, so changing it only affects fresh installs (existing ones keep their
@@ -216,11 +216,20 @@ pixels follow, which they could not do while the shader carried its own copy.
 
 **Where:** [`js/ui/ThemeShaders.ts`](../js/ui/ThemeShaders.ts).
 
-### 13. README screenshots predate the HadOS chrome
+### 13. ~~README screenshots predate the HadOS chrome~~ — RETAKEN
 
-They still show the retired Windows 95 theme. Marked with a warning in the README rather than
-quietly left to mislead. They need retaking — Playwright can do it; the in-app preview browser
-cannot (its screenshots hang).
+The whole set (plus the hero GIF) was reshot on the HadOS chrome via
+[`scripts/capture-screenshots.ts`](../scripts/capture-screenshots.ts), which drives a real
+Playwright Chromium against the dev server — the in-app preview browser cannot do it (its
+screenshots hang). Two lessons encoded in the script: wait for `#splash-screen` to hide (the
+desktop reports ready *behind* it), and clear the centering `transform` before positioning a
+window by inline style. The retake also caught the sticky note advertising **v1.0.5** on a
+v1.0.6 build — the version was hardcoded in all 40 locales; it now interpolates `{version}`
+from `CONFIG` (single source of truth), so a bump can never strand it again.
+
+Still true: the **modern** theme's screenshot shows its Windows-style wallpaper and `winui/`
+icons — the borrowed-identity problem of issue **3**, now visible in the README gallery until
+that theme gets its own assets.
 
 ---
 

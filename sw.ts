@@ -6,7 +6,7 @@
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST?: Array<{ url: string }> };
 
-const CACHE_VERSION = '1.0.5';
+const CACHE_VERSION = '1.0.6';
 const CACHE_NAME = `hados-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `hados-dynamic-v${CACHE_VERSION}`;
 const MAX_DYNAMIC_ITEMS = 80;

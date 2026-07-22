@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ThemeManager } from '../js/core/ThemeManager';
 import { Services } from '../js/core/ServiceContainer';
+import { CONFIG } from '../js/config';
 
 describe('ThemeManager', () => {
     let themeManager: ThemeManager;
@@ -126,15 +127,20 @@ describe('ThemeManager', () => {
             const startMenuTitle = document.getElementById('start-menu-title')!;
             const welcomeText = document.getElementById('welcome-text')!;
 
+            // The locale strings carry a {version} placeholder that i18n fills
+            // from CONFIG — derive the expectation the same way so a version
+            // bump can never strand this test again.
+            const v = CONFIG.APP.VERSION;
+
             // Modern theme text
             themeManager.applyTheme('modern');
             expect(startMenuTitle.textContent).toBe('HadOS UI');
-            expect(welcomeText.textContent).toBe('Welcome to HadOS UI v1.0.5!');
+            expect(welcomeText.textContent).toBe(`Welcome to HadOS UI v${v}!`);
 
             // Win95 theme text
             themeManager.applyTheme('win95');
             expect(startMenuTitle.textContent).toBe('HadOS');
-            expect(welcomeText.textContent).toBe('Welcome to HadOS v1.0.5!');
+            expect(welcomeText.textContent).toBe(`Welcome to HadOS v${v}!`);
         });
     });
 });

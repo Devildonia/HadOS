@@ -83,7 +83,7 @@ export const VFS: IVFS = (() => {
                 if (root && root.children && !needsReset) {
                     const docs = root.children['DOCUMENTS'];
                     if (docs && docs.children && docs.children['README.txt']) {
-                        docs.children['README.txt'].content = 'Welcome to HadOS v1.0.5';
+                        docs.children['README.txt'].content = 'Welcome to HadOS.';
                     }
 
                     const games = root.children['GAMES'];

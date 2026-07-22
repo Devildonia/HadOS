@@ -9,11 +9,11 @@
 [![Vite](https://img.shields.io/badge/Vite-5-%23646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r183-000000.svg?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
 [![PWA](https://img.shields.io/badge/PWA-offline--ready-5A0FC8.svg?style=flat&logo=pwa&logoColor=white)](https://vite-pwa-org.netlify.app/)
-[![Tests](https://img.shields.io/badge/tests-895%20passing-brightgreen.svg?style=flat)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-932%20passing-brightgreen.svg?style=flat)](#-testing)
 [![CI Status](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml)
 
 <p align="center">
-  <img src="docs/screenshots/hero.gif" alt="HadOS — dragging the 3D physics ragdoll around the desktop" width="760">
+  <img src="docs/screenshots/hero.gif" alt="HadOS — the magnetic taskbar snapping to the left edge and the 3D physics ragdoll walking the desktop" width="760">
 </p>
 
 <sub>No HadOS demo is published yet. Its predecessor, **Windows App Center** (v1.6.7), is playable at
@@ -24,10 +24,10 @@
 
 ---
 
-HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, and an 895-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
+HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, on-device **LiteRT.js** inference, a 40-language UI, and a 932-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
 
 > [!NOTE]
-> HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/). See the [CHANGELOG](CHANGELOG.md), and [`docs/known-issues.md`](docs/known-issues.md) for what is knowingly still wrong.
+> HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/), and the on-device AI design in [`docs/ai/`](docs/ai/). See the [CHANGELOG](CHANGELOG.md), and [`docs/known-issues.md`](docs/known-issues.md) for what is knowingly still wrong.
 
 ## 📋 Table of Contents
 - [Why this exists](#-why-this-exists)
@@ -57,25 +57,25 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
 - 🤖 **On-device AI.** Real in-browser inference on **LiteRT.js** (WebGPU, WASM fallback): an isolated `ai-runtime` process, a consented `ai:infer` capability, and a download-once model cache in OPFS. Pinta uses it to **remove a photo's background** — the segmentation model runs entirely on your machine, nothing uploaded.
-- ✅ **912 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
-- 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, acrylic and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
+- ✅ **932 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
+- 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, macOS-style glass, and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
+- 🗣️ **Honest by policy.** Simulated features say so on their face (a summary panel is labelled *"simulated demo"*, demo data is stamped `[DEMO]`), and anything that could send data off-device — like browser speech recognition — sits behind an explicit consent prompt. Every external audit finding is remediated and encoded as a regression test.
+- 🌍 **40 languages.** The entire UI — apps, dialogs, folder names, the works — ships localized in 40 locales, with typed i18n keys and a locale-sync script that keeps all 40 files in shape.
 - 🧩 **Built to be extended.** Auto-registering apps, a scaffolder (`npm run generate:app`), and a runtime plugin API.
 
 ---
 
 ## 📸 Screenshots
 
-> [!WARNING]
-> These screenshots predate the HadOS chrome and still show the retired Windows 95 theme.
-> They need retaking.
-
-| Classic theme (retired) | Modern theme (HadOS UI) |
+| HadOS theme | Modern theme |
 |:---:|:---:|
-| ![Classic Win95 desktop](docs/screenshots/desktop-win95.png) | ![Modern HadOS UI desktop](docs/screenshots/desktop-modern.png) |
-| **Start Menu** | **Multitasking — Task Manager & Terminal** |
-| ![Start Menu](docs/screenshots/start-menu-win95.png) | ![Task Manager and Terminal windows](docs/screenshots/apps-win95.png) |
+| ![HadOS desktop — glass chrome, raymarched wallpaper](docs/screenshots/desktop-hados.png) | ![Modern theme desktop](docs/screenshots/desktop-modern.png) |
+| **Start Menu** | **This PC — a real, quota-backed drive** |
+| ![Start Menu with the circular centered start button](docs/screenshots/start-menu.png) | ![FileX at This PC showing the HadOS drive with real storage quota](docs/screenshots/explorer-thispc.png) |
+| **Multitasking — Task Manager & Terminal** | **Media apps — Media Player & HN Scout** |
+| ![Task Manager and Terminal windows](docs/screenshots/apps-system.png) | ![Media Player with a YouTube embed and Hacker News Scout with live stories](docs/screenshots/apps-media.png) |
 | **3D Physics Ragdoll** | **Games Arcade (sandboxed)** |
-| ![3D physics ragdoll pet on the desktop](docs/screenshots/ragdoll-3d.png) | ![Chapas Prime game running in a sandboxed window](docs/screenshots/games-arcade.png) |
+| ![3D physics ragdoll pet on the desktop](docs/screenshots/ragdoll-3d.png) | ![Game running in a sandboxed window](docs/screenshots/games-arcade.png) |
 
 ---
 
@@ -90,9 +90,12 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - **Service Container (DI)** — decoupled systems (Kernel, VFS, Window Manager, Audio, Resource Manager) resolved through a typed registry.
 - **Virtual File System** — hierarchical directories persisted **asynchronously to IndexedDB** (escaping the ~5–10 MB `localStorage` cap), with binary/large files stored out-of-tree in **OPFS**, debounced writes, quota handling and automatic migration from the legacy `localStorage` tree.
 - **Native Window Manager** — drag, resize, minimize, maximize, z-index focus, **Aero-style edge snapping**, and deterministic teardown.
+- **Draggable, magnetic taskbar** — grab the bar and snap it to **any of the four screen edges**; the start button (circular, macOS-style) and the app cluster stay centered, the system tray adapts to vertical orientations, and maximized windows respect the bar's work-area insets wherever it docks.
+- **A real, unified explorer** — "My Computer" opens FileX at a **This PC** root showing one honest drive, **HadOS (C:)**, whose capacity is the real browser storage quota from `navigator.storage.estimate()`. The Games desktop icon is a shortcut into the same explorer at `C:\GAMES` — one explorer, no bespoke windows.
+- **40-language i18n** — every label in the UI is translated, **including the explorer's folder names** (display labels are localized while canonical paths stay stable), with typed keys and a sync script that keeps all 40 locale files aligned.
 - **Session resume** — the desktop remembers which apps are open and their layout, and restores them on reload.
 - **Resource Manager** — owner-scoped registry (WebGL, audio, listeners, timers) with LIFO disposal for leak-free cleanup.
-- **Theme Engine** — switch between *HadOS* and *Modern* live; all UI is token-driven.
+- **Theme Engine** — switch between *HadOS* and *Modern* live; all UI is token-driven. The HadOS theme wears a **macOS-style glass material** (translucent surfaces with backdrop blur) tuned to keep the project's own palette.
 - **Plugin API** — validate and register/unregister third-party apps at runtime through the Kernel.
 - **♿ Accessibility** — ARIA roles, Alt+Tab window switcher, focus management, and an `aria-live` screen-reader announcer.
 
@@ -102,7 +105,15 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - **Workshop** — customize skins, scale, and behavior.
 
 ### 🛠️ Built-in Applications
-📝 Notepad (VFS save/load, find & replace, multi-window) · 🎨 Paint (tools, color pickers, undo/redo) · 📂 File Explorer · 🌐 Internet Explorer (history + URL safety filter) · 📻 Webamp · ⚙️ Control Panel & Settings (HDR, wallpapers, themes, language) · 🖥️ **Terminal** (VFS-backed shell) · 📊 **Task Manager** (live process monitor) · 🧩 **Plugin Manager**.
+📝 **Notapad** (VFS save/load, find & replace, multi-window) · 🎨 **Pinta** (tools, color pickers, undo/redo, **AI background removal on-device**) · 📂 **FileX** (unified explorer with This PC) · 🌐 **Navea** browser (history + URL safety filter) · 📻 Webamp · ⚙️ Control Panel & Settings (HDR, wallpapers, themes, language) · 🖥️ **Terminal** (VFS-backed shell) · 📊 **Task Pilot** (live process monitor) · 🧩 **Plugin Manager**.
+
+### 🎙️ Media & demo apps
+Five apps that show the platform's range — and practice its honesty policy (anything simulated is labelled as such, in the UI itself):
+- 🎬 **Media Player** — local video/audio and YouTube. The embed is driven **directly via postMessage** (`enablejsapi=1` widget protocol) — no external YouTube script, so the strict CSP stays intact. The "transcript" is a clearly-labelled simulation built from the video title.
+- 📰 **Hacker News Scout** — live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. The summary panel is labelled *"simulated demo — no AI model runs"*.
+- 🎙️ **AudioStudio** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
+- 💬 **Messenger** — chat with scripted characters (canned replies; says so in its description).
+- 📄 **Doc Explorer** — indexes a VFS document and answers queries by keyword overlap, with logs that say exactly that (no embeddings, no model).
 
 ### 🕹️ Games Arcade
 Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life Restart Sim · 🐦 Flappy Neon · ⚽ Football Rush · 🔫 Ultimate DOOM · 🧱 Tetris Tryhard · 🔴 Chapas Prime (Three.js) · 🌙 Nocturna (Web Audio rhythm) · 👾 H.I.P. Game Boy (3D WebGL).
@@ -158,6 +169,10 @@ npm run preview
 
 **Opening apps:** double-click a desktop icon or use the **Start Menu**.
 
+**Moving the taskbar:** grab an empty area of the bar and drag — it snaps magnetically to whichever screen edge you release it near (bottom, top, left or right).
+
+**Exploring files:** double-click **My Computer** to land at **This PC** and drill into the **HadOS (C:)** drive; the **Games** icon jumps straight to `C:\GAMES` in the same explorer.
+
 **Keyboard shortcuts**
 | Shortcut | Action |
 |---|---|
@@ -184,9 +199,9 @@ Use `↑` / `↓` to navigate command history.
 
 ## ✅ Testing
 
-**912 tests across 78 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
+**932 tests across 83 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
-**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.js`](test/e2e/css-baseline.spec.js)). None of those 912 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
+**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.ts`](test/e2e/css-baseline.spec.ts)). None of those 912 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
 
 ```bash
 npm test              # watch mode
@@ -245,10 +260,10 @@ authenticated IPC channel, the **Syscall Broker** checks the capability with the
 confined to the app's home directory.
 
 ### Architecture highlights
-- **Kernel** — a `Map<pid, process>` registry with immediate cleanup on `kill()` and automatic `terminate()` propagation to app instances. Singleton apps refocus their running instance instead of duplicating. Processes are tagged `app` (in-realm), `worker` or `iframe`.
+- **Kernel** — a `Map<pid, process>` registry with immediate cleanup on `kill()` and automatic `terminate()` propagation to app instances. Singleton apps refocus their running instance instead of duplicating. Processes are tagged `app` (in-realm), `worker` or `iframe`. Internally split into focused modules (`core/kernel/`: `AppRegistry`, `ProcessManager`, `KernelTypes`) behind the same public facade.
 - **Process isolation & IPC** — `spawnWorker()`/`spawnIframe()` run code off the Kernel's realm behind a versioned IPC protocol. The host handle (`WorkerProcess`) talks to an injectable transport, so a Worker, a `MessagePort` or a test loopback are interchangeable. iframe processes get a **dedicated, authenticated `MessagePort`** (the host hands the port only to its own iframe; the guest accepts it only from `window.parent`) instead of the global `window` bus.
 - **Syscalls, permissions & packaging** — a `SyscallBroker` mediates `fs.*`/`notify`/`sys.log`; a `PermissionBroker` asks the user for consent per capability and persists the grant; a `PackageManager` installs versioned `.wapp` packages whose manifest declares the permission ceiling. Every app is confined to `C:\APPS\<id>`.
-- **VFS** — an in-memory tree (synchronous reads) over async **IndexedDB** persistence, with binary blobs in **OPFS** so large files never bloat the serialized tree.
+- **VFS** — an in-memory tree (synchronous reads) over async **IndexedDB** persistence, with binary blobs in **OPFS** so large files never bloat the serialized tree. Split into modules (`core/vfs/`: `VFSCoreTree`, `VFSOperations`, `VFSTrash`, `VFSTypes`) — including a real, restorable **recycle bin** (`trashNode`/`restoreFromTrash`/`emptyTrash`).
 - **Event-driven core** — a zero-allocation event bus where each handler is isolated (one failing listener never breaks the others), plus a reactive, persisted store.
 - **Service Container** — a typed DI registry with async resolution (`whenReady`) and HMR-safe `unregister`.
 - **Resource Manager** — owner-scoped disposables with LIFO teardown; `Kernel.kill()` and each app's `terminate()` release their WebGL contexts, audio nodes, listeners, and timers deterministically.
@@ -261,30 +276,39 @@ confined to the app's home directory.
 ```text
 HadOS/
 ├─ js/
-│  ├─ core/        # Kernel, EventBus, Store, Service Container, Ragdoll3D core…
+│  ├─ core/        # EventBus, Store, Service Container, Ragdoll3D core…
+│  │  ├─ kernel/   # Kernel internals — AppRegistry, ProcessManager, KernelTypes
+│  │  ├─ vfs/      # VFS internals — VFSCoreTree, VFSOperations, VFSTrash, VFSTypes
 │  │  ├─ ipc/      # versioned process IPC protocol
-│  │  ├─ VFS·VFSStore·VFSBlobStore        # tree + IndexedDB + OPFS blobs
+│  │  ├─ VFS·VFSStore·VFSBlobStore        # facade + IndexedDB + OPFS blobs
 │  │  ├─ WorkerProcess·IframeProcess      # isolated process handles + transports
 │  │  ├─ ProcessWatchdog·SyscallBroker    # liveness + mediated system access
 │  │  ├─ PermissionBroker·PackageManager  # consent/grants + .wapp install
 │  │  └─ SessionManager·ResourceManager   # session resume + leak-free teardown
-│  ├─ apps/        # Notepad, Paint, Terminal, PrimeLab, TaskManager… (auto-registered)
+│  ├─ ai/          # AiService facade, LiteRtRuntime, model cache (OPFS), segmentation
+│  ├─ apps/        # Notapad, Pinta, Terminal, TaskPilot, MediaPlayer… (auto-registered)
+│  │  ├─ audiostudio/ · explorer/ · notepad/ · paint/ · taskmanager/  # per-app modules
 │  ├─ sdk/         # guest-side App Runtime SDK (appRuntime, guestBoot)
-│  ├─ workers/     # worker-process entries (compute.worker.ts)
-│  ├─ ui/          # WindowFactory, WindowInteractions (drag/snap), ShaderWallpaper…
+│  ├─ workers/     # worker-process entries (compute.worker.ts, ai-runtime)
+│  ├─ ui/          # WindowFactory, WindowInteractions (drag/snap), TaskbarDock, ShaderWallpaper…
 │  ├─ audio/       # AudioManager, procedural synth
-│  ├─ services/    # i18n and other cross-cutting services
+│  ├─ services/    # i18n (typed keys) and other cross-cutting services
 │  └─ utils.ts     # shared helpers (escapeHTML, eventManager, logger…)
 ├─ css/            # stylesheet partials — base/ boot/ chrome/ desktop/ apps/ system/ effects/
 ├─ style.css       # entry: an ORDERED @import manifest, nothing else (order is load-bearing)
 ├─ docs/
-│  └─ webos-roadmap/  # per-phase design notes (0 → 5)
+│  ├─ webos-roadmap/  # per-phase design notes (0 → 5)
+│  ├─ ai/             # on-device AI design notes (LiteRT substrate, Pinta cutout)
+│  └─ known-issues.md # what is knowingly still wrong, with evidence
 ├─ public/
 │  ├─ games/       # sandboxed iframe games
+│  ├─ locales/     # 40 language files (en, es, fr, de, ja, ar, …)
 │  ├─ css/themes/  # theme-base / theme-hados / theme-modern tokens
-│  └─ sw.js        # PWA service worker source (Workbox injectManifest)
-├─ test/           # Vitest unit/characterization + Playwright E2E
-├─ scripts/        # create-app.js scaffolder
+│  ├─ wasm/litert/ # LiteRT.js WASM runtime (copied at install)
+│  └─ ai-runtime.js # prebuilt classic-worker AI process (vite.ai-worker.config)
+├─ sw.ts           # PWA service worker source (Workbox injectManifest)
+├─ test/           # Vitest unit/characterization + Playwright E2E (css-baseline)
+├─ scripts/        # create-app, sync-locales, generate-i18n-types, copy-litert-wasm
 ├─ process-guest.html  # iframe process guest document (Vite entry)
 └─ main.ts         # entry — hydrates the VFS, boots the OS, resumes the session
 ```
@@ -340,8 +364,11 @@ Best experienced in a recent **Chromium-based browser** (Chrome, Edge, Brave). R
 ## 🗺️ Roadmap
 
 The 6-phase **Web OS** roadmap (async VFS → isolated processes → syscalls → permissions →
-packaging → session) shipped in **v1.6.6**; design notes per phase live in
-[`docs/webos-roadmap/`](docs/webos-roadmap/). What's next:
+packaging → session) shipped during the Windows App Center line (v1.6.6); design notes per
+phase live in [`docs/webos-roadmap/`](docs/webos-roadmap/). Since then, the HadOS line has
+added the **on-device AI substrate** ([`docs/ai/`](docs/ai/)) with Pinta's background
+removal as its first consumer, the unified **This PC** explorer, the **magnetic taskbar**,
+the macOS-style glass, and 40-language folder localization. What's next:
 
 - **Real zip container** for `.wapp` packages (the manager already takes a parsed package, so a zip loader plugs in) plus **package signing** via SubtleCrypto, and a store/catalog UI.
 - **Permissions UI** — review, grant and revoke app capabilities from Settings.
@@ -359,6 +386,8 @@ See the [CHANGELOG](CHANGELOG.md) `[Unreleased]` section for the latest.
 - **Single-user / client-side only** — no accounts, no server sync.
 - **Third-party code isolation** — apps run in a sandboxed iframe with an **opaque origin** (`allow-scripts`, no `allow-same-origin`) and reach the system only through a dedicated, authenticated channel: they cannot touch the host DOM, `localStorage` or IndexedDB. A **separate origin** (subdomain) would still add defence in depth — it would also isolate the guest's *own* storage and cover sandbox escapes — but it is no longer required for third-party isolation. By design, no untrusted code is `eval`'d.
 - Fake "hardware" figures in the Task Manager *System* tab are **simulated** (deterministic), not real device telemetry.
+- **Voice dictation uses the browser's own speech recognition** (`webkitSpeechRecognition`), which in Chromium may send audio to the browser vendor's servers. HadOS gates it behind an explicit consent prompt (`speech:cloud` capability) that says exactly that — but the recognition itself is not on-device.
+- **Simulated demo features** (Media Player transcripts, HN Scout summaries, Doc Explorer search, Messenger replies) are labelled as such in their own UI; none of them run an AI model. The only real on-device inference is Pinta's background removal (LiteRT.js).
 
 ---
 

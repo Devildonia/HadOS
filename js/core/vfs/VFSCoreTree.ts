@@ -13,7 +13,7 @@ export const DEFAULT_FS: IVFSNode = {
         },
         'DOCUMENTS': {
             name: 'DOCUMENTS', type: 'dir', i18nKey: 'fs.documents', children: {
-                'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS v1.0.5' }
+                'README.txt': { name: 'README.txt', type: 'file', content: 'Welcome to HadOS.' }
             }
         },
         'GAMES': {

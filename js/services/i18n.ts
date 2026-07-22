@@ -6,6 +6,7 @@
 
 import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
+import { CONFIG } from '../config';
 import type { TranslationKey } from './i18n-keys';
 
 export interface ITranslationDict {
@@ -69,7 +70,9 @@ const i18n: ITranslationService = {
         
         let text: string = dict[key] ?? enDict[key] ?? key;
 
-        // Interpolate {param} placeholders
+        // Interpolate {param} placeholders. {version} is always available so the
+        // 40 locale files never need to hardcode the release number again.
+        params = { version: CONFIG.APP?.VERSION ?? '', ...params };
         if (params && typeof text === 'string') {
             Object.keys(params).forEach(k => {
                 text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(params[k]));
