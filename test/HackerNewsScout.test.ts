@@ -37,26 +37,35 @@ describe('HackerNewsScout App', () => {
         app.terminate();
     });
 
-    it('should fall back to mock data and render news cards', async () => {
-        // We trigger mock fallback since fetch fails or is mocked to reject
+    it('should show an honest error state on fetch failure, with demo data behind an opt-in button', async () => {
+        // Fetch fails → no silent mock fallback: the app must say so (audit A3)
         vi.spyOn(window, 'fetch').mockRejectedValue(new Error('Network error'));
-        
+
         const app = new HackerNewsScout();
         // Wait for fetch/promises to resolve
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        expect(windowBody.innerHTML).toContain('LiteRT: Google\'s new lightweight runtime');
-        expect(windowBody.innerHTML).toContain('antigravity');
+        expect(windowBody.innerHTML).toContain('Could not reach Hacker News');
+        const demoBtn = windowBody.querySelector('#hn-demo-btn') as HTMLButtonElement;
+        expect(demoBtn).not.toBeNull();
+        expect(windowBody.querySelector('#hn-retry-btn')).not.toBeNull();
+
+        // Demo data is opt-in and visibly stamped [DEMO]
+        demoBtn.click();
+        expect(windowBody.innerHTML).toContain('[DEMO]');
         expect(windowBody.innerHTML).toContain('hn-summarize-btn');
 
         app.terminate();
     });
 
-    it('should open AI Summarizer side panel and trigger LiteRT simulation log', async () => {
+    it('should open the summary side panel labelled as a simulated demo', async () => {
         vi.spyOn(window, 'fetch').mockRejectedValue(new Error('Network error'));
 
         const app = new HackerNewsScout();
         await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Opt into demo data first (no silent fallback anymore)
+        (windowBody.querySelector('#hn-demo-btn') as HTMLButtonElement).click();
 
         const summarizeBtn = windowBody.querySelector('.hn-summarize-btn') as HTMLButtonElement;
         expect(summarizeBtn).not.toBeNull();
@@ -66,8 +75,8 @@ describe('HackerNewsScout App', () => {
 
         const panel = windowBody.querySelector('#hn-side-panel') as HTMLElement;
         expect(panel.style.display).toBe('flex');
-        expect(panel.innerHTML).toContain('LiteRT Summarizer');
-        expect(panel.innerHTML).toContain('Initializing LiteRT pipeline');
+        expect(panel.innerHTML).toContain('Summary (simulated demo)');
+        expect(panel.innerHTML).toContain('No AI model runs');
 
         app.terminate();
     });

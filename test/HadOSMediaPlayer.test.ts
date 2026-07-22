@@ -131,7 +131,8 @@ describe('HadOSMediaPlayer', () => {
         vi.advanceTimersByTime(600);
         
         expect(chatFeed.innerHTML).toContain('Never gonna make you cry');
-        expect(chatFeed.querySelector('#mp-chat-citation')).not.toBeNull();
+        // Citations are class-based now (duplicate-id fix, audit A2)
+        expect(chatFeed.querySelector('.mp-chat-citation')).not.toBeNull();
         
         vi.useRealTimers();
         app.terminate();

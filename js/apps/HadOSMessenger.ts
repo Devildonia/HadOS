@@ -206,13 +206,16 @@ export class HadOSMessenger implements IWindowsApp {
         const list = this.container?.querySelector('#messenger-contacts-list');
         if (!list) return;
 
+        // Characters are loaded from the VFS (C:\HADOS\CHARACTERS), which any app can
+        // write through fs.write — so every field is untrusted and gets escaped
+        // before touching innerHTML (audit A2).
         list.innerHTML = this.contacts.map(c => {
             const activeClass = c.id === this.activeContactId ? ' active' : '';
             return `
-                <div class="messenger-contact-item${activeClass}" data-id="${c.id}">
-                    <div class="messenger-contact-avatar">${c.avatar}</div>
+                <div class="messenger-contact-item${activeClass}" data-id="${Utils.escapeHTML(c.id)}">
+                    <div class="messenger-contact-avatar">${Utils.escapeHTML(c.avatar)}</div>
                     <div class="messenger-contact-info">
-                        <span class="messenger-contact-name">${c.name}</span>
+                        <span class="messenger-contact-name">${Utils.escapeHTML(c.name)}</span>
                         <span class="messenger-contact-status">● Online</span>
                     </div>
                 </div>
@@ -231,10 +234,10 @@ export class HadOSMessenger implements IWindowsApp {
         if (header) {
             header.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                    <div class="messenger-contact-avatar" style="font-size: 24px;">${contact.avatar}</div>
+                    <div class="messenger-contact-avatar" style="font-size: 24px;">${Utils.escapeHTML(contact.avatar)}</div>
                     <div>
-                        <div class="messenger-chat-title">${contact.name}</div>
-                        <div class="messenger-chat-desc">${contact.description}</div>
+                        <div class="messenger-chat-title">${Utils.escapeHTML(contact.name)}</div>
+                        <div class="messenger-chat-desc">${Utils.escapeHTML(contact.description)}</div>
                     </div>
                 </div>
                 <button class="hados-btn" id="messenger-clear-btn" style="font-size: 10px; padding: 2px 6px;">🗑️ Clear</button>
@@ -262,11 +265,14 @@ export class HadOSMessenger implements IWindowsApp {
         if (!historyEl) return;
 
         const history = this.getHistory(this.activeContactId);
+        // msg.text persists in localStorage and round-trips back into innerHTML —
+        // unescaped, one crafted message became a STORED XSS that re-fired on every
+        // render, forever (audit A2).
         historyEl.innerHTML = history.map(msg => {
             const typeClass = msg.sender === 'user' ? 'outgoing' : 'incoming';
             return `
                 <div class="messenger-msg-bubble ${typeClass}">
-                    ${msg.text}
+                    ${Utils.escapeHTML(msg.text)}
                 </div>
             `;
         }).join('');
@@ -577,6 +583,6 @@ export class HadOSMessenger implements IWindowsApp {
 Kernel.registerApp('messenger', HadOSMessenger, {
     name: 'HadOS Messenger',
     icon: '💬',
-    description: 'Instant messaging client with AI personalities.',
+    description: 'Chat with scripted characters (canned replies — no AI).',
     singleton: true
 });

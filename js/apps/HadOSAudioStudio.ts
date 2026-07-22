@@ -142,10 +142,12 @@ export class HadOSAudioStudio implements IWindowsApp {
     }
 }
 
-// Auto-register
+// Auto-register. The description says what the engines actually are: scripted
+// podcasts read by the browser's text-to-speech, and dictation via the browser's
+// speech recognition — no AI model runs in this app.
 Kernel.registerApp('audiostudio', HadOSAudioStudio, {
     name: 'Audio Studio',
     icon: '🎙️',
-    description: 'AI-generated conversational audio briefings and podcasts.',
+    description: 'Scripted podcasts via browser text-to-speech, and voice dictation.',
     singleton: true
 });

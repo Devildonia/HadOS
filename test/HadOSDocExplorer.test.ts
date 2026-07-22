@@ -78,9 +78,9 @@ describe('HadOSDocExplorer', () => {
         input.value = "score points";
         sendBtn.click();
 
-        // Check search logs
+        // Check search logs (honest labels: keyword overlap, no embeddings — audit A4)
         const consoleLogs = body.querySelector('#docexplorer-console')!.innerHTML;
-        expect(consoleLogs).toContain('Best Match: Chunk #2'); // "Try to clear rows to score points"
+        expect(consoleLogs).toContain('Best match: line #2'); // "Try to clear rows to score points"
         app.terminate();
     });
 });

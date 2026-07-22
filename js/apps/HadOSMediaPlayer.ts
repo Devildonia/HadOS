@@ -21,9 +21,17 @@ export class HadOSMediaPlayer implements IWindowsApp {
     // Local Video/Audio HTML Elements
     private mediaElement: HTMLVideoElement | null = null;
 
-    // YouTube API Player Reference
-    private ytPlayer: any = null;
+    // YouTube embed control. The embed is driven directly via postMessage
+    // (enablejsapi=1 widget protocol) so no external iframe_api script is
+    // injected and the CSP script-src stays 'self' (audit A3).
+    private ytPlayer: { seekTo: (sec: number, allowSeekAhead: boolean) => void; getCurrentTime: () => number; destroy: () => void } | null = null;
     private ytPlayerId: string = '';
+    private ytFrame: HTMLIFrameElement | null = null;
+    private ytCurrentTime: number = 0;
+    private static readonly YT_EMBED_ORIGIN = 'https://www.youtube-nocookie.com';
+
+    // Object URL of the currently loaded local file — revoked on cleanup (audit A5).
+    private localObjectUrl: string | null = null;
 
     private transcript: TranscriptLine[] = [];
     private activeLineIndex: number = -1;
@@ -39,6 +47,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
     private boundChatKeydown = (e: KeyboardEvent) => {
         if (e.key === 'Enter') this.handleSendChat();
     };
+    private boundYtMessage = (e: MessageEvent) => this.handleYtMessage(e);
 
     constructor() {
         this.init();
@@ -62,7 +71,6 @@ export class HadOSMediaPlayer implements IWindowsApp {
 
         this.setupLayout();
         this.loadVfsMediaList();
-        this.loadYoutubeIframeAPI();
     }
 
     private setupLayout(): void {
@@ -108,7 +116,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
                     <div class="mediaplayer-tabs">
                         <button class="mediaplayer-tab-btn active" id="mp-tab-transcript">${tabTranscriptText}</button>
                         <button class="mediaplayer-tab-btn" id="mp-tab-chat">${tabChatText}</button>
-                        <button class="mediaplayer-tab-btn" id="mp-tab-logs">LiteRT Logs</button>
+                        <button class="mediaplayer-tab-btn" id="mp-tab-logs">Logs</button>
                     </div>
 
                     <!-- Dynamic Content Panel -->
@@ -148,11 +156,13 @@ export class HadOSMediaPlayer implements IWindowsApp {
 
         select.innerHTML = `<option value="">-- Select Local Media --</option>`;
 
-        // List audios/videos from C:\HADOS\PODCASTS
+        // VFS file names are user/app-authored — escaped before touching innerHTML
+        // (audit A2), in the value attribute as well as the label.
         try {
             const files = (VFS.listDir('C:\\HADOS\\PODCASTS') || []).filter(f => f.endsWith('.mp3') || f.endsWith('.wav') || f.endsWith('.mp4'));
             files.forEach(f => {
-                select.innerHTML += `<option value="C:\\HADOS\\PODCASTS\\${f}">[Podcast] ${f}</option>`;
+                const safe = Utils.escapeHTML(f);
+                select.insertAdjacentHTML('beforeend', `<option value="C:\\HADOS\\PODCASTS\\${safe}">[Podcast] ${safe}</option>`);
             });
         } catch {}
 
@@ -160,21 +170,37 @@ export class HadOSMediaPlayer implements IWindowsApp {
         try {
             const files = (VFS.listDir('C:\\') || []).filter(f => f.endsWith('.mp3') || f.endsWith('.wav') || f.endsWith('.mp4'));
             files.forEach(f => {
-                select.innerHTML += `<option value="C:\\${f}">C:\\${f}</option>`;
+                const safe = Utils.escapeHTML(f);
+                select.insertAdjacentHTML('beforeend', `<option value="C:\\${safe}">C:\\${safe}</option>`);
             });
         } catch {}
     }
 
-    private loadYoutubeIframeAPI(): void {
-        if ((window as any).YT) return;
-
-        // Inject script
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        if (firstScriptTag && firstScriptTag.parentNode) {
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    /**
+     * Receives infoDelivery updates from the YouTube embed (widget postMessage
+     * protocol) and keeps the last known currentTime for transcript sync.
+     * Messages are only accepted from the embed origin and our own iframe.
+     */
+    private handleYtMessage(e: MessageEvent): void {
+        if (e.origin !== HadOSMediaPlayer.YT_EMBED_ORIGIN) return;
+        if (!this.ytFrame || e.source !== this.ytFrame.contentWindow) return;
+        let data: any = null;
+        try {
+            data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        } catch {
+            return;
         }
+        if (data && data.event === 'infoDelivery' && data.info && typeof data.info.currentTime === 'number') {
+            this.ytCurrentTime = data.info.currentTime;
+        }
+    }
+
+    /** Sends a widget-protocol command (play, seekTo, ...) to the embed iframe. */
+    private postYtCommand(func: string, args: unknown[] = []): void {
+        this.ytFrame?.contentWindow?.postMessage(
+            JSON.stringify({ event: 'command', func, args, id: this.ytPlayerId, channel: 'widget' }),
+            HadOSMediaPlayer.YT_EMBED_ORIGIN
+        );
     }
 
     private handleOpenLocal(): void {
@@ -192,9 +218,11 @@ export class HadOSMediaPlayer implements IWindowsApp {
 
                 this.mediaElement = document.createElement('video');
                 this.mediaElement.controls = true;
-                // Create secure local object URL to bypass browser file:// CORS/security blocks
+                // Create secure local object URL to bypass browser file:// CORS/security blocks.
+                // Tracked so cleanupPlayback() can revoke it and free the memory (audit A5).
                 try {
-                    this.mediaElement.src = URL.createObjectURL(file);
+                    this.localObjectUrl = URL.createObjectURL(file);
+                    this.mediaElement.src = this.localObjectUrl;
                 } catch {
                     // Fallback for environment constraints (stub/jsdom)
                     this.mediaElement.src = 'mock-blob-url';
@@ -241,56 +269,54 @@ export class HadOSMediaPlayer implements IWindowsApp {
         const stage = this.container?.querySelector('#mediaplayer-stage-div');
         if (!stage) return;
 
-        // Create API target element
-        stage.innerHTML = `<div id="${this.ytPlayerId}" style="width: 100%; height: 100%;"></div>`;
+        // Plain enablejsapi embed controlled via postMessage — no external
+        // iframe_api script, so the CSP script-src stays 'self' (audit A3).
+        const frame = document.createElement('iframe');
+        frame.id = this.ytPlayerId;
+        frame.src = `${HadOSMediaPlayer.YT_EMBED_ORIGIN}/embed/${videoId}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+        frame.allow = 'autoplay; encrypted-media; picture-in-picture';
+        frame.style.cssText = 'width: 100%; height: 100%; border: 0;';
+        stage.innerHTML = '';
+        stage.appendChild(frame);
+        this.ytFrame = frame;
+        this.ytCurrentTime = 0;
 
-        // Initialize Player using YouTube IFrame API
-        const initPlayer = () => {
-            try {
-                this.ytPlayer = new (window as any).YT.Player(this.ytPlayerId, {
-                    videoId: videoId,
-                    events: {
-                        onReady: () => {
-                            this.logRag(`[YouTube] Player loaded for video ID: ${videoId}`);
-                            this.startTimerSync();
-                        },
-                        onError: (e: any) => {
-                            Utils.Logger.error("YouTube player error:", e);
-                        }
-                    }
-                });
-            } catch (err) {
-                // Mock player for testing/JSDOM where YT API is missing
-                this.ytPlayer = {
-                    seekTo: (sec: number) => this.logRag(`[Mock YT] Seeked to ${sec}s`),
-                    getCurrentTime: () => Math.random() * 60,
-                    destroy: () => {}
-                };
-                this.logRag(`[YouTube API] Mock fallback initialized.`);
-                this.startTimerSync();
+        window.addEventListener('message', this.boundYtMessage);
+        frame.addEventListener('load', () => {
+            // Subscribe to infoDelivery updates (currentTime) from the embed.
+            frame.contentWindow?.postMessage(
+                JSON.stringify({ event: 'listening', id: this.ytPlayerId, channel: 'widget' }),
+                HadOSMediaPlayer.YT_EMBED_ORIGIN
+            );
+            this.logRag(`[YouTube] Embed loaded for video ID: ${videoId} (postMessage control, no external script).`);
+        });
+
+        this.ytPlayer = {
+            seekTo: (sec: number, allowSeekAhead: boolean) => this.postYtCommand('seekTo', [sec, allowSeekAhead]),
+            getCurrentTime: () => this.ytCurrentTime,
+            destroy: () => {
+                window.removeEventListener('message', this.boundYtMessage);
+                this.ytFrame = null;
             }
         };
-
-        if ((window as any).YT && (window as any).YT.Player) {
-            initPlayer();
-        } else {
-            // Wait for API to load
-            (window as any).onYouTubeIframeAPIReady = initPlayer;
-            // Immediate retry fallback
-            setTimeout(initPlayer, 1000);
-        }
-
+        this.startTimerSync();
         this.loadVideoTranscript(videoId);
     }
 
     private extractYoutubeId(url: string): string | null {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const match = url.match(regExp);
-        return (match && match[2]?.length === 11) ? match[2] : null;
+        // Strict 11-char [A-Za-z0-9_-] check: the ID is interpolated into the
+        // embed iframe src, so anything else is rejected (audit A6 spirit).
+        return (match && match[2] && /^[\w-]{11}$/.test(match[2])) ? match[2] : null;
     }
 
     private async loadVideoTranscript(videoId: string): Promise<void> {
-        this.logRag(`[LiteRT] Downloading Whisper transcript index for video: ${videoId}...`);
+        // Honest label (audit A4): there is no Whisper and no downloaded transcript.
+        // What follows fetches the video TITLE and fabricates demo lines from its
+        // keywords — the UI must say so, or the user believes they are reading the
+        // video's real captions.
+        this.logRag(`[Demo] Building a SIMULATED transcript from the video title (not real captions)...`);
 
         let title = "Video Presentation";
         try {
@@ -306,12 +332,14 @@ export class HadOSMediaPlayer implements IWindowsApp {
             Utils.Logger.warn("Failed to fetch video title for transcript generation:", e);
         }
 
-        this.logRag(`[LiteRT] Video title fetched: "${title}"`);
+        // The title is REMOTE (noembed) and the RAG log renders via innerHTML —
+        // escape it here or a crafted video title executes in the log panel.
+        this.logRag(`Video title fetched: "${Utils.escapeHTML(title)}"`);
 
         // Generate dynamic transcript based on title content
         this.transcript = this.generateDynamicTranscript(title, videoId);
 
-        this.logRag(`[LiteRT] Compiled ${this.transcript.length} tokens into local similarity vector space.`, 'success');
+        this.logRag(`[Demo] ${this.transcript.length} simulated lines generated from the title.`, 'success');
         this.renderTranscript();
     }
 
@@ -419,9 +447,9 @@ export class HadOSMediaPlayer implements IWindowsApp {
             const timeStr = `${minutes}:${seconds}`;
 
             return `
-                <div class="mediaplayer-transcript-line" id="mp-line-${idx}" data-time="${line.time}">
+                <div class="mediaplayer-transcript-line" id="mp-line-${idx}" data-time="${Number(line.time) || 0}">
                     <span class="mediaplayer-timestamp">${timeStr}</span>
-                    <span>${line.text}</span>
+                    <span>${Utils.escapeHTML(line.text)}</span>
                 </div>
             `;
         }).join('');
@@ -534,7 +562,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 <div style="display: flex; flex-direction: column; height: 100%;">
                     <div class="docexplorer-chat-feed" id="mp-chat-feed" style="flex: 1; overflow-y: auto; padding: 10px;">
                         <div class="docexplorer-chat-bubble ai">
-                            Ask me questions about the loaded video transcript. I will find matching clips locally using LiteRT RAG embeddings.
+                            Ask about the demo transcript — I jump to the line that best matches your words. Local keyword search; the transcript is simulated and no AI model runs.
                         </div>
                     </div>
                     <div class="docexplorer-chat-input-bar">
@@ -559,7 +587,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
     }
 
     private logRag(msg: string, type: 'info' | 'success' = 'info'): void {
-        const prefix = type === 'success' ? '[LiteRT SUCCESS] ' : '';
+        const prefix = type === 'success' ? '[OK] ' : '';
         const logLine = `${prefix}${msg}`;
         this.ragLogs.push(logLine);
 
@@ -582,10 +610,11 @@ export class HadOSMediaPlayer implements IWindowsApp {
         const feed = this.container?.querySelector('#mp-chat-feed');
         if (!feed) return;
 
-        feed.innerHTML += `<div class="docexplorer-chat-bubble user">${query}</div>`;
+        // User input, back through innerHTML — escaped (audit A2).
+        feed.insertAdjacentHTML('beforeend', `<div class="docexplorer-chat-bubble user">${Utils.escapeHTML(query)}</div>`);
         feed.scrollTop = feed.scrollHeight;
 
-        this.logRag(`[LiteRT RAG] Calculating cosine distances for search: "${query}"`);
+        this.logRag(`[Search] Matching query words against the demo transcript: "${Utils.escapeHTML(query)}"`);
 
         // Find best match matching words
         let bestIndex = 0;
@@ -611,17 +640,21 @@ export class HadOSMediaPlayer implements IWindowsApp {
             const seconds = Math.floor(bestLine.time % 60).toString().padStart(2, '0');
             const timeStr = `${minutes}:${seconds}`;
 
-            feed.innerHTML += `
+            // insertAdjacentHTML, not `innerHTML +=`: re-parsing the feed destroyed
+            // the click listeners of every earlier citation (audit A7). The line text
+            // descends from the REMOTE video title, so it is escaped (audit A2).
+            feed.insertAdjacentHTML('beforeend', `
                 <div class="docexplorer-chat-bubble ai">
-                    Grounded Video Answer: <i>"${bestLine.text}"</i><br>
-                    <div class="docexplorer-source-box" id="mp-chat-citation" style="cursor: pointer;">
+                    Best matching demo line: <i>"${Utils.escapeHTML(bestLine.text)}"</i><br>
+                    <div class="docexplorer-source-box mp-chat-citation" style="cursor: pointer;">
                          🎥 <b>Segment at ${timeStr}</b> (Click to jump to this timestamp)
                     </div>
                 </div>
-            `;
+            `);
             feed.scrollTop = feed.scrollHeight;
 
-            const citation = feed.querySelector('#mp-chat-citation');
+            const citations = feed.querySelectorAll('.mp-chat-citation');
+            const citation = citations[citations.length - 1];
             if (citation) {
                 Utils.eventManager.add(citation, 'click', () => this.seekToTime(bestLine.time));
             }
@@ -644,6 +677,13 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 this.mediaElement.load();
             } catch {}
             this.mediaElement = null;
+        }
+        // Revoke the previous local file's object URL so it doesn't leak (audit A5).
+        if (this.localObjectUrl) {
+            try {
+                URL.revokeObjectURL(this.localObjectUrl);
+            } catch {}
+            this.localObjectUrl = null;
         }
         this.playerType = 'idle';
         this.activeLineIndex = -1;
@@ -668,6 +708,6 @@ export class HadOSMediaPlayer implements IWindowsApp {
 Kernel.registerApp('mediaplayer', HadOSMediaPlayer, {
     name: 'Media Player',
     icon: '🎬',
-    description: 'Local and YouTube multimedia player with LiteRT transcript RAG sync.',
+    description: 'Local and YouTube media player with a simulated demo transcript.',
     singleton: true
 });

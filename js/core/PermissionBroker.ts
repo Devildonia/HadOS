@@ -37,6 +37,11 @@ const CAP_LABELS: Record<string, string> = {
     // megabytes of model over the user's connection and then runs it against
     // whatever the app hands it — the picture on their canvas, say.
     'ai:infer': 'run AI on your device',
+    // The browser's SpeechRecognition API: in Chrome the microphone audio is
+    // processed on Google's servers, not on this machine. That is the opposite of
+    // the on-device promise, so it gets its own explicit, remembered consent — and
+    // the wording says where the audio goes.
+    'speech:cloud': "use your browser's speech recognition (audio may be sent to the browser vendor's servers)",
 };
 
 /**

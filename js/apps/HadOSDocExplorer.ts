@@ -64,7 +64,7 @@ export class HadOSDocExplorer implements IWindowsApp {
 
         const openText = i18n.t('docexplorer.open_file') || 'Abrir Archivo';
         const placeholderText = i18n.t('docexplorer.ask_placeholder') || 'Haz una pregunta sobre este documento...';
-        const spaceText = i18n.t('docexplorer.vector_space') || 'Espacio Vectorial Local LiteRT';
+        const spaceText = i18n.t('docexplorer.vector_space') || 'Visualización del índice (decorativa)';
 
         this.container.innerHTML = `
             <div class="docexplorer-layout">
@@ -79,7 +79,7 @@ export class HadOSDocExplorer implements IWindowsApp {
 
                     <div class="docexplorer-chat-feed" id="docexplorer-chat-feed">
                         <div class="docexplorer-chat-bubble ai">
-                            Welcome to <b>LiteRT Doc Explorer</b>. Load a document from the dropdown above, and ask me questions. I will answer locally using LiteRT grounded vector RAG.
+                            Welcome to <b>Doc Explorer</b>. Load a document from the dropdown above and ask about it — answers quote the line that best matches your words. Local keyword search; no AI model runs.
                         </div>
                     </div>
 
@@ -99,8 +99,7 @@ export class HadOSDocExplorer implements IWindowsApp {
 
                     <!-- Diagnostics terminal -->
                     <div class="docexplorer-console" id="docexplorer-console">
-                        [System] LiteRT Doc Explorer initialized.<br>
-                        [LiteRT] Whisper & MobileBERT embedding runtimes loaded.<br>
+                        [System] Doc Explorer initialized — local keyword search, no AI model.<br>
                         [VFS] Ready to read document tree.
                     </div>
                 </div>
@@ -194,13 +193,15 @@ export class HadOSDocExplorer implements IWindowsApp {
     }
 
     private processDocument(text: string): void {
-        this.logConsole(`[LiteRT] Initializing local embedding compiler...`, 'info');
-        this.logConsole(`[LiteRT] Tokenizing text buffer into 256-token chunks...`, 'info');
+        // Honest labels (audit A4): there are no embeddings here. The "index" is the
+        // document split into lines, and the sphere points are random positions for
+        // the visualisation — they encode nothing.
+        this.logConsole(`[Index] Splitting document into lines...`, 'info');
 
         // Split text into chunks (e.g. paragraphs or lines)
         const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
         if (lines.length === 0) {
-            this.logConsole(`[LiteRT] Error: Document is too short or empty.`, 'meta');
+            this.logConsole(`[Index] Error: Document is too short or empty.`, 'meta');
             return;
         }
 
@@ -226,17 +227,16 @@ export class HadOSDocExplorer implements IWindowsApp {
             });
         });
 
-        this.logConsole(`[LiteRT] Compiling tensor index: ${this.points.length} vectors generated.`, 'success');
-        this.logConsole(`[LiteRT] Embedding index loaded successfully in memory.`, 'success');
+        this.logConsole(`[Index] ${this.points.length} lines indexed (keyword search — no embeddings).`, 'success');
 
         // Show welcome chat bubble for doc
         const feed = this.container?.querySelector('#docexplorer-chat-feed');
         if (feed) {
-            feed.innerHTML += `
+            feed.insertAdjacentHTML('beforeend', `
                 <div class="docexplorer-chat-bubble ai">
-                    Loaded document <b>${this.currentFileName}</b> containing ${this.points.length} indexed chunks. Feel free to ask any question grounded on this text!
+                    Loaded document <b>${Utils.escapeHTML(this.currentFileName)}</b> containing ${this.points.length} indexed lines. Answers quote the best keyword match — no AI model runs.
                 </div>
-            `;
+            `);
             feed.scrollTop = feed.scrollHeight;
         }
     }
@@ -251,17 +251,16 @@ export class HadOSDocExplorer implements IWindowsApp {
         const feed = this.container?.querySelector('#docexplorer-chat-feed');
         if (!feed) return;
 
-        // Render user message
-        feed.innerHTML += `
+        // Render user message — escaped: it goes back through innerHTML (audit A2).
+        feed.insertAdjacentHTML('beforeend', `
             <div class="docexplorer-chat-bubble user">
-                ${query}
+                ${Utils.escapeHTML(query)}
             </div>
-        `;
+        `);
         feed.scrollTop = feed.scrollHeight;
 
-        // Perform RAG retrieval
-        this.logConsole(`[LiteRT] Encoding query: "${query}"...`, 'info');
-        this.logConsole(`[LiteRT] Comparing cosine distance against ${this.points.length} vectors...`, 'info');
+        // Keyword retrieval — described as what it is, not as vector search.
+        this.logConsole(`[Search] Matching query words against ${this.points.length} lines...`, 'info');
 
         // Simple mock search (cosine similarity simulation)
         // Find chunk with highest word match ratio
@@ -289,22 +288,23 @@ export class HadOSDocExplorer implements IWindowsApp {
         this.activeChunkId = bestIndex;
         const matchingChunk = this.docChunks[bestIndex] || '';
 
-        this.logConsole(`[LiteRT] Cosine query matching finished in 24ms.`, 'success');
-        this.logConsole(`[LiteRT] Best Match: Chunk #${bestIndex} (score: ${(highestScore * 100).toFixed(1)}%)`, 'success');
+        // No invented "24ms cosine" figures: it is a word-overlap ratio.
+        this.logConsole(`[Search] Best match: line #${bestIndex} (${(highestScore * 100).toFixed(0)}% of query words present)`, 'success');
 
-        // Simulate typing grounded answer
+        // Show the quoted answer. Document content is untrusted (VFS, writable by
+        // apps) — everything is escaped before touching innerHTML (audit A2).
         setTimeout(() => {
-            const sourceText = i18n.t('docexplorer.answering') || 'Respuesta Fundamentada';
+            const sourceText = i18n.t('docexplorer.answering') || 'Best matching line';
             const answer = this.generateGroundedAnswer(query, matchingChunk);
 
-            feed.innerHTML += `
+            feed.insertAdjacentHTML('beforeend', `
                 <div class="docexplorer-chat-bubble ai">
-                    <div><b>${sourceText}:</b> ${answer}</div>
+                    <div><b>${Utils.escapeHTML(sourceText)}:</b> ${Utils.escapeHTML(answer)}</div>
                     <div class="docexplorer-source-box">
-                        <b>Source Chunk #${bestIndex}:</b> "${matchingChunk}"
+                        <b>Source line #${bestIndex}:</b> "${Utils.escapeHTML(matchingChunk)}"
                     </div>
                 </div>
-            `;
+            `);
             feed.scrollTop = feed.scrollHeight;
             if (window.playBlip) window.playBlip(700);
         }, 600);
@@ -411,6 +411,6 @@ export class HadOSDocExplorer implements IWindowsApp {
 Kernel.registerApp('docexplorer', HadOSDocExplorer, {
     name: 'Doc Explorer',
     icon: '🔍',
-    description: 'LiteRT-powered grounded offline document RAG explorer.',
+    description: 'Ask questions about a local document — keyword search that quotes the best match.',
     singleton: true
 });

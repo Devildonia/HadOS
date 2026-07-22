@@ -51,7 +51,7 @@ export class HackerNewsScout implements IWindowsApp {
         this.container.innerHTML = `
             <div class="hn-scout-container">
                 <div class="hn-header">
-                    <h3>📰 Hacker News Scout <span class="hn-litert-badge" style="background: #e65c00;">LiteRT Summarizer Enabled</span></h3>
+                    <h3>📰 Hacker News Scout <span class="hn-litert-badge" style="background: #555;" title="The summary is a scripted demo — no AI model runs">Simulated summaries</span></h3>
                     <button class="hn-refresh-btn hados-btn" id="hn-refresh-btn">🔄 Refresh</button>
                 </div>
                 <div class="hn-main-layout">
@@ -102,46 +102,40 @@ export class HackerNewsScout implements IWindowsApp {
                 return itemRes.json() as Promise<HNItem>;
             });
 
-            const stories = await Promise.all(promises);
-            const lang = i18n.getLang();
-            if (lang !== 'en') {
-                this.newsList = await Promise.all(stories.map(async (story) => {
-                    const translatedTitle = await this.translateTitleIfNeeded(story.title);
-                    return { ...story, title: translatedTitle };
-                }));
-            } else {
-                this.newsList = stories;
-            }
+            this.newsList = await Promise.all(promises);
             this.renderStories();
         } catch (err) {
+            // No silent fallback to mock stories (audit A3): the failure used to be
+            // masked with hardcoded fake headlines styled exactly like real ones, so
+            // a broken feed looked like a working reader serving fiction. If the
+            // network fails, say so; demo data is opt-in and labelled.
             Utils.Logger.error("Error fetching Hacker News:", err);
-            const stories = this.getMockStories();
-            const lang = i18n.getLang();
-            if (lang !== 'en') {
-                this.newsList = await Promise.all(stories.map(async (story) => {
-                    const translatedTitle = await this.translateTitleIfNeeded(story.title);
-                    return { ...story, title: translatedTitle };
-                }));
-            } else {
-                this.newsList = stories;
-            }
-            this.renderStories();
+            this.renderFetchError();
         }
     }
 
-    private async translateTitleIfNeeded(title: string): Promise<string> {
-        const lang = i18n.getLang();
-        if (lang === 'en') return title;
-
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${lang}&dt=t&q=${encodeURIComponent(title)}`;
-        try {
-            const res = await fetch(url);
-            if (!res.ok) return title;
-            const data = await res.json();
-            return data[0][0][0] as string;
-        } catch {
-            return title;
-        }
+    /** An honest failure state, with the demo data behind a clearly labelled button. */
+    private renderFetchError(): void {
+        const grid = this.container?.querySelector('#hn-news-grid');
+        if (!grid) return;
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                <div style="font-size: 24px;">📡</div>
+                <div style="font-weight: bold; margin: 8px 0;">Could not reach Hacker News</div>
+                <div style="font-size: 11px; color: #888;">Check your connection. Nothing below is real until a feed loads.</div>
+                <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
+                    <button class="hados-btn" id="hn-retry-btn">🔄 Retry</button>
+                    <button class="hados-btn" id="hn-demo-btn" title="Hardcoded example stories — not live news">Show demo data (fake)</button>
+                </div>
+            </div>`;
+        const retry = grid.querySelector('#hn-retry-btn');
+        if (retry) Utils.eventManager.add(retry, 'click', () => { void this.fetchTopStories(); });
+        const demo = grid.querySelector('#hn-demo-btn');
+        if (demo) Utils.eventManager.add(demo, 'click', () => {
+            // Demo stories get their titles stamped so they can never pass for news.
+            this.newsList = this.getMockStories().map(s => ({ ...s, title: `[DEMO] ${s.title}` }));
+            this.renderStories();
+        });
     }
 
     private renderStories(): void {
@@ -154,20 +148,33 @@ export class HackerNewsScout implements IWindowsApp {
         }
 
         grid.innerHTML = this.newsList.map(story => {
-            const domain = story.url ? new URL(story.url).hostname : 'news.ycombinator.com';
+            // Every field here is REMOTE data written by HN users — it goes through
+            // escapeHTML before touching innerHTML (audit A2). The href additionally
+            // gets a protocol check: escaping does nothing against `javascript:`.
+            let domain = 'news.ycombinator.com';
+            let safeHref = '#';
+            try {
+                // A malformed URL must not take the whole listing down (audit A6).
+                const parsed = story.url ? new URL(story.url) : null;
+                if (parsed && (parsed.protocol === 'https:' || parsed.protocol === 'http:')) {
+                    domain = parsed.hostname;
+                    safeHref = Utils.escapeHTML(parsed.href);
+                }
+            } catch { /* keep the '#' fallback */ }
             const commentsCount = story.descendants ?? 0;
+            const safeId = Number(story.id) || 0;
             return `
-                <div class="hn-card" data-id="${story.id}">
+                <div class="hn-card" data-id="${safeId}">
                     <div>
-                        <a href="${story.url || '#'}" target="_blank" class="hn-card-title">${story.title}</a>
-                        <div style="font-size: 10px; color: #888; margin-top: 4px;">(${domain})</div>
+                        <a href="${safeHref}" target="_blank" rel="noopener noreferrer" class="hn-card-title">${Utils.escapeHTML(story.title ?? '')}</a>
+                        <div style="font-size: 10px; color: #888; margin-top: 4px;">(${Utils.escapeHTML(domain)})</div>
                     </div>
                     <div class="hn-card-meta">
-                        <span>▲ ${story.score} points by ${story.by}</span>
-                        <span>💬 ${commentsCount}</span>
+                        <span>▲ ${Number(story.score) || 0} points by ${Utils.escapeHTML(story.by ?? '')}</span>
+                        <span>💬 ${Number(commentsCount) || 0}</span>
                     </div>
                     <div class="hn-card-actions">
-                        <button class="hados-btn hn-summarize-btn" data-id="${story.id}" style="width: 100%; font-size: 10px; padding: 3px 6px;">
+                        <button class="hados-btn hn-summarize-btn" data-id="${safeId}" style="width: 100%; font-size: 10px; padding: 3px 6px;">
                             ✨ ${i18n.t('hnscout.summarize') || 'Resumir con IA'}
                         </button>
                     </div>
@@ -203,13 +210,13 @@ export class HackerNewsScout implements IWindowsApp {
 
         panel.innerHTML = `
             <div class="hn-panel-header">
-                <span>🤖 LiteRT Summarizer</span>
+                <span>📝 Summary (simulated demo)</span>
                 <button class="hados-btn" id="hn-close-panel-btn" style="padding: 1px 6px; font-size: 10px;">X</button>
             </div>
             <div class="hn-panel-content">
-                <div style="font-weight: bold; font-size: 11px;">"${story.title}"</div>
+                <div style="font-weight: bold; font-size: 11px;">"${Utils.escapeHTML(story.title ?? '')}"</div>
                 <div class="hn-litert-console" id="hn-console-log">
-                    [System] Initializing LiteRT pipeline...
+                    [Demo] No AI model runs here — this panel shows a scripted text.
                 </div>
                 <div class="hn-summary-text" id="hn-summary-text" style="display: none;"></div>
             </div>
@@ -235,13 +242,14 @@ export class HackerNewsScout implements IWindowsApp {
         const summaryText = this.container?.querySelector('#hn-summary-text') as HTMLElement | null;
         if (!consoleLog || !summaryText) return;
 
+        // These used to narrate a model download, tensor allocation and "inference"
+        // that never happened, over a hardcoded summary (audit A4). The theatre is
+        // gone: the log says what this is — a scripted, keyword-matched demo text.
+        // Real summarisation belongs to the AiService substrate when an on-device
+        // LLM lands (LiteRT-LM milestone); nothing here may claim it early.
         const logs = [
-            `[LiteRT] Loading WASM accelerator... OK`,
-            `[LiteRT] Downloading model 'mobilebert_summarizer.tflite' (4.2MB)...`,
-            `[LiteRT] Model compiled successfully in 324ms.`,
-            `[LiteRT] Allocating input/output tensors... OK`,
-            `[LiteRT] Tokenizing feed text and comments (${story.descendants ?? 0} comments)...`,
-            `[LiteRT] Running model inference on WebAssembly thread pool...`
+            `[Demo] This summary is SIMULATED — no AI model runs.`,
+            `[Demo] Picking a canned text by title keywords...`
         ];
 
         let logIndex = 0;
@@ -252,12 +260,14 @@ export class HackerNewsScout implements IWindowsApp {
             }
 
             if (logIndex < logs.length) {
-                consoleLog.innerHTML += `<br>${logs[logIndex]}`;
+                // insertAdjacentHTML: `innerHTML +=` re-parsed the whole log node on
+                // every tick and would have destroyed any inner listeners (audit A7).
+                consoleLog.insertAdjacentHTML('beforeend', `<br>${logs[logIndex]}`);
                 consoleLog.scrollTop = consoleLog.scrollHeight;
                 logIndex++;
             } else {
                 window.clearInterval(logInterval);
-                consoleLog.innerHTML += `<br>[LiteRT] Inference completed. Streaming output:`;
+                consoleLog.insertAdjacentHTML('beforeend', `<br>[Demo] Showing scripted text:`);
                 consoleLog.scrollTop = consoleLog.scrollHeight;
 
                 // Start streaming summary
@@ -314,7 +324,7 @@ export class HackerNewsScout implements IWindowsApp {
             ? "The comments section is deeply technical with developers sharing real-world alternatives, benchmarking data, and architectural feedback."
             : "The comments reflect early interest with brief technical inquiries and general observations.";
 
-        return `### ⚡ LiteRT AI Summary\n\n**${scoreText}**\n\n${topicAnalysis}\n\n**Key Takeaways & Comments:**\n${commentsSentiment}\n\n*Source: ${story.by} on Hacker News*`;
+        return `### 📝 Simulated summary (no AI)\n\n**${scoreText}**\n\n${topicAnalysis}\n\n**Key Takeaways & Comments:**\n${commentsSentiment}\n\n*Source: ${story.by} on Hacker News — text selected by title keywords, not generated.*`;
     }
 
     private getMockStories(): HNItem[] {
@@ -390,6 +400,6 @@ export class HackerNewsScout implements IWindowsApp {
 Kernel.registerApp('hnscout', HackerNewsScout, {
     name: 'HN Scout',
     icon: '📰',
-    description: 'Hacker News reader with LiteRT AI Summarizer.',
+    description: 'Hacker News reader with simulated demo summaries.',
     singleton: true
 });

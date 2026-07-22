@@ -1,7 +1,20 @@
 import { i18n } from '../../services/i18n.js';
 import { Utils } from '../../utils.js';
 import { VFS } from '../../core/VFS.js';
+import { PermissionBroker } from '../../core/PermissionBroker.js';
 import type { IAudioStudioTab } from './IAudioStudioTab.js';
+
+/**
+ * Dictation over the browser's SpeechRecognition API.
+ *
+ * HONESTY NOTE (audit A1): this is NOT on-device inference. In Chrome this API
+ * ships the microphone audio to Google's servers for transcription. The tab used
+ * to log "[LiteRT] Whisper weights initialized" over it, which was false on every
+ * word — no LiteRT, no Whisper, and the audio left the machine. It now says what
+ * it is, and starting the microphone is gated behind an explicit, remembered
+ * consent (`speech:cloud`) through the PermissionBroker, the same path every
+ * other sensitive capability takes.
+ */
 
 export class DictationTab implements IAudioStudioTab {
     private container: HTMLElement | null = null;
@@ -44,7 +57,7 @@ export class DictationTab implements IAudioStudioTab {
             this.recognition.onstart = () => {
                 this.isRecording = true;
                 this.updateUI();
-                this.logMessage(`[LiteRT] Listening on audio buffer stream (16000Hz)...`);
+                this.logMessage(`[Speech] Listening. Audio is processed by your browser's speech service.`);
             };
 
             this.recognition.onresult = (e: any) => {
@@ -61,7 +74,8 @@ export class DictationTab implements IAudioStudioTab {
 
                 if (final) {
                     this.transcribedText += (this.transcribedText ? ' ' : '') + final;
-                    this.logMessage(`[LiteRT] Decoder confidence: ${(95 + Math.random() * 4.9).toFixed(1)}% | Latency: 16ms`);
+                    // No invented "confidence/latency" figures: the API reports none.
+                    this.logMessage(`[Speech] Phrase transcribed (${final.trim().split(/\s+/).length} words).`);
                 }
 
                 const textarea = this.container?.querySelector('#dictation-textarea') as HTMLTextAreaElement | null;
@@ -73,14 +87,14 @@ export class DictationTab implements IAudioStudioTab {
 
             this.recognition.onerror = (err: any) => {
                 Utils.Logger.error("Speech recognition error:", err);
-                this.logMessage(`[LiteRT] Error: ${err.error}. Check microphone permissions.`);
+                this.logMessage(`[Speech] Error: ${err.error}. Check microphone permissions.`);
                 this.handleStop();
             };
 
             this.recognition.onend = () => {
                 this.isRecording = false;
                 this.updateUI();
-                this.logMessage(`[LiteRT] Session stopped.`);
+                this.logMessage(`[Speech] Session stopped. Microphone released.`);
             };
         } catch (e) {
             Utils.Logger.error("Failed to initialize speech recognition:", e);
@@ -115,7 +129,7 @@ export class DictationTab implements IAudioStudioTab {
 
                 <!-- Diagnostics Log Panel -->
                 <div class="audiostudio-log" id="dictation-log" style="height: 100px;">
-                    [LiteRT] Ready. Whisper-Tiny weights initialized (42MB). Click Start to speak.
+                    [Speech] Uses the browser's speech recognition — audio may be sent to the browser vendor's servers. You will be asked before the microphone starts.
                 </div>
             </div>
         `;
@@ -140,34 +154,31 @@ export class DictationTab implements IAudioStudioTab {
         if (this.isRecording) {
             this.handleStop();
         } else {
-            this.handleStart();
+            void this.handleStart();
         }
     }
 
-    private handleStart(): void {
-        this.logMessage(`[LiteRT] Initializing WebAssembly Whisper weights...`);
-        if (this.recognition) {
-            try {
-                this.recognition.lang = i18n.getLang();
-                this.recognition.start();
-            } catch (e) {
-                // If already running
-                this.recognition.stop();
-            }
-        } else {
-            // Mock recording if SpeechRecognition is not supported (offline/JSDOM mode)
-            this.isRecording = true;
-            this.updateUI();
-            this.logMessage(`[LiteRT] JSDOM Mock Input activated.`);
-            // Mock transcription
-            setTimeout(() => {
-                if (this.isRecording) {
-                    this.transcribedText = "This is a simulated on-device transcription generated via Google LiteRT runtime.";
-                    const textarea = this.container?.querySelector('#dictation-textarea') as HTMLTextAreaElement | null;
-                    if (textarea) textarea.value = this.transcribedText;
-                    this.logMessage(`[LiteRT] Confidence: 99.1% | Inference time: 24ms`);
-                }
-            }, 800);
+    private async handleStart(): Promise<void> {
+        if (!this.recognition) {
+            // No fake transcription for unsupported browsers: say so and stop.
+            this.logMessage(`[Speech] Speech recognition is not supported in this browser.`);
+            return;
+        }
+
+        // Audio leaves the device with this API, so starting the microphone requires
+        // the same explicit, remembered consent as any other sensitive capability.
+        const allowed = await PermissionBroker.check('audiostudio', 'speech:cloud');
+        if (!allowed) {
+            this.logMessage(`[Speech] Permission denied — the microphone was not started.`);
+            return;
+        }
+
+        try {
+            this.recognition.lang = i18n.getLang();
+            this.recognition.start();
+        } catch (e) {
+            // If already running
+            this.recognition.stop();
         }
     }
 
@@ -177,7 +188,6 @@ export class DictationTab implements IAudioStudioTab {
         } else {
             this.isRecording = false;
             this.updateUI();
-            this.logMessage(`[LiteRT] Session stopped.`);
         }
     }
 
