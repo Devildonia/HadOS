@@ -42,6 +42,8 @@ const CAP_LABELS: Record<string, string> = {
     // the on-device promise, so it gets its own explicit, remembered consent — and
     // the wording says where the audio goes.
     'speech:cloud': "use your browser's speech recognition (audio may be sent to the browser vendor's servers)",
+    'ai:chat': 'generate chat replies with the imported AI model, entirely on your device (nothing is sent anywhere)',
+    'ai:transcribe': 'download a speech-to-text model (~140 MB, once) and transcribe audio entirely on your device',
 };
 
 /**

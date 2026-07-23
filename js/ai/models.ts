@@ -16,7 +16,7 @@
 import type { IModelSpec } from './AiModelCache';
 
 /** What a model is for. Lets a caller ask for a task without knowing an id. */
-export type ModelTask = 'segmentation';
+export type ModelTask = 'segmentation' | 'chat';
 
 export interface IRegisteredModel extends IModelSpec {
     task: ModelTask;
@@ -74,3 +74,68 @@ export function listModels(): readonly IRegisteredModel[] {
 }
 
 export { DEEPLAB_V3 };
+
+// ── Imported chat models ──────────────────────────────────────────────────────
+/**
+ * Chat models (Gemma `.task`/`.litertlm` bundles for MediaPipe LLM Inference) are
+ * NOT downloaded by HadOS: they are gated behind Google's Gemma license, so the
+ * user downloads the file themselves (accepting the license where they got it)
+ * and imports it. The registry above stays the boundary for anything HadOS is
+ * willing to FETCH; imported models never had a URL, so the download primitive
+ * the boundary exists to deny simply does not exist for them. Apps still name
+ * models by id — the bytes live in AiModelCache (OPFS), keyed by that id, with
+ * the SHA-256 recorded at import and re-verified before every compile.
+ */
+export interface IChatModelMeta {
+    id: string;
+    /** Human-readable — the imported filename. */
+    label: string;
+    bytes: number;
+    /** Hex SHA-256 computed at import; null when SubtleCrypto was unavailable. */
+    sha256: string | null;
+    task: 'chat';
+    importedAt: number;
+}
+
+const CHAT_MODELS_KEY = 'hados-ai-chat-models';
+
+function readChatModels(): IChatModelMeta[] {
+    try {
+        const raw = localStorage.getItem(CHAT_MODELS_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.filter(m => m && typeof m.id === 'string') : [];
+    } catch {
+        return []; // workers have no localStorage; a corrupt entry means no models
+    }
+}
+
+function writeChatModels(models: IChatModelMeta[]): void {
+    try {
+        localStorage.setItem(CHAT_MODELS_KEY, JSON.stringify(models));
+    } catch { /* storage full or unavailable — the import will simply not persist */ }
+}
+
+export function listChatModels(): IChatModelMeta[] {
+    return readChatModels();
+}
+
+export function getChatModel(id: string): IChatModelMeta | null {
+    return readChatModels().find(m => m.id === id) ?? null;
+}
+
+/** The chat model `AiService.chat()` reaches for — most recently imported wins. */
+export function getDefaultChatModel(): IChatModelMeta | null {
+    const models = readChatModels();
+    return models.length ? models.reduce((a, b) => (b.importedAt > a.importedAt ? b : a)) : null;
+}
+
+export function registerChatModel(meta: IChatModelMeta): void {
+    const models = readChatModels().filter(m => m.id !== meta.id);
+    models.push(meta);
+    writeChatModels(models);
+}
+
+export function removeChatModel(id: string): void {
+    writeChatModels(readChatModels().filter(m => m.id !== id));
+}

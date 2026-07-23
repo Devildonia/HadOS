@@ -8,8 +8,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Remediation of the v1.0.6 audit (A1–A8): the five new apps get honest labels, real
 security hygiene and documented behavior. No fake AI claims remain anywhere in the UI.
+And the first claim gets to flip back honestly: the Messenger can now hold **real
+conversations with an on-device LLM**.
 
 ### Added
+
+- **Real on-device chat (AI phase 1)** — the Messenger's scripted replies can now be
+  replaced by a real LLM: **MediaPipe LLM Inference** (`@mediapipe/tasks-genai`, the
+  LiteRT-LM family) running a **user-imported Gemma bundle** (`.task`/`.litertlm`,
+  e.g. Gemma 3 1B int4, ~550 MB) over WebGPU, inside the same isolated `ai-runtime`
+  process as the tensor substrate. Design notes in `docs/ai/phase-1-llm-chat.md`.
+  - **Import, never download**: Gemma is license-gated, so the user downloads the
+    bundle themselves and imports it in the Messenger sidebar. The import hashes the
+    file (SHA-256, which becomes the model id), stores the bytes in the OPFS model
+    cache, and the worker re-verifies size + hash **before every compile** — the
+    registry's no-URL-across-the-boundary rule is preserved because this path has no
+    URL at all.
+  - **`AiService.chat(appId, {persona, history}, onToken)`** with real streaming:
+    `chat:token` deltas ride the process IPC, routed by requestId.
+  - **Gemma prompt template** (`js/ai/chatPrompt.ts`): persona folded into the first
+    user turn (Gemma has no system role), 12-turn window, and turn-grammar markers
+    stripped from user text so a message cannot close its turn and speak as the model.
+  - **`ai:chat` capability** in the PermissionBroker: *"generate chat replies with
+    the imported AI model, entirely on your device (nothing is sent anywhere)"*.
+  - **Messenger honesty pill**: shows `🧠 IA local: <model>` when replies are real,
+    `Respuestas con guion (sin IA)` + an import button when they are not, and an
+    exact message when a model exists but WebGPU does not. Personas (including
+    user-imported characters) condition the model; generation errors surface as
+    errors — no silent fallback to the script.
+  - 18 new tests (`test/AiChat.test.ts`): template + injection defence, handler
+    verify-before-compile, delta streaming over the IPC loopback, cache round-trip,
+    registry recency, and the consent gate.
+- **Real transcription in the Media Player (AI phase 2)** — local files are now
+  transcribed **for real, on-device** with Whisper (`onnx-community/whisper-base`,
+  q4, ~140 MB — the only quantisation the pinned onnxruntime accepts) via `@huggingface/transformers` in a new `asr-runtime` module-worker
+  process; the timestamps drive the karaoke highlight and click-to-seek. Design
+  notes in `docs/ai/phase-2-whisper-transcription.md`.
+  - **The simulated transcript is deleted, not relabelled**: YouTube's transcript
+    panel now states the truth — a cross-origin embed's audio is unreachable from
+    the browser, so no in-browser player can transcribe it. Real transcription is
+    a local-files feature by nature.
+  - **`ai:transcribe` capability**: consent names the one-time ~140 MB download
+    (Whisper is Apache-2.0 — downloadable, unlike license-gated Gemma). The model
+    name is pinned in code; CSP allows the HF Hub hosts; onnxruntime's wasm is
+    self-hosted (`scripts/copy-ort-wasm.ts`), never its CDN.
+  - `AiService.transcribe(appId, samples, {language?}, onProgress)` with per-file
+    download and run progress; `js/ai/audioDecode.ts` resamples any decodable
+    media to Whisper's 16 kHz mono contract on the main thread.
+  - 7 new tests (`test/AiAsr.test.ts`) plus updated Media Player specs asserting
+    the honest YouTube state.
 
 - **Five apps documented** (shipped in 1.0.6 without a CHANGELOG entry — audit A8):
   - **AudioStudio** — scripted podcasts via browser `speechSynthesis`, plus voice

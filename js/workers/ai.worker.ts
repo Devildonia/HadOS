@@ -11,7 +11,10 @@
 
 import { createWorkerRuntime } from '../sdk/appRuntime';
 import { createAiRuntimeHandlers, AI_REQUESTS, AI_EVENTS } from '../ai/aiRuntimeHandlers';
+import { createChatHandlers, CHAT_REQUESTS, CHAT_EVENTS } from '../ai/chatHandlers';
 import { LiteRtRuntime } from '../ai/LiteRtRuntime';
+import { GenAiRuntime } from '../ai/ChatRuntime';
+import { AiModelCache } from '../ai/AiModelCache';
 import type { Backend } from '../ai/InferenceRuntime';
 
 const app = createWorkerRuntime();
@@ -34,9 +37,21 @@ const handlers = createAiRuntimeHandlers(runtime, {
     onProgress: (ev) => { void app.request(AI_EVENTS.PROGRESS, ev).catch(() => { /* host not listening */ }); },
 });
 
+// The chat half: MediaPipe LLM Inference (LiteRT-LM) over a user-imported Gemma
+// bundle read back from the same OPFS cache the import wrote.
+const chatRuntime = new GenAiRuntime();
+const chatHandlers = createChatHandlers(chatRuntime, AiModelCache, {
+    onProgress: (ev) => { void app.request(AI_EVENTS.PROGRESS, ev).catch(() => { /* host not listening */ }); },
+    onToken: (ev) => { void app.request(CHAT_EVENTS.TOKEN, ev).catch(() => { /* host not listening */ }); },
+});
+
 app
     .on(AI_REQUESTS.LOAD, (payload) => handlers.load((payload ?? {}) as Record<string, unknown>))
     .on(AI_REQUESTS.INFER, (payload) => handlers.infer((payload ?? {}) as Record<string, unknown>))
     .on(AI_REQUESTS.DISPOSE, (payload) => handlers.dispose((payload ?? {}) as Record<string, unknown>))
     .on(AI_REQUESTS.INFO, () => handlers.info())
+    .on(CHAT_REQUESTS.LOAD, (payload) => chatHandlers.load((payload ?? {}) as Record<string, unknown>))
+    .on(CHAT_REQUESTS.GENERATE, (payload) => chatHandlers.generate((payload ?? {}) as Record<string, unknown>))
+    .on(CHAT_REQUESTS.DISPOSE, () => chatHandlers.dispose())
+    .on(CHAT_REQUESTS.INFO, () => chatHandlers.info())
     .start();

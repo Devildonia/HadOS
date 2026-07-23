@@ -18,7 +18,7 @@ import type { ProcMessage } from '../js/core/ipc/protocol';
  * same shape and no pinned hash. The real entry's pinning is asserted in
  * AiModelCache.test.ts, where it belongs.
  */
-vi.mock('../js/ai/models', () => {
+vi.mock('../js/ai/models', async (importOriginal) => {
     const TEST_SPEC = {
         id: 'deeplab-v3-float32',
         url: 'https://storage.googleapis.com/test/model.tflite',
@@ -29,7 +29,11 @@ vi.mock('../js/ai/models', () => {
         classes: 21,
         backgroundClass: 0,
     };
+    // Keep the real module's other exports (the chat-model registry among them) —
+    // AiService imports those too, and a factory that omits them breaks its import.
+    const actual = await importOriginal<typeof import('../js/ai/models')>();
     return {
+        ...actual,
         DEEPLAB_V3: TEST_SPEC,
         MODEL_HOSTS: ['https://storage.googleapis.com'],
         // The allowlist semantics are what the substrate leans on, so they are kept

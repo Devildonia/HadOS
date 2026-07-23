@@ -5,6 +5,8 @@ import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
 import { VFS } from '../core/VFS.js';
+import { AiService } from '../ai/AiService.js';
+import { decodeTo16kMono } from '../ai/audioDecode.js';
 
 interface TranscriptLine {
     time: number; // in seconds
@@ -32,6 +34,11 @@ export class HadOSMediaPlayer implements IWindowsApp {
 
     // Object URL of the currently loaded local file — revoked on cleanup (audit A5).
     private localObjectUrl: string | null = null;
+    /** The local File itself, kept for real Whisper transcription of its audio. */
+    private localFile: File | null = null;
+    /** 'idle' → 'working' (status shows why) → back. One transcription at a time. */
+    private transcribeState: 'idle' | 'working' = 'idle';
+    private transcribeStatus: string = '';
 
     private transcript: TranscriptLine[] = [];
     private activeLineIndex: number = -1;
@@ -242,10 +249,11 @@ export class HadOSMediaPlayer implements IWindowsApp {
                     Utils.Logger.info("Local playback started:", file.name);
                 }
 
-                // Reset transcripts for arbitrary files
+                // Reset transcripts; keep the File so Whisper can transcribe it.
+                this.localFile = file;
                 this.transcript = [];
                 this.renderTranscript();
-                this.logRag(`[Local Player] Loaded file: ${file.name}`);
+                this.logRag(`[Local Player] Loaded file: ${Utils.escapeHTML(file.name)}`);
             }
         };
         picker.click();
@@ -311,16 +319,82 @@ export class HadOSMediaPlayer implements IWindowsApp {
         return (match && match[2] && /^[\w-]{11}$/.test(match[2])) ? match[2] : null;
     }
 
+    /** Live status line while decoding/downloading/transcribing. */
+    private setTranscribeStatus(text: string): void {
+        this.transcribeStatus = text;
+        const el = this.container?.querySelector('#mp-transcribe-status');
+        if (el) el.textContent = text;
+        else this.renderTranscript();
+    }
+
+    /**
+     * REAL transcription of the loaded local file: decode to 16 kHz mono on the
+     * main thread, then Whisper in the asr-runtime process. Consent (`ai:transcribe`)
+     * names the one-time ~80 MB download. Timestamps come from the model, so the
+     * karaoke highlight and the click-to-seek finally describe the actual audio.
+     */
+    private async transcribeLocal(): Promise<void> {
+        const file = this.localFile;
+        if (!file || this.transcribeState === 'working') return;
+
+        if (!AiService.transcribeSupported()) {
+            this.logRag(`[Whisper] This environment cannot run the speech model (Web Audio or WebAssembly missing).`, 'error');
+            return;
+        }
+
+        this.transcribeState = 'working';
+        this.setTranscribeStatus('Decodificando audio…');
+
+        try {
+            const audio = await decodeTo16kMono(await file.arrayBuffer());
+            const seconds = Math.round(audio.length / 16000);
+            this.logRag(`[Whisper] Audio decoded: ${seconds}s at 16 kHz mono.`);
+
+            const result = await AiService.transcribe('mediaplayer', audio, {}, (p) => {
+                if (p.phase === 'download') {
+                    const mb = (n: number) => (n / 1048576).toFixed(1);
+                    this.setTranscribeStatus(p.total
+                        ? `Descargando modelo… ${mb(p.loaded)} / ${mb(p.total)} MB`
+                        : 'Descargando modelo…');
+                } else if (p.phase === 'init') {
+                    this.setTranscribeStatus('Inicializando Whisper…');
+                } else {
+                    this.setTranscribeStatus(p.loaded === 0
+                        ? `Transcribiendo ${seconds}s de audio en tu equipo… (puede tardar)`
+                        : 'Transcripción completada.');
+                }
+            });
+
+            this.transcript = result.chunks
+                .filter(c => c.text.trim())
+                .map(c => ({ time: Math.max(0, c.start), text: c.text.trim() }));
+
+            this.logRag(`[Whisper] ${this.transcript.length} lines transcribed on-device (real captions).`, 'success');
+            if (this.transcript.length === 0) {
+                this.logRag(`[Whisper] The model heard no speech in this audio.`);
+            }
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.logRag(`[Whisper] Transcription failed: ${Utils.escapeHTML(msg)}`, 'error');
+        } finally {
+            this.transcribeState = 'idle';
+            this.transcribeStatus = '';
+            this.renderTranscript();
+        }
+    }
+
     private async loadVideoTranscript(videoId: string): Promise<void> {
-        // Honest label (audit A4): there is no Whisper and no downloaded transcript.
-        // What follows fetches the video TITLE and fabricates demo lines from its
-        // keywords — the UI must say so, or the user believes they are reading the
-        // video's real captions.
-        this.logRag(`[Demo] Building a SIMULATED transcript from the video title (not real captions)...`);
+        // No transcript for YouTube, and no simulation either (the pre-Whisper demo
+        // fabricated lines from the title): a cross-origin embed's audio stream is
+        // unreachable from the browser by design, so a real transcription is
+        // impossible here — and the UI says exactly that.
+        this.transcript = [];
+        this.renderTranscript();
+        this.logRag(`[Transcript] Not available for YouTube: the embed's audio is not accessible from the browser.`);
 
         let title = "Video Presentation";
         try {
-            // Fetch video title via CORS-friendly oEmbed
+            // Fetch video title via CORS-friendly oEmbed (for the log only)
             const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
             if (res.ok) {
                 const data = await res.json();
@@ -329,103 +403,12 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 }
             }
         } catch (e) {
-            Utils.Logger.warn("Failed to fetch video title for transcript generation:", e);
+            Utils.Logger.warn("Failed to fetch video title:", e);
         }
 
         // The title is REMOTE (noembed) and the RAG log renders via innerHTML —
         // escape it here or a crafted video title executes in the log panel.
         this.logRag(`Video title fetched: "${Utils.escapeHTML(title)}"`);
-
-        // Generate dynamic transcript based on title content
-        this.transcript = this.generateDynamicTranscript(title, videoId);
-
-        this.logRag(`[Demo] ${this.transcript.length} simulated lines generated from the title.`, 'success');
-        this.renderTranscript();
-    }
-
-    private generateDynamicTranscript(title: string, videoId: string): TranscriptLine[] {
-        const titleLower = title.toLowerCase();
-        const lang = i18n.getLang();
-        const isSpanish = lang === 'es';
-
-        // Check if it's the rickroll
-        if (videoId === 'dQw4w9WgXcQ') {
-            return [
-                { time: 0, text: "[Music] Never gonna give you up" },
-                { time: 5, text: "[Music] Never gonna let you down" },
-                { time: 10, text: "[Music] Never gonna run around and desert you" },
-                { time: 18, text: "[Music] Never gonna make you cry" },
-                { time: 24, text: "[Music] Never gonna say goodbye" },
-                { time: 30, text: "[Music] Never gonna tell a lie and hurt you" }
-            ];
-        }
-
-        // Check topic
-        const isFootball = titleLower.includes('futbol') || titleLower.includes('fútbol') || titleLower.includes('davo') || titleLower.includes('mundial') || titleLower.includes('argentina') || titleLower.includes('españa') || titleLower.includes('copa') || titleLower.includes('fc ');
-        const isTech = titleLower.includes('code') || titleLower.includes('programming') || titleLower.includes('tech') || titleLower.includes('rust') || titleLower.includes('wasm') || titleLower.includes('js') || titleLower.includes('developer');
-
-        if (isFootball) {
-            if (isSpanish) {
-                return [
-                    { time: 0, text: `Comenzamos el análisis sobre: "${title}"` },
-                    { time: 8, text: "Para mí España viene jugando con una intensidad táctica tremenda." },
-                    { time: 16, text: "Pero ojo, que Argentina tiene la experiencia y la chapa de campeón." },
-                    { time: 24, text: "El planteo defensivo y la presión alta en el mediocampo son la clave de este partido." },
-                    { time: 32, text: "Mucha gente debate si realmente son candidatos firmes para el Mundial 2026." },
-                    { time: 42, text: "Terminamos con las reflexiones finales de este gran debate de fútbol." }
-                ];
-            } else {
-                return [
-                    { time: 0, text: `Starting the match analysis: "${title}"` },
-                    { time: 8, text: "Spain has been playing with incredible tactical intensity." },
-                    { time: 16, text: "But look out, Argentina has the championship experience." },
-                    { time: 24, text: "The defensive scheme and high pressure in midfield are key in this match." },
-                    { time: 32, text: "Many are debating if they are true contenders for World Cup 2026." },
-                    { time: 42, text: "That concludes our quick football debate review." }
-                ];
-            }
-        } else if (isTech) {
-            if (isSpanish) {
-                return [
-                    { time: 0, text: `Iniciamos la presentación técnica de: "${title}"` },
-                    { time: 6, text: "Hoy hablaremos sobre optimización del compilador y WebAssembly." },
-                    { time: 12, text: "El uso de LiteRT en local permite optimizar la asignación de memoria." },
-                    { time: 20, text: "Esto reduce el overhead del hilo de ejecución en el navegador." },
-                    { time: 28, text: "Veamos el benchmark comparativo frente a APIs de la nube." },
-                    { time: 36, text: "Eso concluye el bloque de optimización técnica." }
-                ];
-            } else {
-                return [
-                    { time: 0, text: `Starting technical presentation: "${title}"` },
-                    { time: 6, text: "Today we talk about compiler optimization and WebAssembly." },
-                    { time: 12, text: "Using on-device LiteRT reduces memory allocation overhead." },
-                    { time: 20, text: "This optimizes execution threads in browser contexts." },
-                    { time: 28, text: "Let's review the benchmark graphs comparing edge models." },
-                    { time: 36, text: "That concludes the technical optimization segment." }
-                ];
-            }
-        } else {
-            // General fallback using title segments
-            const words = title.split(' ').filter(w => w.length > 3);
-            const keyPhrase = words.slice(0, 3).join(' ');
-            if (isSpanish) {
-                return [
-                    { time: 0, text: `Bienvenidos a la reproducción de: "${title}"` },
-                    { time: 7, text: `Analizaremos en profundidad los detalles de ${keyPhrase || 'este tema'}.` },
-                    { time: 15, text: "El debate principal gira en torno al impacto y alcance de este contenido." },
-                    { time: 22, text: "Muchos expertos señalan que la consistencia lógica es el factor clave." },
-                    { time: 30, text: "Agradecemos a todos por sintonizar este análisis en directo." }
-                ];
-            } else {
-                return [
-                    { time: 0, text: `Welcome to the playback of: "${title}"` },
-                    { time: 7, text: `We are analyzing in detail the concepts of ${keyPhrase || 'this topic'}.` },
-                    { time: 15, text: "The main discussion focuses on the impact and scope of the release." },
-                    { time: 22, text: "Many experts highlight that logical consistency is the key factor." },
-                    { time: 30, text: "Thank you for watching this live analysis." }
-                ];
-            }
-        }
     }
 
     private renderTranscript(): void {
@@ -433,11 +416,38 @@ export class HadOSMediaPlayer implements IWindowsApp {
         if (!container) return;
 
         if (this.transcript.length === 0) {
-            container.innerHTML = `
-                <div style="color: #999; font-size: 11px; padding: 10px; text-align: center;">
-                    No transcript loaded. Load a YouTube video to sync RAG transcripts.
-                </div>
-            `;
+            // The empty state is honest per source: YouTube audio is unreachable
+            // (cross-origin embed — a real transcription is impossible from the
+            // browser); a local file can be transcribed for real with Whisper.
+            if (this.playerType === 'youtube') {
+                container.innerHTML = `
+                    <div style="color: #999; font-size: 11px; padding: 12px; text-align: center;">
+                        🔇 A YouTube embed's audio is not accessible from the browser,
+                        so it cannot be transcribed. Transcription is available for
+                        <b>local files</b>.
+                    </div>`;
+            } else if (this.playerType === 'local' && this.transcribeState === 'working') {
+                container.innerHTML = `
+                    <div style="color: #666; font-size: 11px; padding: 12px; text-align: center;">
+                        ⏳ <span id="mp-transcribe-status">${Utils.escapeHTML(this.transcribeStatus)}</span>
+                    </div>`;
+            } else if (this.playerType === 'local' && this.localFile) {
+                container.innerHTML = `
+                    <div style="font-size: 11px; padding: 12px; text-align: center;">
+                        <div style="color: #666; margin-bottom: 8px;">
+                            Transcribe this file's audio with <b>Whisper, entirely on your device</b>.
+                            The first use downloads the model (~140 MB, kept for later).
+                        </div>
+                        <button class="hados-btn" id="mp-transcribe-btn">🎤 Transcribir (IA local)</button>
+                    </div>`;
+                const btn = container.querySelector('#mp-transcribe-btn');
+                if (btn) Utils.eventManager.add(btn, 'click', () => { void this.transcribeLocal(); });
+            } else {
+                container.innerHTML = `
+                    <div style="color: #999; font-size: 11px; padding: 10px; text-align: center;">
+                        No transcript. Open a local file to transcribe it on-device.
+                    </div>`;
+            }
             return;
         }
 
@@ -562,7 +572,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 <div style="display: flex; flex-direction: column; height: 100%;">
                     <div class="docexplorer-chat-feed" id="mp-chat-feed" style="flex: 1; overflow-y: auto; padding: 10px;">
                         <div class="docexplorer-chat-bubble ai">
-                            Ask about the demo transcript — I jump to the line that best matches your words. Local keyword search; the transcript is simulated and no AI model runs.
+                            Ask about the transcript — I jump to the line that best matches your words. Local keyword search (no AI model runs here); transcribe a local file first to have real captions to search.
                         </div>
                     </div>
                     <div class="docexplorer-chat-input-bar">
@@ -586,8 +596,8 @@ export class HadOSMediaPlayer implements IWindowsApp {
         }
     }
 
-    private logRag(msg: string, type: 'info' | 'success' = 'info'): void {
-        const prefix = type === 'success' ? '[OK] ' : '';
+    private logRag(msg: string, type: 'info' | 'success' | 'error' = 'info'): void {
+        const prefix = type === 'success' ? '[OK] ' : (type === 'error' ? '[ERROR] ' : '');
         const logLine = `${prefix}${msg}`;
         this.ragLogs.push(logLine);
 
@@ -685,6 +695,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
             } catch {}
             this.localObjectUrl = null;
         }
+        this.localFile = null;
         this.playerType = 'idle';
         this.activeLineIndex = -1;
     }
@@ -708,6 +719,6 @@ export class HadOSMediaPlayer implements IWindowsApp {
 Kernel.registerApp('mediaplayer', HadOSMediaPlayer, {
     name: 'Media Player',
     icon: '🎬',
-    description: 'Local and YouTube media player with a simulated demo transcript.',
+    description: 'Local and YouTube media player. Local files can be transcribed for real, on-device (Whisper).',
     singleton: true
 });

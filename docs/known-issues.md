@@ -277,6 +277,18 @@ that theme gets its own assets.
 
 ## Latent
 
+- **The CSP does not apply to workers — at all.** HadOS ships its CSP as a `<meta>`
+  tag, and per spec a `<meta>` CSP governs only the document: workers spawned from a
+  URL get their policy from their own HTTP response headers, of which the static
+  hosting sends none. Found empirically during the Whisper work: onnxruntime's
+  loader fetched its wasm from jsDelivr from inside the `asr-runtime` worker while
+  the page's `connect-src`/`script-src` plainly forbid that host (a Blob worker, by
+  contrast, inherits the creator's policy — which is how the difference surfaced).
+  We self-host the ort wasm anyway (`scripts/copy-ort-wasm.ts` + `wasmPaths`), but
+  the fence itself is illusory for every worker process until the CSP moves to a
+  real `Content-Security-Policy` response header, which needs control over the
+  hosting (itch.io zip uploads offer none).
+
 - **`base: './'` and root-absolute asset paths disagree.** `vite.config.js` sets `base: './'`,
   which exists so the app can be served from a subdirectory — but every `public/` asset loaded from
   code is referenced root-absolute (`/css/themes/theme-base.css`, `/games/ragdoll/assets/audio/*.opus`,

@@ -6,7 +6,7 @@
   "main": "main.ts",
   "scripts": {
     "dev": "vite",
-    "predev": "npm run build:guest && npm run copy:litert && npm run build:ai-worker",
+    "predev": "npm run build:guest && npm run copy:litert && npm run copy:genai && npm run copy:ort && npm run build:ai-worker",
     "build:guest": "vite build --config vite.guest.config.ts",
     "test": "vitest",
     "test:run": "vitest run --reporter=verbose",
@@ -17,11 +17,13 @@
     "lint": "eslint js/ main.ts",
     "lint:fix": "eslint js/ main.ts --fix",
     "typecheck": "tsc --noEmit",
-    "build": "npm run build:guest && npm run build:games && npm run copy:litert && npm run build:ai-worker && vite build",
+    "build": "npm run build:guest && npm run build:games && npm run copy:litert && npm run copy:genai && npm run copy:ort && npm run build:ai-worker && vite build",
     "build:games": "npx tailwindcss -i tailwind-games.css -o public/css/tailwind-games.css --content \"./public/games/**/*.html\" --minify",
     "generate:app": "tsx scripts/create-app.ts",
     "preview": "vite preview",
     "copy:litert": "tsx scripts/copy-litert-wasm.ts",
+    "copy:genai": "tsx scripts/copy-genai-wasm.ts",
+    "copy:ort": "tsx scripts/copy-ort-wasm.ts",
     "build:ai-worker": "vite build --config vite.ai-worker.config.ts"
   },
   "keywords": [
@@ -66,7 +68,9 @@
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.3",
+    "@huggingface/transformers": "^4.2.0",
     "@litertjs/core": "^2.5.2",
+    "@mediapipe/tasks-genai": "^0.10.29",
     "@types/three": "^0.183.1",
     "three": "^0.183.2"
   }

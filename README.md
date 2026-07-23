@@ -109,7 +109,7 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 
 ### 🎙️ Media & demo apps
 Five apps that show the platform's range — and practice its honesty policy (anything simulated is labelled as such, in the UI itself):
-- 🎬 **Media Player** — local video/audio and YouTube. The embed is driven **directly via postMessage** (`enablejsapi=1` widget protocol) — no external YouTube script, so the strict CSP stays intact. The "transcript" is a clearly-labelled simulation built from the video title.
+- 🎬 **Media Player** — local video/audio and YouTube. The embed is driven **directly via postMessage** (`enablejsapi=1` widget protocol) — no external YouTube script, so the strict CSP stays intact. **Local files get REAL on-device transcription** (Whisper, ~140 MB one-time download behind consent) with model timestamps driving the karaoke highlight and click-to-seek; YouTube's panel honestly explains that an embed's audio is unreachable from the browser.
 - 📰 **Hacker News Scout** — live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. The summary panel is labelled *"simulated demo — no AI model runs"*.
 - 🎙️ **AudioStudio** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
 - 💬 **Messenger** — chat with scripted characters (canned replies; says so in its description).
@@ -387,7 +387,7 @@ See the [CHANGELOG](CHANGELOG.md) `[Unreleased]` section for the latest.
 - **Third-party code isolation** — apps run in a sandboxed iframe with an **opaque origin** (`allow-scripts`, no `allow-same-origin`) and reach the system only through a dedicated, authenticated channel: they cannot touch the host DOM, `localStorage` or IndexedDB. A **separate origin** (subdomain) would still add defence in depth — it would also isolate the guest's *own* storage and cover sandbox escapes — but it is no longer required for third-party isolation. By design, no untrusted code is `eval`'d.
 - Fake "hardware" figures in the Task Manager *System* tab are **simulated** (deterministic), not real device telemetry.
 - **Voice dictation uses the browser's own speech recognition** (`webkitSpeechRecognition`), which in Chromium may send audio to the browser vendor's servers. HadOS gates it behind an explicit consent prompt (`speech:cloud` capability) that says exactly that — but the recognition itself is not on-device.
-- **Simulated demo features** (Media Player transcripts, HN Scout summaries, Doc Explorer search, Messenger replies) are labelled as such in their own UI; none of them run an AI model. The only real on-device inference is Pinta's background removal (LiteRT.js).
+- **Simulated demo features** (HN Scout summaries, Doc Explorer search) are labelled as such in their own UI. Real on-device inference: Pinta's background removal (LiteRT.js), the Messenger's chat once a Gemma bundle is imported (MediaPipe LLM Inference), and the Media Player's transcription of local files (Whisper).
 
 ---
 

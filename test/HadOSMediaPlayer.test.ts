@@ -73,7 +73,7 @@ describe('HadOSMediaPlayer', () => {
         app.terminate();
     });
 
-    it('should load YouTube url, parse ID, download mock transcript, and click to seek', async () => {
+    it('should load a YouTube url with an honest no-transcript state, and click-to-seek on real lines', async () => {
         const app = new HadOSMediaPlayer();
         const body = WindowFactory.getBody(app.windowId)!;
         const input = body.querySelector('#mediaplayer-yt-input') as HTMLInputElement;
@@ -82,18 +82,27 @@ describe('HadOSMediaPlayer', () => {
         input.value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         loadBtn.click();
 
-        // Allow async oembed fetch and transcript gen to resolve
+        // Allow the async oembed title fetch to resolve
         await new Promise(resolve => setTimeout(resolve, 50));
 
         expect(app['playerType']).toBe('youtube');
-        expect(app['transcript'].length).toBeGreaterThan(0);
+        // No simulation any more: a cross-origin embed's audio cannot be
+        // transcribed, and the transcript panel says so instead of pretending.
+        expect(app['transcript'].length).toBe(0);
+        const container = body.querySelector('#mp-transcript-container')!;
+        expect(container.textContent).toContain('not accessible');
 
-        // Check if transcript lines are rendered
+        // Click-to-seek still works over real transcript lines (seeded here —
+        // in production they come from Whisper on a local file).
+        (app as unknown as { transcript: Array<{ time: number; text: string }> }).transcript = [
+            { time: 0, text: 'Never gonna give you up' },
+        ];
+        (app as unknown as { renderTranscript(): void }).renderTranscript();
+
         const firstLine = body.querySelector('#mp-line-0') as HTMLElement;
         expect(firstLine).not.toBeNull();
         expect(firstLine.innerHTML).toContain('Never gonna give you up');
 
-        // Test click to seek
         const seekSpy = vi.spyOn(app as any, 'seekToTime');
         firstLine.click();
         expect(seekSpy).toHaveBeenCalledWith(0);
@@ -104,14 +113,15 @@ describe('HadOSMediaPlayer', () => {
     it('should support switching to RAG Chat, typing query, and getting citation links', async () => {
         const app = new HadOSMediaPlayer();
         const body = WindowFactory.getBody(app.windowId)!;
-        const loadBtn = body.querySelector('#mediaplayer-yt-btn') as HTMLButtonElement;
-        const inputYt = body.querySelector('#mediaplayer-yt-input') as HTMLInputElement;
 
-        inputYt.value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-        loadBtn.click();
-
-        // Allow async oembed fetch and transcript gen to resolve
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Seed a transcript directly: YouTube no longer fabricates one (the embed's
+        // audio is unreachable, and the simulation was removed), and this test is
+        // about the CHAT's keyword search + citations, not about how lines arrive.
+        (app as unknown as { transcript: Array<{ time: number; text: string }> }).transcript = [
+            { time: 0, text: 'Never gonna give you up' },
+            { time: 18, text: 'Never gonna make you cry' },
+            { time: 30, text: 'Never gonna tell a lie and hurt you' },
+        ];
 
         // Switch to Chat tab
         const tabChat = body.querySelector('#mp-tab-chat') as HTMLButtonElement;

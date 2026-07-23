@@ -5,6 +5,8 @@ import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
 import { VFS } from '../core/VFS.js';
+import { AiService } from '../ai/AiService.js';
+import type { IChatTurn } from '../ai/chatPrompt.js';
 
 interface Character {
     id: string;
@@ -30,9 +32,12 @@ export class HadOSMessenger implements IWindowsApp {
     private activeContactId: string = 'clippy';
     private typingTimeoutId: number | null = null;
     private streamIntervalId: number | null = null;
+    /** True while an on-device generation is in flight — one reply at a time. */
+    private aiBusy: boolean = false;
 
     private boundSendMessage = () => this.handleSendMessage();
     private boundImportJson = () => this.handleImportJson();
+    private boundImportModel = () => this.handleImportModel();
 
     constructor() {
         this.init();
@@ -142,10 +147,12 @@ export class HadOSMessenger implements IWindowsApp {
                         <div class="messenger-contacts-list" id="messenger-contacts-list"></div>
                     </div>
                     <div class="messenger-sidebar-footer">
+                        <div id="messenger-ai-status" style="font-size: 10px; padding: 4px 2px;"></div>
                         <button class="hados-btn" id="messenger-import-btn" style="font-size: 10px; padding: 4px;">
                             📥 ${importText}
                         </button>
                         <input type="file" id="messenger-file-input" accept=".json" style="display: none;">
+                        <input type="file" id="messenger-model-input" accept=".task,.litertlm,.bin" style="display: none;">
                     </div>
                 </div>
 
@@ -166,6 +173,7 @@ export class HadOSMessenger implements IWindowsApp {
         `;
 
         this.renderContacts();
+        this.renderAiStatus();
 
         // Bind events
         const sendBtn = this.container.querySelector('#messenger-send-btn');
@@ -190,6 +198,11 @@ export class HadOSMessenger implements IWindowsApp {
             Utils.eventManager.add(fileInput, 'change', (e) => this.processImportFile(e));
         }
 
+        const modelInput = this.container.querySelector('#messenger-model-input') as HTMLInputElement | null;
+        if (modelInput) {
+            Utils.eventManager.add(modelInput, 'change', (e) => { void this.processImportModel(e); });
+        }
+
         // Delegate contact selection click
         const contactsList = this.container.querySelector('#messenger-contacts-list');
         if (contactsList) {
@@ -199,6 +212,37 @@ export class HadOSMessenger implements IWindowsApp {
                     this.selectContact(item.dataset.id);
                 }
             });
+        }
+    }
+
+    /**
+     * The honesty pill: says exactly which brain answers. Real on-device AI when a
+     * Gemma bundle is imported and WebGPU exists; clearly-labelled scripted replies
+     * otherwise. The user is never left guessing which one they got.
+     */
+    private renderAiStatus(): void {
+        const el = this.container?.querySelector('#messenger-ai-status') as HTMLElement | null;
+        if (!el) return;
+
+        const model = AiService.chatModel();
+        if (model && AiService.chatSupported()) {
+            el.innerHTML = `
+                <span title="Replies are generated on your device — nothing is sent anywhere">🧠 IA local: <b>${Utils.escapeHTML(model.label)}</b></span>
+                <button class="hados-btn" id="messenger-model-remove" title="Eliminar el modelo importado" style="font-size: 9px; padding: 1px 4px; margin-left: 4px;">✕</button>`;
+            const rm = el.querySelector('#messenger-model-remove');
+            if (rm) Utils.eventManager.add(rm, 'click', () => {
+                void AiService.deleteChatModel(model.id).then(() => this.renderAiStatus());
+            });
+        } else if (model && !AiService.chatSupported()) {
+            el.innerHTML = `<span title="On-device chat needs WebGPU">⚠️ Modelo importado, pero este navegador no expone WebGPU — respuestas con guion.</span>`;
+        } else {
+            el.innerHTML = `
+                <div style="color: #888; margin-bottom: 3px;">Respuestas con guion (sin IA).</div>
+                <button class="hados-btn" id="messenger-model-import" style="font-size: 10px; padding: 4px; width: 100%;" title="Importa un modelo Gemma .task (MediaPipe LLM) para conversación real on-device">
+                    🧠 Importar modelo IA (.task)
+                </button>`;
+            const btn = el.querySelector('#messenger-model-import');
+            if (btn) Utils.eventManager.add(btn, 'click', this.boundImportModel);
         }
     }
 
@@ -369,6 +413,13 @@ export class HadOSMessenger implements IWindowsApp {
     }
 
     private triggerBotResponse(contact: Character): void {
+        // The real path: an imported Gemma bundle + WebGPU. The scripted fallback
+        // below is what shipped before, and the sidebar pill says which one is live.
+        if (AiService.chatModel() && AiService.chatSupported()) {
+            void this.triggerAiResponse(contact);
+            return;
+        }
+
         const history = this.getHistory(contact.id);
         const lastUserMsg = [...history].reverse().find(m => m.sender === 'user')?.text || '';
 
@@ -415,6 +466,70 @@ export class HadOSMessenger implements IWindowsApp {
         if (this.streamIntervalId !== null) {
             window.clearInterval(this.streamIntervalId);
             this.streamIntervalId = null;
+        }
+    }
+
+    /**
+     * Generates a real reply on-device: persona-conditioned Gemma via the
+     * ai-runtime process, deltas streamed straight into the bubble. Errors are
+     * shown as errors — after the v1.0.6 audit nothing here pretends.
+     */
+    private async triggerAiResponse(contact: Character): Promise<void> {
+        if (this.aiBusy) return; // one generation at a time — the model is, too
+        this.aiBusy = true;
+
+        const history = this.getHistory(contact.id);
+        const turns: IChatTurn[] = history
+            .filter(m => m.text.trim())
+            .map(m => ({ role: m.sender === 'user' ? 'user' as const : 'model' as const, text: m.text }));
+
+        const persona =
+            `Eres ${contact.name} (${contact.description}). Personalidad: ${contact.personality}. ` +
+            `Mantente SIEMPRE en el personaje, responde en el idioma del último mensaje del usuario y sé breve (1-3 frases).`;
+
+        // The bubble only exists in the DOM while this chat is the visible one;
+        // the finished reply is saved to the contact's history either way.
+        const bubbleFor = (): HTMLElement | null =>
+            this.activeContactId === contact.id
+                ? (this.container?.querySelector('#messenger-messages-history') as HTMLElement | null)
+                : null;
+
+        let bubble: HTMLElement | null = null;
+        const historyEl = bubbleFor();
+        if (historyEl) {
+            bubble = document.createElement('div');
+            bubble.className = 'messenger-msg-bubble incoming';
+            bubble.textContent = '';
+            historyEl.appendChild(bubble);
+        }
+        if (window.playBlip) window.playBlip(600);
+
+        try {
+            const text = await AiService.chat('messenger', { persona, history: turns }, (delta) => {
+                if (bubble && this.activeContactId === contact.id) {
+                    bubble.textContent += delta; // textContent: streamed model output never touches innerHTML
+                    const el = bubbleFor();
+                    if (el) el.scrollTop = el.scrollHeight;
+                }
+            });
+
+            const reply = text.trim();
+            if (reply) {
+                history.push({ sender: 'bot', text: reply, timestamp: Date.now() });
+                this.saveHistory(contact.id, history);
+            }
+            if (bubble) bubble.textContent = reply; // reconcile with the final text
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (bubble) {
+                bubble.textContent = `⚠️ IA local: ${msg}`;
+            } else {
+                const notify = Services.get('Notify');
+                if (notify) notify.error(`IA local: ${msg}`);
+            }
+            Utils.Logger.error('[Messenger] on-device chat failed:', err);
+        } finally {
+            this.aiBusy = false;
         }
     }
 
@@ -515,6 +630,32 @@ export class HadOSMessenger implements IWindowsApp {
         }
     }
 
+    private handleImportModel(): void {
+        const input = this.container?.querySelector('#messenger-model-input') as HTMLInputElement | null;
+        if (input) input.click();
+    }
+
+    private async processImportModel(e: Event): Promise<void> {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (!file) return;
+        input.value = ''; // allow re-picking the same file after an error
+
+        const notify = Services.get('Notify');
+        const statusEl = this.container?.querySelector('#messenger-ai-status') as HTMLElement | null;
+        if (statusEl) statusEl.innerHTML = `<span>⏳ Importando "${Utils.escapeHTML(file.name)}" (${(file.size / 1048576).toFixed(0)} MB)...</span>`;
+
+        try {
+            const meta = await AiService.importChatModel(file);
+            if (notify) notify.success(`Modelo "${meta.label}" importado — el chat ahora usa IA local.`);
+            if (window.playBlip) window.playBlip(800);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (notify) notify.error(`No se pudo importar el modelo: ${msg}`);
+        }
+        this.renderAiStatus();
+    }
+
     private processImportFile(e: Event): void {
         const input = e.target as HTMLInputElement;
         if (!input.files || !input.files[0]) return;
@@ -583,6 +724,6 @@ export class HadOSMessenger implements IWindowsApp {
 Kernel.registerApp('messenger', HadOSMessenger, {
     name: 'HadOS Messenger',
     icon: '💬',
-    description: 'Chat with scripted characters (canned replies — no AI).',
+    description: 'Chat with characters — real on-device AI (imported Gemma) when available, scripted replies otherwise.',
     singleton: true
 });

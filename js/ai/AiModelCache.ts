@@ -34,6 +34,10 @@ export type ProgressFn = (loaded: number, total: number) => void;
 
 export interface IAiModelCache {
     load(spec: IModelSpec, onProgress?: ProgressFn): Promise<ArrayBuffer>;
+    /** Reads cached bytes WITHOUT any download path — for user-imported models. */
+    get(id: string): Promise<ArrayBuffer | null>;
+    /** Stores caller-supplied bytes (a user-imported model file). */
+    put(id: string, data: ArrayBuffer): Promise<void>;
     has(id: string): Promise<boolean>;
     evict(id: string): Promise<void>;
     list(): Promise<string[]>;
@@ -306,6 +310,28 @@ export const AiModelCache: IAiModelCache = (() => {
         }
     }
 
+    /**
+     * Read-only lookup for models that were IMPORTED rather than downloaded — a
+     * user-supplied Gemma bundle has no URL, so on a miss there is nothing to
+     * fetch and the caller must ask the user to import again.
+     */
+    async function get(id: string): Promise<ArrayBuffer | null> {
+        if (!isValidModelId(id)) return null;
+        return readStored(id);
+    }
+
+    /**
+     * Stores caller-supplied bytes under an id. The main thread writes an import
+     * here; the ai-runtime worker reads it back through `get` — OPFS/IndexedDB
+     * are origin-scoped and shared across both. (The in-memory last resort is
+     * per-realm and therefore NOT shared; on that backend a chat model works
+     * only where it was imported, which jsdom tests account for.)
+     */
+    async function put(id: string, data: ArrayBuffer): Promise<void> {
+        assertValidId(id);
+        await writeStored(id, data);
+    }
+
     async function has(id: string): Promise<boolean> {
         if (!isValidModelId(id)) return false;
         return (await readStored(id)) !== null;
@@ -335,5 +361,5 @@ export const AiModelCache: IAiModelCache = (() => {
         dbPromise = null;
     }
 
-    return { load, has, evict, list, backend: () => backend, __reset };
+    return { load, get, put, has, evict, list, backend: () => backend, __reset };
 })();
