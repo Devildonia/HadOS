@@ -9,8 +9,7 @@
  * session and embeds on this ort build — no QDQ trouble here — at ~23 MB total.
  */
 
-import { pipeline, env } from '@huggingface/transformers';
-import type { FeatureExtractionPipeline } from '@huggingface/transformers';
+import { pipeline, env, type FeatureExtractionPipeline } from '@huggingface/transformers';
 
 /** Pinned model. Changing it changes what users download — treat like the registry. */
 export const EMBED_MODEL_ID = 'Xenova/all-MiniLM-L6-v2';

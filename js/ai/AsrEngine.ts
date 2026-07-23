@@ -16,8 +16,7 @@
  * without WebGPU. Slower than GPU — the UI shows honest progress instead.
  */
 
-import { pipeline, env } from '@huggingface/transformers';
-import type { AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+import { pipeline, env, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
 
 /** Pinned model. Changing it changes what users download — treat like the registry.
  *  The onnx-community export, NOT the older Xenova one: the legacy q8 export trips
