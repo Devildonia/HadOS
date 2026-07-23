@@ -127,6 +127,7 @@ export function setupEventListeners(): void {
     setupIconAction('icon-docexplorer', () => launchKernelApp('docexplorer'));
     setupIconAction('icon-mediaplayer', () => launchKernelApp('mediaplayer'));
     setupIconAction('icon-voiceassistant', () => launchKernelApp('voiceassistant'));
+    setupIconAction('icon-tabula', () => launchKernelApp('tabula'));
     setupIconAction('icon-notepad', () => launchKernelApp('notepad'));
     setupIconAction('icon-paint', () => launchKernelApp('paint'));
     setupIconAction('icon-explorer', () => launchKernelApp('explorer'));

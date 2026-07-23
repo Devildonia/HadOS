@@ -2,18 +2,22 @@ import { i18n } from '../../services/i18n.js';
 import { Utils } from '../../utils.js';
 import { VFS } from '../../core/VFS.js';
 import { PermissionBroker } from '../../core/PermissionBroker.js';
+import { AiService } from '../../ai/AiService.js';
+import { decodeTo16kMono } from '../../ai/audioDecode.js';
 import type { IAudioStudioTab } from './IAudioStudioTab.js';
 
 /**
- * Dictation over the browser's SpeechRecognition API.
+ * Dictation with TWO engines, each labelled with exactly what it does:
  *
- * HONESTY NOTE (audit A1): this is NOT on-device inference. In Chrome this API
- * ships the microphone audio to Google's servers for transcription. The tab used
- * to log "[LiteRT] Whisper weights initialized" over it, which was false on every
- * word — no LiteRT, no Whisper, and the audio left the machine. It now says what
- * it is, and starting the microphone is gated behind an explicit, remembered
- * consent (`speech:cloud`) through the PermissionBroker, the same path every
- * other sensitive capability takes.
+ *  🔒 LOCAL (Whisper, default when available) — push-to-talk: record, then the
+ *     asr-runtime transcribes on-device (`mic:record` + `ai:transcribe`).
+ *     Since AI phase 5 this is the default, which makes HadOS fully
+ *     zero-egress: no feature sends data anywhere.
+ *
+ *  ☁️ CLOUD (the browser's SpeechRecognition) — live interim results, but in
+ *     Chrome the audio ships to Google's servers. Kept as the option for live
+ *     dictation, behind the `speech:cloud` consent that says so (audit A1 —
+ *     this used to be the ONLY engine, mislabelled as "[LiteRT] Whisper").
  */
 
 export class DictationTab implements IAudioStudioTab {
@@ -22,14 +26,28 @@ export class DictationTab implements IAudioStudioTab {
     private isRecording: boolean = false;
     private transcribedText: string = '';
 
+    /** Which dictation engine is active. Local is the default when it can run. */
+    private engine: 'local' | 'cloud' = 'cloud';
+    private recorder: MediaRecorder | null = null;
+    private micStream: MediaStream | null = null;
+    private chunks: Blob[] = [];
+
     private boundToggleRecord = () => this.handleToggleRecord();
     private boundSaveNote = () => this.handleSaveNote();
 
     public render(container: HTMLElement): void {
         this.container = container;
+        this.engine = this.localSupported() ? 'local' : 'cloud';
         this.ensureVfsDirectory();
         this.setupSpeechRecognition();
         this.setupLayout();
+    }
+
+    private localSupported(): boolean {
+        return AiService.transcribeSupported()
+            && typeof navigator !== 'undefined'
+            && !!navigator.mediaDevices?.getUserMedia
+            && typeof MediaRecorder !== 'undefined';
     }
 
     private ensureVfsDirectory(): void {
@@ -117,6 +135,10 @@ export class DictationTab implements IAudioStudioTab {
                     <div class="audiostudio-controls">
                         <button class="hados-btn" id="dictation-record-btn">${startText}</button>
                         <button class="hados-btn" id="dictation-save-btn">${saveText}</button>
+                        <select class="hados-select" id="dictation-engine" style="font-size: 10px;" title="Qué motor transcribe — y a dónde va (o no va) tu audio">
+                            <option value="local" ${this.engine === 'local' ? 'selected' : ''} ${this.localSupported() ? '' : 'disabled'}>🔒 Whisper (local — nada sale del equipo)</option>
+                            <option value="cloud" ${this.engine === 'cloud' ? 'selected' : ''}>☁️ Navegador (el audio puede salir a sus servidores)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -129,7 +151,9 @@ export class DictationTab implements IAudioStudioTab {
 
                 <!-- Diagnostics Log Panel -->
                 <div class="audiostudio-log" id="dictation-log" style="height: 100px;">
-                    [Speech] Uses the browser's speech recognition — audio may be sent to the browser vendor's servers. You will be asked before the microphone starts.
+                    ${this.engine === 'local'
+                        ? '[Whisper] On-device dictation: record, stop, and the transcript is generated on your machine. Nothing is sent anywhere.'
+                        : '[Speech] Uses the browser\'s speech recognition — audio may be sent to the browser vendor\'s servers. You will be asked before the microphone starts.'}
                 </div>
             </div>
         `;
@@ -140,6 +164,15 @@ export class DictationTab implements IAudioStudioTab {
 
         const saveBtn = this.container.querySelector('#dictation-save-btn');
         if (saveBtn) Utils.eventManager.add(saveBtn, 'click', this.boundSaveNote);
+
+        const engineSel = this.container.querySelector('#dictation-engine') as HTMLSelectElement | null;
+        if (engineSel) Utils.eventManager.add(engineSel, 'change', () => {
+            if (this.isRecording) this.handleStop();
+            this.engine = engineSel.value === 'local' && this.localSupported() ? 'local' : 'cloud';
+            this.logMessage(this.engine === 'local'
+                ? '[Whisper] Switched to ON-DEVICE dictation — nothing leaves your machine.'
+                : '[Speech] Switched to the browser engine — audio may be sent to its servers (you will be asked).');
+        });
     }
 
     private logMessage(msg: string): void {
@@ -153,8 +186,71 @@ export class DictationTab implements IAudioStudioTab {
     private handleToggleRecord(): void {
         if (this.isRecording) {
             this.handleStop();
+        } else if (this.engine === 'local') {
+            void this.handleStartLocal();
         } else {
             void this.handleStart();
+        }
+    }
+
+    /**
+     * Push-to-talk over the on-device pipeline: record → decode → Whisper in
+     * the asr-runtime process. No live interim results (Whisper works on the
+     * finished clip) — the honest trade against the cloud engine's streaming.
+     */
+    private async handleStartLocal(): Promise<void> {
+        if (!this.localSupported()) {
+            this.logMessage(`[Whisper] On-device dictation is not available in this environment.`);
+            return;
+        }
+        if (!(await PermissionBroker.check('audiostudio', 'mic:record'))) {
+            this.logMessage(`[Whisper] Microphone permission denied — nothing was recorded.`);
+            return;
+        }
+        try {
+            this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch {
+            this.logMessage(`[Whisper] The browser denied the microphone.`);
+            return;
+        }
+
+        this.chunks = [];
+        this.recorder = new MediaRecorder(this.micStream);
+        this.recorder.ondataavailable = (e) => { if (e.data.size > 0) this.chunks.push(e.data); };
+        this.recorder.onstop = () => { void this.transcribeLocalClip(); };
+        this.recorder.start();
+        this.isRecording = true;
+        this.updateUI();
+        this.logMessage(`[Whisper] Recording… stop to transcribe on your device.`);
+    }
+
+    private async transcribeLocalClip(): Promise<void> {
+        const blob = new Blob(this.chunks, { type: this.recorder?.mimeType || 'audio/webm' });
+        this.recorder = null;
+        this.chunks = [];
+        if (blob.size < 1000) { this.logMessage(`[Whisper] Nothing recorded.`); return; }
+
+        try {
+            this.logMessage(`[Whisper] Transcribing on-device…`);
+            const audio = await decodeTo16kMono(await blob.arrayBuffer());
+            const result = await AiService.transcribe('audiostudio', audio, {}, (p) => {
+                if (p.phase === 'download' && p.total > 0) {
+                    this.logMessage(`[Whisper] Downloading the model… ${((p.loaded / p.total) * 100).toFixed(0)}% (first use only)`);
+                }
+            });
+            const text = result.text.trim();
+            if (!text) { this.logMessage(`[Whisper] The model heard no speech.`); return; }
+
+            this.transcribedText += (this.transcribedText ? ' ' : '') + text;
+            const textarea = this.container?.querySelector('#dictation-textarea') as HTMLTextAreaElement | null;
+            if (textarea) {
+                textarea.value = this.transcribedText;
+                textarea.scrollTop = textarea.scrollHeight;
+            }
+            this.logMessage(`[Whisper] ${text.split(/\s+/).length} words transcribed — nothing left your machine.`);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.logMessage(`[Whisper] Transcription failed: ${msg}`);
         }
     }
 
@@ -183,6 +279,14 @@ export class DictationTab implements IAudioStudioTab {
     }
 
     private handleStop(): void {
+        if (this.engine === 'local' || this.recorder) {
+            try { this.recorder?.stop(); } catch { /* already stopped */ }
+            this.micStream?.getTracks().forEach(t => t.stop());
+            this.micStream = null;
+            this.isRecording = false;
+            this.updateUI();
+            return;
+        }
         if (this.recognition) {
             this.recognition.stop();
         } else {

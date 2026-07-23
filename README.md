@@ -9,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-5-%23646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r183-000000.svg?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
 [![PWA](https://img.shields.io/badge/PWA-offline--ready-5A0FC8.svg?style=flat&logo=pwa&logoColor=white)](https://vite-pwa-org.netlify.app/)
-[![Tests](https://img.shields.io/badge/tests-981%20passing-brightgreen.svg?style=flat)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-1007%20passing-brightgreen.svg?style=flat)](#-testing)
 [![CI Status](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml)
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ---
 
-HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, on-device **LiteRT.js** inference, a 40-language UI, and a 981-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
+HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, on-device **LiteRT.js** inference, a 40-language UI, and a 1007-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
 
 > [!NOTE]
 > HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/), and the on-device AI design in [`docs/ai/`](docs/ai/). See the [CHANGELOG](CHANGELOG.md), and [`docs/known-issues.md`](docs/known-issues.md) for what is knowingly still wrong.
@@ -57,7 +57,7 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
 - 🤖 **A real on-device AI substrate.** Three inference engines behind consented capabilities, all running on your machine with nothing uploaded: **LiteRT.js** segmentation (Pinta removes photo backgrounds), **MediaPipe LLM Inference** over a user-imported Gemma (Tavern Chat holds real conversations, Nova summarises Hacker News discussions, Doc Query answers grounded questions), and **transformers.js** (Whisper transcribes local media with real timestamps; MiniLM embeddings power true semantic search). Isolated worker processes, per-app consent, download-once caches.
-- ✅ **981 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
+- ✅ **1007 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
 - 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, macOS-style glass, and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
 - 🗣️ **Honest by policy.** Simulated features say so on their face (a summary panel is labelled *"simulated demo"*, demo data is stamped `[DEMO]`), and anything that could send data off-device — like browser speech recognition — sits behind an explicit consent prompt. Every external audit finding is remediated and encoded as a regression test.
 - 🌍 **40 languages.** The entire UI — apps, dialogs, folder names, the works — ships localized in 40 locales, with typed i18n keys and a locale-sync script that keeps all 40 files in shape.
@@ -111,10 +111,11 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 Five apps that show the platform's range — and practice its honesty policy (anything simulated is labelled as such, in the UI itself):
 - 🎬 **Media Player** — local video/audio and YouTube. The embed is driven **directly via postMessage** (`enablejsapi=1` widget protocol) — no external YouTube script, so the strict CSP stays intact. **Local files get REAL on-device transcription** (Whisper, ~140 MB one-time download behind consent) with model timestamps driving the karaoke highlight and click-to-seek; YouTube's panel honestly explains that an embed's audio is unreachable from the browser.
 - 📰 **Nova** — a Hacker News reader: live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. With a Gemma model imported, the summary panel **really summarises the thread's discussion on-device** (the badge flips to `On-device AI`); without one it stays a labelled simulated demo.
-- 🎙️ **Voxcribe** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
+- 🎙️ **Voxcribe** — scripted podcasts via browser text-to-speech, plus voice dictation with an engine selector: **on-device Whisper by default** (nothing leaves your machine) or the browser's cloud engine for live streaming, behind a consent that warns the audio may leave (`speech:cloud`).
 - 💬 **Tavern Chat** — chat with scripted characters (canned replies; says so in its description).
 - 🧚 **Hada** — a **voice assistant that never phones home**: push-to-talk → Whisper hears you → Gemma answers → the browser speaks, every step on your machine (a new `mic:record` capability gates the capture, before the browser's own mic prompt). The requirements panel honestly names any missing piece and keeps the mic disabled until the stack is real.
-- 📄 **Doc Query** — indexes a VFS document with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
+- 📄 **Doc Query** — indexes one document or **all of them at once** with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, answers cite `[file:line]` provenance, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
+- 📊 **Tabula** — CSV analysis where **the numbers must be real**: parsing and per-column statistics computed in code (an LLM doing arithmetic is a hallucination with confidence); the imported model only *narrates* the precomputed figures, under a prompt that forbids inventing them.
 
 ### 🧠 On-device AI substrate
 
@@ -126,8 +127,8 @@ Nothing ever leaves the device. Per-phase design notes live in [`docs/ai/`](docs
 | Engine | Model | Delivery | Capability | Consumers |
 |---|---|---|---|---|
 | LiteRT.js | DeepLab v3 (2.7 MB) | pinned URL + SHA-256, OPFS cache | `ai:infer` | Pinta background removal |
-| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Tavern Chat · Nova · Doc Query · Hada |
-| transformers.js | Whisper base q4 (~140 MB) | downloaded on consent, Cache API | `ai:transcribe` | Media Player · Hada |
+| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Tavern Chat · Nova · Doc Query · Hada · Tabula |
+| transformers.js | Whisper base q4 (~140 MB) | downloaded on consent, Cache API | `ai:transcribe` | Media Player · Hada · Voxcribe |
 | transformers.js | MiniLM-L6 q8 (~23 MB) | downloaded on consent, Cache API | `ai:embed` | Doc Query semantic index |
 
 Two worker processes back this: the classic `ai-runtime` (LiteRT needs
@@ -223,9 +224,9 @@ Use `↑` / `↓` to navigate command history.
 
 ## ✅ Testing
 
-**981 tests across 87 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
+**1007 tests across 89 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
-**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.ts`](test/e2e/css-baseline.spec.ts)). None of those 981 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
+**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.ts`](test/e2e/css-baseline.spec.ts)). None of those 1007 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
 
 ```bash
 npm test              # watch mode

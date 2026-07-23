@@ -148,6 +148,6 @@ export class HadOSAudioStudio implements IWindowsApp {
 Kernel.registerApp('audiostudio', HadOSAudioStudio, {
     name: 'Audio Studio',
     icon: '🎙️',
-    description: 'Scripted podcasts via browser text-to-speech, and voice dictation.',
+    description: 'Scripted podcasts via browser text-to-speech, and voice dictation — on-device (Whisper) by default, browser cloud engine optional.',
     singleton: true
 });

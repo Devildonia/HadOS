@@ -9,7 +9,7 @@ Nothing here is speculative: every claim was measured or read out of the running
 > Before touching anything under `css/` or `public/css/themes/`, read
 > [`test/e2e/css-baseline.spec.ts`](../test/e2e/css-baseline.spec.ts). The unit suite never
 > evaluates CSS — jsdom does not load external stylesheets, so `style.css` could be deleted and
-> all 981 tests would still pass. That spec is the only net.
+> all 1007 tests would still pass. That spec is the only net.
 
 ---
 

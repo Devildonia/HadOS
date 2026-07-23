@@ -1,4 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { radarMatches } from '../js/apps/HackerNewsScout.js';
+
+describe('radarMatches (Nova Radar)', () => {
+    it('matches case-insensitively and reports which topics hit', () => {
+        expect(radarMatches('Rust 2.0 released with WebGPU support', ['rust', 'webgpu', 'go'])).toEqual(['rust', 'webgpu']);
+    });
+    it('ignores blank and single-char topics', () => {
+        expect(radarMatches('a b c', ['', ' ', 'a'])).toEqual([]);
+    });
+    it('returns empty for no hits', () => {
+        expect(radarMatches('Nothing relevant', ['rust'])).toEqual([]);
+    });
+});
 import { HackerNewsScout } from '../js/apps/HackerNewsScout';
 import { Kernel } from '../js/core/Kernel';
 import { WindowFactory } from '../js/ui/WindowFactory';

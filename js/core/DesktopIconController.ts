@@ -52,7 +52,8 @@ export function initializeDraggableIcons(): void {
         'icon-audiostudio': { x: 120, y: 720 },
         'icon-docexplorer': { x: 220, y: 20 },
         'icon-mediaplayer': { x: 220, y: 120 },
-        'icon-voiceassistant': { x: 220, y: 220 }
+        'icon-voiceassistant': { x: 220, y: 220 },
+        'icon-tabula': { x: 220, y: 320 }
     };
 
     // Every slot a default already claims — so auto-placed icons land beside them,

@@ -31,6 +31,8 @@ export class HadOSDocExplorer implements IWindowsApp {
     private activeChunkId: number | null = null;
 
     private docChunks: string[] = [];
+    /** Provenance per line — which file and which local line it came from. */
+    private docSources: Array<{ file: string; line: number }> = [];
     private currentFileName: string = '';
 
     /** Real MiniLM embeddings of docChunks ([n × 384], L2-normalised rows), or
@@ -155,7 +157,8 @@ export class HadOSDocExplorer implements IWindowsApp {
         if (!select) return;
 
         // Clear existing options except placeholder
-        select.innerHTML = `<option value="">-- Select VFS Document --</option>`;
+        select.innerHTML = `<option value="">-- Select VFS Document --</option>
+            <option value="*ALL*">📚 Todos los documentos (multi-doc)</option>`;
 
         // List files in C:\
         try {
@@ -195,6 +198,26 @@ export class HadOSDocExplorer implements IWindowsApp {
         const select = this.container?.querySelector('#docexplorer-file-select') as HTMLSelectElement | null;
         if (!select || !select.value) return;
 
+        // Multi-doc: every listed file becomes one index, lines keep provenance.
+        if (select.value === '*ALL*') {
+            const paths = [...select.options].map(o => o.value).filter(v => v && v !== '*ALL*');
+            this.currentFileName = `Todos los documentos (${paths.length})`;
+            this.logConsole(`[VFS] Reading ${paths.length} documents...`, 'info');
+            const entries: Array<{ file: string; text: string }> = [];
+            for (const p of paths) {
+                try {
+                    const text = VFS.readFile(p);
+                    if (text) entries.push({ file: p.split('\\').pop() || p, text });
+                } catch { /* unreadable file — skip, the count below tells the truth */ }
+            }
+            if (entries.length === 0) {
+                this.logConsole(`[VFS] No readable documents found.`, 'meta');
+                return;
+            }
+            this.processDocuments(entries);
+            return;
+        }
+
         const filePath = select.value;
         this.currentFileName = filePath.split('\\').pop() || 'document.txt';
 
@@ -203,7 +226,7 @@ export class HadOSDocExplorer implements IWindowsApp {
         try {
             const text = VFS.readFile(filePath);
             if (text !== null) {
-                this.processDocument(text);
+                this.processDocuments([{ file: this.currentFileName, text }]);
             } else {
                 this.logConsole(`[VFS] File is empty or not found.`, 'meta');
             }
@@ -212,20 +235,33 @@ export class HadOSDocExplorer implements IWindowsApp {
         }
     }
 
-    private processDocument(text: string): void {
-        // Honest labels (audit A4): there are no embeddings here. The "index" is the
-        // document split into lines, and the sphere points are random positions for
-        // the visualisation — they encode nothing.
-        this.logConsole(`[Index] Splitting document into lines...`, 'info');
+    private processDocuments(entries: Array<{ file: string; text: string }>): void {
+        this.logConsole(`[Index] Splitting ${entries.length > 1 ? entries.length + ' documents' : 'document'} into lines...`, 'info');
 
-        // Split text into chunks (e.g. paragraphs or lines)
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+        // Split into lines, keeping per-line provenance for multi-doc citations.
+        const lines: string[] = [];
+        const sources: Array<{ file: string; line: number }> = [];
+        for (const { file, text } of entries) {
+            text.split('\n').forEach((raw, i) => {
+                const l = raw.trim();
+                if (l.length > 5) { lines.push(l); sources.push({ file, line: i }); }
+            });
+        }
         if (lines.length === 0) {
             this.logConsole(`[Index] Error: Document is too short or empty.`, 'meta');
             return;
         }
 
+        // The semantic index caps at MAX_EMBED_TEXTS; keep both search modes on
+        // the same corpus and say so when the cap bites.
+        if (lines.length > 512) {
+            this.logConsole(`[Index] ${lines.length} lines found — only the first 512 are indexed (the semantic cap).`, 'meta');
+            lines.length = 512;
+            sources.length = 512;
+        }
+
         this.docChunks = lines;
+        this.docSources = sources;
         this.points = [];
 
         // Generate vector points (nube de puntos) in 3D sphere
@@ -437,6 +473,12 @@ export class HadOSDocExplorer implements IWindowsApp {
         }
     }
 
+    /** `file:line` provenance for a global index — the citation the user can check. */
+    private sourceLabel(index: number): string {
+        const src = this.docSources[index];
+        return src ? `${src.file}:${src.line}` : `línea ${index}`;
+    }
+
     /** The no-model answer: an honest quote of the best line, escaped (audit A2). */
     private renderQuotedAnswer(query: string, feed: Element, bestIndex: number, matchingChunk: string): void {
         setTimeout(() => {
@@ -447,7 +489,7 @@ export class HadOSDocExplorer implements IWindowsApp {
                 <div class="docexplorer-chat-bubble ai">
                     <div><b>${Utils.escapeHTML(sourceText)}:</b> ${Utils.escapeHTML(answer)}</div>
                     <div class="docexplorer-source-box">
-                        <b>Source line #${bestIndex}:</b> "${Utils.escapeHTML(matchingChunk)}"
+                        <b>Source [${Utils.escapeHTML(this.sourceLabel(bestIndex))}]:</b> "${Utils.escapeHTML(matchingChunk)}"
                     </div>
                 </div>
             `);
@@ -469,7 +511,7 @@ export class HadOSDocExplorer implements IWindowsApp {
             <div class="docexplorer-chat-bubble ai">
                 <div><b>🧠</b> <span class="doc-ai-answer"></span></div>
                 <div class="docexplorer-source-box">
-                    <b>Source line #${bestIndex}:</b> "${Utils.escapeHTML(matchingChunk)}"
+                    <b>Source [${Utils.escapeHTML(this.sourceLabel(bestIndex))}]:</b> "${Utils.escapeHTML(matchingChunk)}"
                 </div>
             </div>
         `);

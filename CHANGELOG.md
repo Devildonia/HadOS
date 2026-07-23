@@ -30,6 +30,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   messages are never re-compressed.
 - 11 new tests (briefing/memory prompt builders in `AiGrounded.test.ts`, Hada's
   honest-state contract in `HadOSVoiceAssistant.test.ts`).
+- **🔒 Zero egress (AI phase 5)** — Voxcribe's dictation gains an engine selector
+  with **on-device Whisper as the default**: record, stop, transcribed locally
+  (`mic:record` + `ai:transcribe`). The browser's cloud engine stays as the
+  option for live dictation, still behind `speech:cloud`. With this, **no HadOS
+  feature sends user data anywhere** — the cloud path is opt-in, labelled, and
+  default for nothing. Design notes in `docs/ai/phase-5-zero-egress-and-tabula.md`.
+- **📊 Tabula (new app)** — CSV analysis where the numbers must be real: an
+  RFC-4180-shaped parser (quotes, CRLF, Excel BOM, `,`/`;`/tab auto-detection,
+  EU decimal commas) and per-column statistics computed **in code**, labelled as
+  such. The 🧠 Narrar button (AI mode only) hands Gemma the precomputed figures
+  under a prompt that forbids inventing or recalculating — an LLM doing
+  arithmetic is a hallucination with confidence, so it is never asked to.
+- **📚 Doc Query multi-document** — "Todos los documentos" indexes every listed
+  file into one corpus with per-line `{file, line}` provenance; answers cite
+  `[archivo:línea]`; the 512-line semantic cap logs honestly when it bites.
+  (Also fixed on the way: the file list now includes `C:\DOCUMENTS`, where
+  Notapad actually saves.)
+- **📡 Nova Radar** — comma-separated watch topics; while Nova is open, the
+  front page is swept every 5 minutes and NEW matching stories raise an OS
+  notification. Keyword matching by design (a watchlist must be cheap and
+  predictable), scope stated honestly: a browser OS has no background daemons.
+- 15 new tests (`Tabula.test.ts` parser/stats/prompt + app states, `radarMatches`).
 
 ## [1.0.7] - 2026-07-23
 

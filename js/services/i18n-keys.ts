@@ -18,6 +18,7 @@ export type TranslationKey =
     | "app.ragdoll_workshop"
     | "app.recyclebin"
     | "app.settings"
+    | "app.tabula"
     | "app.taskmanager"
     | "app.terminal"
     | "app.voiceassistant"

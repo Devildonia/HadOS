@@ -25,6 +25,22 @@ interface HNComment {
     dead?: boolean;
 }
 
+/**
+ * Radar matching — plain case-insensitive keyword containment, exported pure so
+ * the ranking is pinned by tests. Deliberately NOT a model call: a watchlist
+ * must be cheap enough to run every few minutes and predictable enough to
+ * trust; "did the title contain your word" is both, and is labelled as such.
+ */
+export function radarMatches(title: string, topics: string[]): string[] {
+    const lower = title.toLowerCase();
+    return topics
+        .map(t => t.trim().toLowerCase())
+        .filter(t => t.length >= 2 && lower.includes(t));
+}
+
+/** How often the radar re-checks the front page while Nova is open. */
+export const RADAR_INTERVAL_MS = 5 * 60_000;
+
 export class HackerNewsScout implements IWindowsApp {
     public windowId: string = '';
     private container: HTMLElement | null = null;
@@ -53,6 +69,7 @@ export class HackerNewsScout implements IWindowsApp {
         if (!this.container) return;
 
         this.setupLayout();
+        this.setupRadar();
         this.fetchTopStories();
     }
 
@@ -67,6 +84,11 @@ export class HackerNewsScout implements IWindowsApp {
                         <button class="hn-refresh-btn hados-btn" id="hn-briefing-btn" style="display: none;" title="One on-device digest of the whole front page (headlines only — the articles are not read)">🗞️ Briefing</button>
                         <button class="hn-refresh-btn hados-btn" id="hn-refresh-btn">🔄 Refresh</button>
                     </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; padding: 2px 6px; font-size: 10px;" title="Vigila la portada mientras Nova está abierta (un OS de navegador no tiene demonios en segundo plano). Aviso solo de historias nuevas que contengan tus temas.">
+                    <span>📡 Radar:</span>
+                    <input class="hados-input" id="hn-radar-input" placeholder="temas separados por comas — p. ej. rust, webgpu" style="flex: 1; font-size: 10px; padding: 2px 6px;">
+                    <span id="hn-radar-status" style="color: #888;"></span>
                 </div>
                 <div class="hn-main-layout">
                     <div class="hn-news-grid" id="hn-news-grid">
@@ -213,6 +235,67 @@ export class HackerNewsScout implements IWindowsApp {
             if (window.playBlip) window.playBlip(700);
             this.showAISummary(story);
         }
+    }
+
+    // ── Radar (watchlist while the app is open) ──────────────────────────────
+
+    private radarIntervalId: number | null = null;
+
+    private getRadarTopics(): string[] {
+        return (localStorage.getItem('hnscout-radar-topics') ?? '')
+            .split(',').map(t => t.trim()).filter(Boolean);
+    }
+
+    private setupRadar(): void {
+        const input = this.container?.querySelector('#hn-radar-input') as HTMLInputElement | null;
+        if (!input) return;
+        input.value = this.getRadarTopics().join(', ');
+        Utils.eventManager.add(input, 'change', () => {
+            localStorage.setItem('hnscout-radar-topics', input.value);
+            this.restartRadar();
+        });
+        this.restartRadar();
+    }
+
+    private restartRadar(): void {
+        if (this.radarIntervalId !== null) { window.clearInterval(this.radarIntervalId); this.radarIntervalId = null; }
+        const status = this.container?.querySelector('#hn-radar-status') as HTMLElement | null;
+        const topics = this.getRadarTopics();
+        if (topics.length === 0) { if (status) status.textContent = ''; return; }
+        if (status) status.textContent = `vigilando ${topics.length} tema${topics.length > 1 ? 's' : ''}`;
+        this.radarIntervalId = window.setInterval(() => { void this.checkRadar(); }, RADAR_INTERVAL_MS);
+        void this.checkRadar(); // and once now — a watchlist that waits 5 min to start is a bug report
+    }
+
+    /** One radar sweep: only NEW story ids, only keyword matches, one notification each. */
+    private async checkRadar(): Promise<void> {
+        const topics = this.getRadarTopics();
+        if (topics.length === 0) return;
+        try {
+            const res = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+            if (!res.ok) return;
+            const ids = (await res.json() as number[]).slice(0, 30);
+            const seen: number[] = JSON.parse(localStorage.getItem('hnscout-radar-seen') ?? '[]');
+            const seenSet = new Set(seen);
+            const fresh = ids.filter(id => !seenSet.has(id));
+            if (fresh.length === 0) return;
+
+            const notify = Services.get('Notify');
+            for (const id of fresh) {
+                const itemRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+                if (!itemRes.ok) continue;
+                const item = await itemRes.json() as HNItem | null;
+                if (!item?.title) continue;
+                const hits = radarMatches(item.title, topics);
+                if (hits.length && notify) {
+                    // The title is remote text, but Notify renders messages as text.
+                    notify.info(`📡 Radar (${hits.join(', ')}): ${item.title}`, { duration: 8000 });
+                }
+            }
+            // Everything looked at is seen, matched or not — no repeat notifications.
+            const merged = [...seen, ...fresh].slice(-500);
+            localStorage.setItem('hnscout-radar-seen', JSON.stringify(merged));
+        } catch { /* a failed sweep is silent; the next one retries */ }
     }
 
     /** True when replies can be REAL: an imported Gemma bundle + WebGPU. */
@@ -544,6 +627,10 @@ export class HackerNewsScout implements IWindowsApp {
         if (this.streamIntervalId !== null) {
             window.clearInterval(this.streamIntervalId);
             this.streamIntervalId = null;
+        }
+        if (this.radarIntervalId !== null) {
+            window.clearInterval(this.radarIntervalId);
+            this.radarIntervalId = null;
         }
 
         if (this.container) {
