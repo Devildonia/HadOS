@@ -234,8 +234,8 @@ export class Terminal implements IWindowsApp {
             this.writeOutput('  ver          - Print version info');
             this.writeOutput('  help         - Show this help menu');
         } else if (cmd === 'ver') {
-            this.writeOutput(`HadOS Terminal [Version ${CONFIG.APP?.VERSION || '1.0.7'}]`);
-            this.writeOutput(`HadOS version: ${CONFIG.APP?.VERSION || '1.0.7'}`);
+            this.writeOutput(`HadOS Terminal [Version ${CONFIG.APP?.VERSION || '1.0.8'}]`);
+            this.writeOutput(`HadOS version: ${CONFIG.APP?.VERSION || '1.0.8'}`);
         } else if (cmd === 'cls' || cmd === 'clear') {
             if (this.outputContainer) this.outputContainer.innerHTML = '';
         } else if (cmd === 'cd') {

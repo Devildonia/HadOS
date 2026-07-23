@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-07-23
+
+The zero-egress release. Two new apps and four upgraded ones, all harvested from
+surveying the agent-app ecosystem and rebuilt under HadOS's rules — on-device,
+consented, labelled. **Hada** gives the OS a voice (mic → Whisper → Gemma → speech,
+never leaving the machine); **Tabula** analyses CSVs with code-computed numbers the
+model may only narrate; Nova gains front-page briefings and a watchlist radar;
+Tavern Chat gains model-compressed long-term memory; Doc Query goes multi-document
+with `file:line` citations; and Voxcribe's dictation defaults to on-device Whisper —
+making HadOS **fully zero-egress**: the one cloud path left is opt-in, labelled, and
+default for nothing. The test suite crosses 1000 (1007).
+
 ### Added
 
 - **🧚 Hada — an on-device voice assistant (AI phase 4, new app)**: push-to-talk
