@@ -430,9 +430,39 @@ Licensed under the **MIT License** — see [LICENSE](LICENSE).
 
 ## 🙌 Credits
 
-- **Author:** HaDeS (A.K.A. DeViLDoNia) — [GitHub](https://github.com/DeViLDoNia)
-- **Physics:** [Rapier.rs](https://rapier.rs/) & [Matter.js](https://brm.io/matter-js/)
-- **Rendering:** [Three.js](https://threejs.org/)
-- **Aesthetics:** inspired by the golden era of computing (1995–2000).
+**Author:** HaDeS (A.K.A. DeViLDoNia) — [GitHub](https://github.com/DeViLDoNia).
+**Aesthetics:** inspired by the golden era of computing (1995–2000).
+
+HadOS stands on excellent open-source work. Everything below ships in or powers the
+product; each project is linked to its source.
+
+### Rendering & physics
+- [**Three.js**](https://github.com/mrdoob/three.js) — WebGL rendering (3D ragdoll, Chapas Prime, shader wallpapers).
+- [**Rapier**](https://github.com/dimforge/rapier.js) ([rapier.rs](https://rapier.rs/)) — 3D physics for the ragdoll pet (WASM).
+- [**Matter.js**](https://github.com/liabru/matter-js) — 2D physics for the stickman pet.
+
+### On-device AI runtimes
+- [**LiteRT.js**](https://github.com/google-ai-edge/LiteRT) (`@litertjs/core`) — tensor inference for Pinta's background removal.
+- [**MediaPipe LLM Inference**](https://github.com/google-ai-edge/mediapipe) (`@mediapipe/tasks-genai`) — runs Gemma in the browser for chat, summaries and grounded answers.
+- [**Transformers.js**](https://github.com/huggingface/transformers.js) (`@huggingface/transformers`) — Whisper transcription and MiniLM embeddings, on [**ONNX Runtime Web**](https://github.com/microsoft/onnxruntime).
+
+### AI models
+- [**DeepLab v3**](https://github.com/tensorflow/models/tree/master/research/deeplab) (Apache-2.0) — image segmentation, served via [MediaPipe models](https://developers.google.com/mediapipe/solutions/vision/image_segmenter).
+- [**Gemma**](https://github.com/google-deepmind/gemma) (Google DeepMind, [Gemma license](https://ai.google.dev/gemma/terms)) — the user-imported chat model.
+- [**Whisper**](https://github.com/openai/whisper) (OpenAI, MIT) — speech recognition; ONNX export by the [onnx-community](https://huggingface.co/onnx-community).
+- [**all-MiniLM-L6-v2**](https://github.com/UKPLab/sentence-transformers) (Sentence-Transformers, Apache-2.0) — text embeddings; ONNX export by [Xenova](https://huggingface.co/Xenova).
+
+### Bundled applications
+- [**Webamp**](https://github.com/captbaritone/webamp) — the faithful Winamp 2 reimplementation behind the music player.
+- [**js-dos**](https://github.com/caiiiycuk/js-dos) / [**DOSBox**](https://github.com/dosbox-staging/dosbox-staging) — the DOS emulation running DOOM ([id Software](https://github.com/id-Software/DOOM)) in a sandboxed window.
+
+### Build, test & tooling
+- [**Vite**](https://github.com/vitejs/vite) · [**TypeScript**](https://github.com/microsoft/TypeScript) · [**Vitest**](https://github.com/vitest-dev/vitest) · [**Playwright**](https://github.com/microsoft/playwright) · [**ESLint**](https://github.com/eslint/eslint) + [**typescript-eslint**](https://github.com/typescript-eslint/typescript-eslint)
+- [**vite-plugin-pwa**](https://github.com/vite-pwa/vite-plugin-pwa) + [**Workbox**](https://github.com/GoogleChrome/workbox) — the offline story.
+- [**jsdom**](https://github.com/jsdom/jsdom) · [**fake-indexeddb**](https://github.com/dumbmatter/fakeIndexedDB) · [**MSW**](https://github.com/mswjs/msw) — the unit-test environment.
+- [**Tailwind CSS**](https://github.com/tailwindlabs/tailwindcss) (games build) · [**tsx**](https://github.com/privatenumber/tsx) (script runner).
+
+### Type & UI details
+- [**Sora**](https://github.com/google/fonts/tree/main/ofl/sora) (SIL OFL 1.1) — the display typeface, via Google Fonts.
 
 <div align="center"><sub>© HaDeS 2026 · Built with intention.</sub></div>
