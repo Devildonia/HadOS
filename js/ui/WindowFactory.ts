@@ -182,7 +182,12 @@ export const WindowFactory: IWindowFactory = (function () {
         const wm = Services.get('WindowManager') as IWindowManager | undefined;
         if (wm) {
             wm.makeDraggable(id);
-            // Resize handle is added by makeResizable if needed
+            // Resizable by default — this call is what actually adds the resize
+            // handle and its drag logic. It was missing, so `resizable: true`
+            // windows had no grip and could not be resized at all.
+            if (opts.resizable !== false) {
+                wm.makeResizable(id);
+            }
         }
 
         createdWindows.add(id);

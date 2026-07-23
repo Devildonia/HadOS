@@ -1,22 +1,18 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { TaskManager } from '../js/apps/TaskManager';
-import { Services } from '../js/core/ServiceContainer';
+import { Settings } from '../js/apps/Settings';
 import { Kernel } from '../js/core/Kernel';
 
-describe('TaskManager', () => {
-    beforeEach(() => {
-        vi.restoreAllMocks();
-        (Services as any).__reset();
-        vi.spyOn(Kernel, 'launch').mockImplementation(() => ({} as any));
-    });
-
+describe('TaskManager (Task Pilot)', () => {
     it('should register with the Kernel', () => {
-        const registry = Kernel.getRegistry();
-        expect(registry.apps['taskmanager']).toBeDefined();
+        expect(Kernel.getRegistry().apps['taskmanager']).toBeDefined();
     });
 
-    it('should redirect to settings display tab and terminate', () => {
-        const app = new TaskManager();
-        expect(Kernel.launch).toHaveBeenCalledWith('settings', { category: 'taskmanager' });
+    it('is a Settings subclass now, not a self-killing proxy', () => {
+        // The old proxy launched a separate `settings` process and tried to kill
+        // itself before it was registered — leaving a zombie. It is now a real
+        // Settings subclass with its own window. (Behaviour with a real window is
+        // pinned in ProxyAppsAndResize.test.ts.)
+        expect(Object.getPrototypeOf(TaskManager.prototype)).toBe(Settings.prototype);
     });
 });

@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task Pilot / Display Properties left zombie taskbar buttons and refused to
+  reopen**: both were "proxy" apps that launched a separate `settings` process and
+  then tried to kill themselves — but the self-kill searched for their own process
+  *before* the kernel had registered it (registration happens after the constructor
+  returns), so they never died. The result was a process whose `windowId`
+  (`win-taskmanager-proxy`) named a window that never existed: a phantom taskbar
+  button that could not be closed, and a singleton that refused to relaunch. They
+  are now thin **Settings subclasses** (opening on the taskmanager/display category)
+  with a real window, so closing kills the right process and reopening just works.
+- **Task Pilot / Display Properties now show their own name and icon**, in the
+  taskbar and the window title bar (`📊 Task Pilot`, `🖥️ Display Properties`) —
+  the proxy launched Settings, so the window used to read a generic `⚙️ Settings`.
+  Settings gained optional `windowTitle`/`windowIcon` params for this.
+- **Windows could not be resized**: `WindowFactory` set up dragging but never
+  called `makeResizable`, so `resizable: true` windows had no resize grip at all
+  (the comment "added by makeResizable if needed" described a call that did not
+  exist). Windows are now resizable by default; `resizable: false` opts out.
+  `makeResizable` was also missing from the `IWindowManager` interface.
+- 6 regression tests (`test/ProxyAppsAndResize.test.ts`) pin the real-window
+  lifecycle and the resize-by-default behaviour.
+
 ## [1.0.9] - 2026-07-23
 
 The AI-features harvest (phases 4–6) meets architecture-debt payoff. Three

@@ -30,6 +30,8 @@ export interface IWindowManager {
     bringToFront(win: HTMLElement | null): void;
     /** Enables drag handlers on the window titlebar. */
     makeDraggable(windowId: string): void;
+    /** Adds the resize grip and its drag logic to the window. */
+    makeResizable(windowId: string): void;
     /** Removes drag handlers from the window titlebar. */
     destroyDraggable(windowId: string): void;
     /** Removes resizing handlers from the window container borders. */
@@ -268,6 +270,7 @@ const WindowManager: IWindowManager = (function () {
         maximize: toggleMaximize,
         bringToFront: (win: HTMLElement | null) => zstack.bringToFront(win),
         makeDraggable: (id: string) => interactions.makeDraggable(id),
+        makeResizable: (id: string) => interactions.makeResizable(id),
         destroyDraggable: (id: string) => interactions.destroyDraggable(id),
         destroyResizable: (id: string) => interactions.destroyResizable(id),
         destroyWindowInteractions: (id: string) => interactions.destroyWindowInteractions(id),

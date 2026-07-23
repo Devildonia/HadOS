@@ -69,6 +69,10 @@ const LANGUAGE_NAMES: Record<string, string> = {
 
 export interface ISettingsParams {
     category?: string;
+    /** Window title/icon override — lets Task Pilot / Display Properties present
+     *  as their own app (own name in the title bar) while reusing this class. */
+    windowTitle?: string;
+    windowIcon?: string;
 }
 
 export class Settings implements IWindowsApp {
@@ -95,6 +99,11 @@ export class Settings implements IWindowsApp {
     private boundTmProcessStarted: () => void;
     private boundTmProcessStopped: () => void;
 
+    /** Title/icon shown in this instance's window chrome (overridable so Task
+     *  Pilot and Display Properties present as themselves). */
+    private windowTitle: string;
+    private windowIcon: string;
+
     constructor(params: ISettingsParams = {}) {
         this.boundLanguageChanged = () => this.onLanguageChanged();
         this.boundTmProcessStarted = () => this.refreshTmUI();
@@ -102,6 +111,8 @@ export class Settings implements IWindowsApp {
         if (params.category) {
             this.activeCategory = params.category;
         }
+        this.windowTitle = params.windowTitle ?? i18n.t('settings.title');
+        this.windowIcon = params.windowIcon ?? '⚙️';
         this.init();
     }
 
@@ -145,11 +156,11 @@ export class Settings implements IWindowsApp {
 
     private init(): void {
         this.windowId = WindowFactory.create({
-            title: i18n.t('settings.title'),
+            title: this.windowTitle,
             width: 560,
             height: 400,
             resizable: true,
-            icon: '⚙️'
+            icon: this.windowIcon
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -579,7 +590,7 @@ export class Settings implements IWindowsApp {
 
     private onLanguageChanged(): void {
         // Keep the window title and all panel labels in the active language.
-        WindowFactory.setTitle(this.windowId, `⚙️ ${i18n.t('settings.title')}`);
+        WindowFactory.setTitle(this.windowId, `${this.windowIcon} ${this.windowTitle}`);
         this.renderInto();
         const feedback = this.container?.querySelector('#settings-lang-feedback');
         if (feedback) feedback.textContent = i18n.t('settings.applied');

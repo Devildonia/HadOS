@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 vi.mock('../js/ui/WindowManager', () => ({
     WindowManager: {
         makeDraggable: vi.fn(),
+        makeResizable: vi.fn(),
         destroyWindowInteractions: vi.fn(),
         open: vi.fn()
     }
