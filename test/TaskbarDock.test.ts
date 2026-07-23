@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TaskbarDock, nearestEdge, type TaskbarEdge } from '../js/ui/TaskbarDock';
 
@@ -100,14 +101,10 @@ describe('TaskbarDock — docking keeps the layout in agreement', () => {
     });
 
     it('announces the change so other layout consumers can react', () => {
-        // The test harness stubs window.dispatchEvent, so assert the module fires the
-        // event (the ragdoll floor and desktop icons listen for it) rather than trying
-        // to receive it.
-        const spy = window.dispatchEvent as unknown as ReturnType<typeof vi.fn>;
-        spy.mockClear();
+        const listener = vi.fn();
+        const unbind = EventBus.on('taskbar:edge-changed', listener);
         TaskbarDock.setEdge('left');
-        const ev = spy.mock.calls.map(c => c[0] as Event).find(e => e.type === 'taskbar:edge-changed');
-        expect(ev).toBeTruthy();
-        expect((ev as CustomEvent).detail.edge).toBe('left');
+        expect(listener).toHaveBeenCalledWith({ edge: 'left' });
+        unbind();
     });
 });

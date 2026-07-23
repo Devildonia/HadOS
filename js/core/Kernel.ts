@@ -1,3 +1,4 @@
+import { EventBus } from './EventBus.js';
 import { Utils } from '../utils.js';
 import { VFS } from './VFS.js';
 import { Services } from './ServiceContainer.js';
@@ -107,7 +108,7 @@ export const Kernel: IKernel = (() => {
 
         const success = unregisterApp(id);
         if (success) {
-            window.dispatchEvent(new CustomEvent('kernel:plugin-uninstalled', { detail: { id } }));
+            EventBus.emit('kernel:plugin-uninstalled', { id });
             Utils.Logger.log(`Kernel: Plugin uninstalled [${id}]`);
             return true;
         }

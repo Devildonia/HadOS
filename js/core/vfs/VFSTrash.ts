@@ -1,3 +1,4 @@
+import { EventBus } from '../EventBus.js';
 import type { ITrashEntry, IVFSNode } from './VFSTypes.js';
 import { VFSCoreTree } from './VFSCoreTree.js';
 import { VFSOperations } from './VFSOperations.js';
@@ -18,9 +19,7 @@ export class VFSTrash {
     }
 
     private signalTrashChanged(): void {
-        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-            window.dispatchEvent(new CustomEvent('vfs:trash-changed'));
-        }
+        EventBus.emit('vfs:trash-changed');
     }
 
     private ensureRecycleBin(): IVFSNode | null {

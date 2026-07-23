@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as StickyNotesController from '../js/core/StickyNotesController';
 import { Services } from '../js/core/ServiceContainer';
@@ -188,18 +189,17 @@ describe('StickyNotesController', () => {
         });
 
         it('should handle initialization events and trigger on vfs:trash-changed', () => {
-            const addEventSpy = vi.spyOn(window, 'addEventListener');
+            const spy = vi.spyOn(EventBus, 'on');
             StickyNotesController.initRecycleBin();
             
-            expect(addEventSpy).toHaveBeenCalledWith('vfs:trash-changed', expect.any(Function));
-            expect(addEventSpy).toHaveBeenCalledWith('themechanged', expect.any(Function));
+            expect(spy).toHaveBeenCalledWith('vfs:trash-changed', expect.any(Function));
+            expect(spy).toHaveBeenCalledWith('themechanged', expect.any(Function));
 
-            // Trigger vfs:trash-changed event
+            // Trigger vfs:trash-changed event via EventBus
             const dialog = document.getElementById('dialog-recyclebin')!;
             dialog.style.display = 'block'; // Make dialog visible to trigger updateRecycleBinUI
             
-            const event = new Event('vfs:trash-changed');
-            window.dispatchEvent(event);
+            EventBus.emit('vfs:trash-changed');
 
             // Assert it refreshed/updated dialog UI
             expect(dialog.querySelector('.dialog-content')).toBeDefined();

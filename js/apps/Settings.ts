@@ -1,4 +1,5 @@
 import { Kernel } from '../core/Kernel.js';
+import { EventBus } from '../core/EventBus.js';
 import { Utils } from '../utils.js';
 import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
@@ -75,7 +76,12 @@ export class Settings implements IWindowsApp {
     private container: HTMLElement | null = null;
     private activeCategory: string = 'language';
 
-    private boundLanguageChanged: EventListener;
+    private boundLanguageChanged: () => void;
+    /** Unsubscribe handles for the EventBus subscriptions (the events moved off
+     *  window in the v1.0.8_fix event unification). */
+    private langUnsub: (() => void) | null = null;
+    private tmStartedUnsub: (() => void) | null = null;
+    private tmStoppedUnsub: (() => void) | null = null;
     /** Panel listeners (nav items + select) added on each renderInto(); tracked
      *  so they are removed before every re-bind and on terminate(), otherwise the
      *  EventManager Map accumulates entries for detached DOM on each re-render. */
@@ -86,8 +92,8 @@ export class Settings implements IWindowsApp {
     private tmProcessesTab: ProcessesTab | null = null;
     private tmPerformanceTab: PerformanceTab | null = null;
     private tmSystemTab: SystemTab | null = null;
-    private boundTmProcessStarted: EventListener;
-    private boundTmProcessStopped: EventListener;
+    private boundTmProcessStarted: () => void;
+    private boundTmProcessStopped: () => void;
 
     constructor(params: ISettingsParams = {}) {
         this.boundLanguageChanged = () => this.onLanguageChanged();
@@ -152,7 +158,7 @@ export class Settings implements IWindowsApp {
         this.renderInto();
 
         // Re-render when the language changes elsewhere so labels stay in sync.
-        Utils.eventManager.add(window, 'languagechanged', this.boundLanguageChanged);
+        this.langUnsub = EventBus.on('languagechanged', this.boundLanguageChanged);
     }
 
     private renderInto(): void {
@@ -446,8 +452,8 @@ export class Settings implements IWindowsApp {
             window.clearInterval(this.tmIntervalId);
             this.tmIntervalId = null;
         }
-        Utils.eventManager.remove(window, 'kernel:process-started', this.boundTmProcessStarted);
-        Utils.eventManager.remove(window, 'kernel:process-stopped', this.boundTmProcessStopped);
+        this.tmStartedUnsub?.(); this.tmStartedUnsub = null;
+        this.tmStoppedUnsub?.(); this.tmStoppedUnsub = null;
         this.tmProcessesTab = null;
         this.tmPerformanceTab = null;
         this.tmSystemTab = null;
@@ -533,8 +539,8 @@ export class Settings implements IWindowsApp {
                 });
             }
 
-            Utils.eventManager.add(window, 'kernel:process-started', this.boundTmProcessStarted);
-            Utils.eventManager.add(window, 'kernel:process-stopped', this.boundTmProcessStopped);
+            this.tmStartedUnsub = EventBus.on('kernel:process-started', this.boundTmProcessStarted);
+            this.tmStoppedUnsub = EventBus.on('kernel:process-stopped', this.boundTmProcessStopped);
 
             // Bind inner tab buttons inside Task Manager
             this.container.querySelectorAll('#task-manager .tab-btn').forEach(btn => {
@@ -581,14 +587,14 @@ export class Settings implements IWindowsApp {
 
     public terminate(): void {
         this.clearPanelListeners();
-        Utils.eventManager.remove(window, 'languagechanged', this.boundLanguageChanged);
+        this.langUnsub?.(); this.langUnsub = null;
 
         if (this.tmIntervalId !== null) {
             window.clearInterval(this.tmIntervalId);
             this.tmIntervalId = null;
         }
-        Utils.eventManager.remove(window, 'kernel:process-started', this.boundTmProcessStarted);
-        Utils.eventManager.remove(window, 'kernel:process-stopped', this.boundTmProcessStopped);
+        this.tmStartedUnsub?.(); this.tmStartedUnsub = null;
+        this.tmStoppedUnsub?.(); this.tmStoppedUnsub = null;
 
         const resManager = Services.get('ResourceManager');
         if (resManager) {

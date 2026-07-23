@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Remediation of the v1.0.8 audit (9.3/10 — both findings closed in one session).
+## [1.0.9] - 2026-07-23
+
+The AI-features harvest (phases 4–6) meets architecture-debt payoff. Three
+long-standing structural items land — the god-bridge split, the unified event
+system, and real opaque-origin iframe isolation — alongside the three phase-6 AI
+features, the v1.0.8 audit remediation (M1/M2), and the regression the event
+refactor surfaced in review.
 
 ### Added
 
@@ -46,6 +52,34 @@ Remediation of the v1.0.8 audit (9.3/10 — both findings closed in one session)
   consumers now DERIVE from it. Manifests declaring a host-only capability get a
   truthful error ("permission not available to packaged apps") instead of
   "unknown permission". 6 new tests pin the derivation.
+- **Orphaned `window` listeners after the event unification** (regression caught in
+  review of the refactor below): moving the dispatches to `EventBus`-only left
+  several **listeners** still on `window.addEventListener` for the migrated events,
+  which silently received nothing — a language switch that never re-translated
+  FileExplorer/Paint/Settings nor re-swapped ThemeManager's icons, a session that
+  never recorded apps opening/closing (SessionManager), a Task Manager that never
+  refreshed its process list (Settings), and a Plugin Manager that never refreshed
+  on uninstall. All six listeners migrated to `EventBus.on` with proper
+  unsubscription; verified live that the bus delivers `languagechanged` and
+  `kernel:process-started` to fresh subscribers.
+
+### Changed (architecture debt)
+
+- **God-bridge modularised**: `SystemBridge` no longer owns everything — dialog
+  concerns move to `core/bridges/DialogBridge.ts` and desktop/wallpaper concerns
+  to `core/bridges/DesktopBridge.ts`, with `SystemBridge` delegating. Neither new
+  module touches `window.*`, shrinking the global coupling.
+- **Event system unified on the EventBus**: the Kernel and system events
+  (`kernel:process-started/stopped`, `kernel:plugin-uninstalled`, `themechanged`,
+  `languagechanged`, `vfs:trash-changed`, `taskbar:edge-changed`) are now typed in
+  `Types.ts` and emitted **only** through the `EventBus`; the parallel
+  `window.dispatchEvent(CustomEvent)` dispatches in `Kernel`, `ProcessManager`,
+  `VFSTrash`, `ThemeManager`, `i18n` and `TaskbarDock` are gone. The EventBus is
+  the single source of truth for internal communication.
+- **Real opaque-origin isolation for iframe processes**: `WindowFactory` now
+  defaults to `sandbox="allow-scripts allow-popups"` — `allow-same-origin` is
+  dropped, so iframe processes and games run on a genuinely opaque origin and
+  cannot reach the host's storage or DOM.
 
 ## [1.0.8] - 2026-07-23
 

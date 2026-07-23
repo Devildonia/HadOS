@@ -6,6 +6,7 @@
 import { Utils } from '../utils.js';
 import { Kernel } from '../core/Kernel.js';
 import { Services } from '../core/ServiceContainer.js';
+import { EventBus } from '../core/EventBus.js';
 import { AiService } from '../ai/AiService.js';
 import { applySubjectMask } from '../ai/segmentation.js';
 import { i18n } from '../services/i18n.js';
@@ -100,8 +101,8 @@ class Paint {
 
         window.addEventListener('resize', this.onResize);
 
-        const onLangChange = () => this.translateUI();
-        window.addEventListener('languagechanged', onLangChange);
+        // 'languagechanged' rides the EventBus since the event unification.
+        const unsubLang = EventBus.on('languagechanged', () => this.translateUI());
 
         if (window.ResizeObserver) {
             this.resizeObserver = new ResizeObserver(() => this.resizeCanvas());
@@ -117,7 +118,7 @@ class Paint {
                         this.resizeObserver.disconnect();
                     }
                     window.removeEventListener('resize', this.onResize);
-                    window.removeEventListener('languagechanged', onLangChange);
+                    unsubLang();
                     document.removeEventListener('keydown', this.onKeyDown);
                     Utils.eventManager.remove(document, 'mouseup', this.onMouseUp);
                     this.menus?.dispose();

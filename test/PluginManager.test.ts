@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PluginManager } from '../js/core/PluginManager';
 import { Kernel } from '../js/core/Kernel';
@@ -82,13 +83,8 @@ describe('PluginManager & Plugin API', () => {
         expect(process).toBeDefined();
         expect(Kernel.getActiveCount()).toBe(1);
 
-        // Detect if window.dispatchEvent was mocked by a previous test suite
-        const isMock = vi.isMockFunction(window.dispatchEvent);
-        const uninstallSpy = isMock ? window.dispatchEvent : vi.fn();
-
-        if (!isMock) {
-            window.addEventListener('kernel:plugin-uninstalled', uninstallSpy);
-        }
+        const uninstallSpy = vi.fn();
+        const unbind = EventBus.on('kernel:plugin-uninstalled', uninstallSpy);
 
         // Uninstall
         const uninstalled = Kernel.uninstallPlugin('test-plugin');
@@ -96,10 +92,7 @@ describe('PluginManager & Plugin API', () => {
 
         expect(Kernel.getActiveCount()).toBe(0);
         expect(Kernel.getRegistry().apps['test-plugin']).toBeUndefined();
-        expect(uninstallSpy).toHaveBeenCalled();
-        
-        if (!isMock) {
-            window.removeEventListener('kernel:plugin-uninstalled', uninstallSpy as any);
-        }
+        expect(uninstallSpy).toHaveBeenCalledWith({ id: 'test-plugin' });
+        unbind();
     });
 });

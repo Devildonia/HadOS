@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Utils } from '../js/utils';
 
@@ -110,7 +111,10 @@ describe('Application Modules', () => {
             }
         });
 
-        it('should dispatch kernel:process-stopped when Webamp is closed', async () => {
+        it('should emit kernel:process-stopped on EventBus when Webamp is closed', async () => {
+            const listener = vi.fn();
+            const unbind = EventBus.on('kernel:process-stopped', listener);
+
             // Launch first
             await WebampApp.launch();
 
@@ -120,11 +124,10 @@ describe('Application Modules', () => {
             closeCallback();
 
             expect(mockWebampInstance.dispose).toHaveBeenCalled();
-            expect(window.dispatchEvent).toHaveBeenCalledWith(expect.any(CustomEvent));
+            expect(listener).toHaveBeenCalled();
+            expect((listener.mock.calls[0]![0] as any).appId).toBe('webamp');
 
-            const eventArg = vi.mocked(window.dispatchEvent).mock.calls[0]![0] as CustomEvent;
-            expect(eventArg.type).toBe('kernel:process-stopped');
-            expect(eventArg.detail.pid).toBe('webamp');
+            unbind();
         });
 
         it('should just bring Webamp to front if already initialized', async () => {

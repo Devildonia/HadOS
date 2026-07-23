@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Kernel } from '../js/core/Kernel';
 import { Services } from '../js/core/ServiceContainer';
@@ -74,18 +75,16 @@ describe('Kernel', () => {
             expect((globalThis as any).WindowManager.open).toHaveBeenCalledWith('win-auto');
         });
 
-        it('should dispatch kernel:process-started event', () => {
+        it('should emit kernel:process-started event on EventBus', () => {
             class EvtApp {}
             Kernel.registerApp('evt', EvtApp, { name: 'Evt', icon: '' });
 
-            window.addEventListener = vi.fn();
-            window.dispatchEvent = vi.fn() as any;
+            const listener = vi.fn();
+            const unbind = EventBus.on('kernel:process-started', listener);
 
             Kernel.launch('evt');
-            expect(window.dispatchEvent).toHaveBeenCalled();
-
-            const call = (window.dispatchEvent as any).mock.calls[0][0];
-            expect(call.type || call.constructor.name).toBeDefined();
+            expect(listener).toHaveBeenCalled();
+            unbind();
         });
 
         it('should return null for unregistered app', () => {
@@ -158,15 +157,17 @@ describe('Kernel', () => {
             expect(proc!.status).toBe('terminated');
         });
 
-        it('should dispatch kernel:process-stopped event', () => {
+        it('should emit kernel:process-stopped event on EventBus', () => {
             class Stoppable {}
             Kernel.registerApp('stop', Stoppable, { name: 'Stop', icon: '' });
             const proc = Kernel.launch('stop');
 
-            window.dispatchEvent = vi.fn() as any;
+            const listener = vi.fn();
+            const unbind = EventBus.on('kernel:process-stopped', listener);
             Kernel.kill(proc!.pid);
 
-            expect(window.dispatchEvent).toHaveBeenCalled();
+            expect(listener).toHaveBeenCalled();
+            unbind();
         });
 
         // ── Sprint 2: Map-based process cleanup ──────────────────────────
@@ -267,7 +268,8 @@ describe('Kernel', () => {
 
     describe('launch — singleton dedup', () => {
         it('should return same pid when launching singleton app twice, and not increment active count', () => {
-            const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+            const listener = vi.fn();
+            const unbind = EventBus.on('kernel:process-started', listener);
             class SingletonApp {
                 get windowId() { return 'win-singleton'; }
             }
@@ -279,9 +281,9 @@ describe('Kernel', () => {
             expect(p1!.pid).toBe(p2!.pid);
             expect(Kernel.getActiveCount()).toBe(1);
             
-            // Check process started event dispatched only once
-            const startEvents = dispatchSpy.mock.calls.filter(call => (call[0] as any).type === 'kernel:process-started');
-            expect(startEvents.length).toBe(1);
+            // Check process started event emitted only once
+            expect(listener).toHaveBeenCalledTimes(1);
+            unbind();
         });
 
         it('should launch separate instances for non-singleton apps', () => {

@@ -203,7 +203,7 @@ export const WindowFactory: IWindowFactory = (function () {
         iframe.id = iframeId;
         iframe.className = 'game-frame';
         iframe.style.cssText = 'width:100%; height:100%; border:none; background:#000;';
-        const sandboxValue = opts.sandbox !== undefined ? opts.sandbox : 'allow-scripts allow-same-origin allow-popups';
+        const sandboxValue = opts.sandbox !== undefined ? opts.sandbox : 'allow-scripts allow-popups';
         if (sandboxValue) {
             iframe.setAttribute('sandbox', sandboxValue);
         }

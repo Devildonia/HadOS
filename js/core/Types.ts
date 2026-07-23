@@ -93,8 +93,20 @@ export interface IStoreStateMap {
 export interface IEventPayloadMap {
     /** Emitted when a new process is registered and started by the Kernel. */
     'process-started': IProcess;
+    'kernel:process-started': IProcess;
     /** Emitted when an active process has stopped or been terminated. */
     'process-stopped': IProcess;
+    'kernel:process-stopped': IProcess;
+    /** Emitted when a plugin is uninstalled by the Kernel. */
+    'kernel:plugin-uninstalled': { id: string };
+    /** Emitted when the UI theme changes. */
+    'themechanged': { theme: string };
+    /** Emitted when the system language changes. */
+    'languagechanged': { lang: string };
+    /** Emitted when VFS trash contents change. */
+    'vfs:trash-changed': [];
+    /** Emitted when the taskbar edge/position changes. */
+    'taskbar:edge-changed': { edge: string };
     /** Emitted when a key/value pair is modified in the global state store. */
     'store:changed': [string, unknown, unknown]; // tuple: [key, new, old]
     /** Custom event emitted for generic 2D ragdoll actions. */

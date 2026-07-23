@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ThemeManager } from '../js/core/ThemeManager';
 import { Services } from '../js/core/ServiceContainer';
@@ -100,8 +101,9 @@ describe('ThemeManager', () => {
             expect((window as any).ShaderWallpaper.setFragmentShader).toHaveBeenCalledWith('modern');
         });
 
-        it('should dispatch "themechanged" custom event', () => {
-            const dispatchSpy = vi.spyOn(window, 'dispatchEvent') as any;
+        it('should emit "themechanged" event on EventBus', () => {
+            const listener = vi.fn();
+            const unbind = EventBus.on('themechanged', listener);
 
             // Mock swapIcons since it errors out if elements are missing from the test DOM
             const originalSwapIcons = themeManager.swapIcons;
@@ -109,18 +111,11 @@ describe('ThemeManager', () => {
 
             themeManager.applyTheme('modern');
 
-            expect(dispatchSpy).toHaveBeenCalled();
-            // Check that it's a CustomEvent named 'themechanged' and it has theme 'modern'
-            // We need to find the correct call because it also triggers on init() for win95
-            const modernEventCall = dispatchSpy.mock.calls.find((call: any) =>
-                call[0].type === 'themechanged' && call[0].detail.theme === 'modern'
-            );
-            expect(modernEventCall).toBeDefined();
-            expect(modernEventCall[0].detail.theme).toBe('modern');
+            expect(listener).toHaveBeenCalledWith({ theme: 'modern' });
 
             // Restore
             themeManager.swapIcons = originalSwapIcons;
-            dispatchSpy.mockRestore();
+            unbind();
         });
 
         it('should correctly mutate DOM text content for specific IDs', () => {

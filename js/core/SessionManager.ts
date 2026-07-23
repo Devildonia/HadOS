@@ -12,6 +12,7 @@
 import { VFS } from './VFS';
 import { Utils } from '../utils';
 import { Kernel } from './Kernel';
+import { EventBus } from './EventBus';
 import { Services } from './ServiceContainer';
 
 const SESSION_DIR = 'C:\\HADOS\\SYSTEM';
@@ -133,8 +134,11 @@ export const SessionManager = (() => {
     function init(): void {
         if (wired) return;
         wired = true;
-        window.addEventListener('kernel:process-started', save);
-        window.addEventListener('kernel:process-stopped', save);
+        // Kernel process events flow on the EventBus (not window) since the
+        // v1.0.8_fix event unification — subscribe there or the session never
+        // records apps opening/closing.
+        EventBus.on('kernel:process-started', () => save());
+        EventBus.on('kernel:process-stopped', () => save());
         // Layout changes (drag/resize) end with a mouseup; visibility/unload are the
         // durability triggers (beforeunload can't await an async write).
         document.addEventListener('mouseup', save);

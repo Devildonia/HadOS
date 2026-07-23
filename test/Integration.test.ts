@@ -141,34 +141,33 @@ describe('Integration: Kernel process events → window.dispatchEvent', () => {
         Services.register('Kernel', Kernel as any);
     });
 
-    it('should dispatch kernel:process-started on launch', () => {
-        const spy = vi.spyOn(window, 'dispatchEvent');
+    it('should emit kernel:process-started on launch via EventBus', () => {
+        const listener = vi.fn();
+        const unbind = EventBus.on('kernel:process-started', listener);
 
         class App { constructor() { } }
         Kernel.registerApp('evt-test', App as any, { name: 'EvtTest', icon: '🔔' });
         Kernel.launch('evt-test');
 
-        expect(spy).toHaveBeenCalled();
-        const callArgs = spy.mock.calls.find(args => (args[0] as any).type === 'kernel:process-started')!;
-        expect(callArgs).toBeDefined();
-        const detail = (callArgs[0] as any).detail;
-        expect(detail.appId).toBe('evt-test');
-        expect(detail.status).toBe('running');
+        expect(listener).toHaveBeenCalled();
+        const proc = listener.mock.calls[0]![0] as any;
+        expect(proc.appId).toBe('evt-test');
+        expect(proc.status).toBe('running');
 
-        window.removeEventListener('kernel:process-started', spy as any);
+        unbind();
     });
 
-    it('should dispatch kernel:process-stopped on kill', () => {
-        const spy = vi.spyOn(window, 'dispatchEvent');
+    it('should emit kernel:process-stopped on kill via EventBus', () => {
+        const listener = vi.fn();
+        const unbind = EventBus.on('kernel:process-stopped', listener);
 
         class App { constructor() { } }
         Kernel.registerApp('evt-kill', App as any, { name: 'EvtKill', icon: '💀' });
         const proc = Kernel.launch('evt-kill')!;
 
         Kernel.kill(proc.pid);
-        expect(spy).toHaveBeenCalled();
-        const callArgs = spy.mock.calls.find(args => (args[0] as any).type === 'kernel:process-stopped');
-        expect(callArgs).toBeDefined();
+        expect(listener).toHaveBeenCalled();
+        unbind();
     });
 });
 

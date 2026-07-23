@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { i18n } from '../js/services/i18n';
 import fs from 'fs';
@@ -153,14 +154,12 @@ describe('i18n', () => {
     });
 
     describe('setLang side effects', () => {
-        it('should dispatch a languagechanged event carrying the new lang', async () => {
-            const spy = vi.spyOn(window, 'dispatchEvent') as any;
+        it('should emit a languagechanged event carrying the new lang on EventBus', async () => {
+            const listener = vi.fn();
+            const unbind = EventBus.on('languagechanged', listener);
             await i18n.setLang('es');
-            const langEvents = spy.mock.calls.map((c: any) => c[0]).filter((e: any) => e && e.type === 'languagechanged');
-            const evt = langEvents[langEvents.length - 1];
-            expect(evt).toBeTruthy();
-            expect((evt as CustomEvent).detail.lang).toBe('es');
-            spy.mockRestore();
+            expect(listener).toHaveBeenCalledWith({ lang: 'es' });
+            unbind();
         });
     });
 

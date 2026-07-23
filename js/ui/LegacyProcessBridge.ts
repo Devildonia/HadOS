@@ -1,3 +1,4 @@
+import { EventBus } from '../core/EventBus';
 import { Services } from '../core/ServiceContainer';
 import type { IAppMetadata, IProcess } from '../core/Types';
 
@@ -82,7 +83,8 @@ export class LegacyProcessBridge {
         // Safety: Check if taskbar already has a button for this window
         const existingBtn = document.getElementById(`task-btn-legacy-${windowId}`);
         if (!existingBtn) {
-            window.dispatchEvent(new CustomEvent('kernel:process-started', { detail: fakeProcess as unknown as IProcess }));
+            EventBus.emit('kernel:process-started', fakeProcess as unknown as IProcess);
+            EventBus.emit('process-started', fakeProcess as unknown as IProcess);
         }
     }
 
@@ -99,9 +101,9 @@ export class LegacyProcessBridge {
                 kernel.kill(proc.pid);
             } else {
                 // Check for our legacy fake process
-                window.dispatchEvent(new CustomEvent('kernel:process-stopped', {
-                    detail: { pid: `legacy-${windowId}`, windowId: windowId } as unknown as IProcess
-                }));
+                const fakeStopProc = { pid: `legacy-${windowId}`, windowId: windowId } as unknown as IProcess;
+                EventBus.emit('kernel:process-stopped', fakeStopProc);
+                EventBus.emit('process-stopped', fakeStopProc);
             }
         }
     }

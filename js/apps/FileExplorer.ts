@@ -1,6 +1,7 @@
 import { Utils } from '../utils.js';
 import { VFS } from '../core/VFS.js';
 import { Kernel } from '../core/Kernel.js';
+import { EventBus } from '../core/EventBus.js';
 import { Services } from '../core/ServiceContainer.js';
 import { WindowApp } from '../core/WindowApp.js';
 import { ExplorerGrid } from './explorer/ExplorerGrid.js';
@@ -138,9 +139,9 @@ class FileExplorer extends WindowApp {
         }
 
         // Re-render on language change so an open window's folder labels update live.
-        const onLangChange = (): void => this.render();
-        window.addEventListener('languagechanged', onLangChange);
-        this.addCleanup(() => window.removeEventListener('languagechanged', onLangChange));
+        // 'languagechanged' rides the EventBus since the event unification.
+        const unsubLang = EventBus.on('languagechanged', () => this.render());
+        this.addCleanup(unsubLang);
 
         if (this.addressInput && this.address) {
             const addressHandler = (e: KeyboardEvent) => this.address?.handleKeyDown(e);

@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WindowManager } from '../js/ui/WindowManager';
 import { Services } from '../js/core/ServiceContainer';
@@ -83,11 +84,12 @@ describe('WindowManager', () => {
             expect(() => WindowManager.open('win-ghost')).not.toThrow();
         });
 
-        it('should dispatch kernel:process-started for legacy windows', () => {
-            const spy = vi.spyOn(window, 'dispatchEvent');
+        it('should emit kernel:process-started on EventBus for legacy windows', () => {
+            const listener = vi.fn();
+            const unbind = EventBus.on('kernel:process-started', listener);
             WindowManager.open('win-test1');
-            const callArgs = spy.mock.calls.find(args => (args[0] as any)?.type === 'kernel:process-started');
-            expect(callArgs).toBeDefined();
+            expect(listener).toHaveBeenCalled();
+            unbind();
         });
     });
 

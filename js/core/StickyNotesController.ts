@@ -1,3 +1,4 @@
+import { EventBus } from './EventBus';
 import { Services } from './ServiceContainer';
 import { Utils } from '../utils';
 import { VFS } from './VFS';
@@ -175,14 +176,14 @@ export function refreshRecycleBinIcon(): void {
  */
 export function initRecycleBin(): void {
     refreshRecycleBinIcon();
-    window.addEventListener('vfs:trash-changed', () => {
+    EventBus.on('vfs:trash-changed', () => {
         refreshRecycleBinIcon();
         const dialog = document.getElementById('dialog-recyclebin');
         if (dialog && dialog.style.display !== 'none') updateRecycleBinUI();
     });
     // ThemeManager.swapIcons resets the icon to "empty" on a theme change; restore
     // the full state afterwards.
-    window.addEventListener('themechanged', refreshRecycleBinIcon);
+    EventBus.on('themechanged', refreshRecycleBinIcon);
 }
 
 export function setupStickyNotes(): void {

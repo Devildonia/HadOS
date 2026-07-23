@@ -1,6 +1,7 @@
 import { Kernel } from '../core/Kernel.js';
 import { Utils } from '../utils.js';
 import { i18n } from '../services/i18n.js';
+import { EventBus } from '../core/EventBus.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
 
@@ -8,7 +9,10 @@ export class PluginManagerApp implements IWindowsApp {
     public windowId: string = '';
     private container: HTMLElement | null = null;
     
-    private boundPluginUninstalled: EventListener;
+    private boundPluginUninstalled: () => void;
+    /** Unsubscribe for the EventBus 'kernel:plugin-uninstalled' subscription
+     *  (moved off window in the v1.0.8_fix event unification). */
+    private pluginUninstalledUnsub: (() => void) | null = null;
     private boundInstallBtnClick: EventListener;
     private boundListClick: EventListener;
 
@@ -44,7 +48,7 @@ export class PluginManagerApp implements IWindowsApp {
         this.setupLayout();
         this.refreshUI();
 
-        window.addEventListener('kernel:plugin-uninstalled', this.boundPluginUninstalled);
+        this.pluginUninstalledUnsub = EventBus.on('kernel:plugin-uninstalled', this.boundPluginUninstalled);
     }
 
     private setupLayout(): void {
@@ -176,7 +180,8 @@ export class PluginManagerApp implements IWindowsApp {
     }
 
     public terminate(): void {
-        window.removeEventListener('kernel:plugin-uninstalled', this.boundPluginUninstalled);
+        this.pluginUninstalledUnsub?.();
+        this.pluginUninstalledUnsub = null;
         if (this.container) {
             const installBtn = this.container.querySelector('#pm-install-btn');
             if (installBtn) {

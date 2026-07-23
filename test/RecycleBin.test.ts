@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { VFS } from '../js/core/VFS';
 
@@ -139,19 +140,18 @@ describe('VFS recycle bin', () => {
     });
 
     it('fires a vfs:trash-changed signal on every mutation', () => {
-        // test/setup.ts mocks window.dispatchEvent with a spy, so the recycle-bin
-        // signal is observed there rather than via a real listener.
+        const listener = vi.fn();
+        const unbind = EventBus.on('vfs:trash-changed', listener);
+
         VFS.writeFile('C:\\DOCUMENTS', 'a.txt', 'x');
-        (window.dispatchEvent as any).mockClear();
+        listener.mockClear();
 
         VFS.trashNode('C:\\DOCUMENTS', 'a.txt');
         VFS.restoreFromTrash(VFS.listTrash()[0]!.id);
         VFS.trashNode('C:\\DOCUMENTS', 'a.txt');
         VFS.emptyTrash();
 
-        const signals = (window.dispatchEvent as any).mock.calls
-            .map(([e]: any) => e.type)
-            .filter((t: string) => t === 'vfs:trash-changed');
-        expect(signals).toHaveLength(4);
+        expect(listener).toHaveBeenCalledTimes(4);
+        unbind();
     });
 });

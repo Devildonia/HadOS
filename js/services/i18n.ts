@@ -4,6 +4,7 @@
  * v2.0 (TypeScript)
  */
 
+import { EventBus } from '../core/EventBus';
 import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
 import { CONFIG } from '../config';
@@ -108,9 +109,7 @@ const i18n: ITranslationService = {
         this.updateDOM();
 
         // Notify components (open windows, apps) so they can re-render their labels
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('languagechanged', { detail: { lang } }));
-        }
+        EventBus.emit('languagechanged', { lang });
 
         Utils.Logger.log(`[i18n] Language set to: ${lang}`);
     },

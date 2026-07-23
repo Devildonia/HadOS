@@ -1,3 +1,4 @@
+import { EventBus } from '../js/core/EventBus';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WorkerProcess } from '../js/core/WorkerProcess';
 import { ProcessWatchdog } from '../js/core/ProcessWatchdog';
@@ -135,15 +136,13 @@ describe('Kernel.spawnWorker (Fase 1)', () => {
         expect(isTerminated()).toBe(true);
     });
 
-    it('dispatches kernel:process-started for a spawned worker', () => {
-        const spy = vi.spyOn(window, 'dispatchEvent');
+    it('emits kernel:process-started on EventBus for a spawned worker', () => {
+        const listener = vi.fn();
+        const unbind = EventBus.on('kernel:process-started', listener);
         const { transport } = makeFakeTransport();
         Kernel.spawnWorker('compute-demo', transport);
-        const evt = spy.mock.calls
-            .map(c => c[0])
-            .find(e => e instanceof CustomEvent && e.type === 'kernel:process-started') as any;
-        expect(evt).toBeDefined();
-        expect(evt.detail.kind).toBe('worker');
-        spy.mockRestore();
+        expect(listener).toHaveBeenCalled();
+        expect(listener.mock.calls[0]![0].kind).toBe('worker');
+        unbind();
     });
 });

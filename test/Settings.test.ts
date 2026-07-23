@@ -5,6 +5,7 @@ import { Kernel } from '../js/core/Kernel';
 import { i18n } from '../js/services/i18n';
 import { WindowFactory } from '../js/ui/WindowFactory';
 import { Utils } from '../js/utils';
+import { EventBus } from '../js/core/EventBus';
 
 describe('Settings App', () => {
     let windowBody: HTMLDivElement;
@@ -61,16 +62,14 @@ describe('Settings App', () => {
 
     it('should re-render on languagechanged event', () => {
         const app = new Settings();
-        
-        // Directly trigger the event manager listener for languagechanged to avoid JSDOM proxy event propagation bugs
-        for (const [key, listener] of (Utils.eventManager as any).listeners.entries()) {
-            if (listener.event === 'languagechanged') {
-                listener.handler(new Event('languagechanged'));
-            }
-        }
+
+        // 'languagechanged' flows on the EventBus since the v1.0.8_fix event
+        // unification (it used to be a window CustomEvent). Emitting there is
+        // what the real i18n.setLang() does now.
+        EventBus.emit('languagechanged', { lang: 'es' });
 
         expect(WindowFactory.setTitle).toHaveBeenCalledWith('win-settings-test', expect.any(String));
-        
+
         app.terminate();
     });
 

@@ -3,6 +3,7 @@
  * Integrates Webamp (Winamp 2 port) and fetches 90s Radio Stations
  */
 
+import { EventBus } from '../core/EventBus.js';
 import { Kernel } from '../core/Kernel.js';
 import { Utils } from '../utils.js';
 
@@ -110,9 +111,9 @@ class WebampApp {
             this.instance = null;
             this.isInitialized = false;
 
-            window.dispatchEvent(new CustomEvent('kernel:process-stopped', {
-                detail: { pid: 'webamp', windowId: 'webamp-container' }
-            }));
+            const fakeProcess = { pid: 999, appId: 'webamp', instance: this as any, windowId: 'webamp-container', status: 'terminated' as const };
+            EventBus.emit('kernel:process-stopped', fakeProcess);
+            EventBus.emit('process-stopped', fakeProcess);
         });
     }
 

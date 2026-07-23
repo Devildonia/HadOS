@@ -10,6 +10,7 @@
  * never gets overlapped by a maximized or snapped window. The chosen edge persists.
  */
 
+import { EventBus } from '../core/EventBus';
 import { Utils } from '../utils';
 
 export type TaskbarEdge = 'top' | 'right' | 'bottom' | 'left';
@@ -60,7 +61,7 @@ export const TaskbarDock = (() => {
 
         if (persist) Utils.setStorage(STORAGE_KEY, edge);
         // Let anything tracking the layout (the ragdoll floor, desktop icons) react.
-        window.dispatchEvent(new CustomEvent('taskbar:edge-changed', { detail: { edge } }));
+        EventBus.emit('taskbar:edge-changed', { edge });
     }
 
     /** True when the pointer landed on something interactive, not bare bar. */

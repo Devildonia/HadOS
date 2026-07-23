@@ -1,3 +1,4 @@
+import { EventBus } from '../core/EventBus';
 import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
 import { WindowManager } from './WindowManager';
@@ -48,14 +49,10 @@ const TaskbarManager: ITaskbarManager = (() => {
             if (startBtn) startBtn.after(container);
         }
 
-        // Listen for Kernel events
-        if (!listenersAttached && !onProcessStarted) {
-            onProcessStarted = (e: Event) => update((e as CustomEvent<IProcess>).detail);
-            window.addEventListener('kernel:process-started', onProcessStarted);
-        }
-        if (!listenersAttached && !onProcessStopped) {
-            onProcessStopped = (e: Event) => remove((e as CustomEvent<IProcess>).detail);
-            window.addEventListener('kernel:process-stopped', onProcessStopped);
+        // Listen for Kernel events via EventBus
+        if (!listenersAttached) {
+            EventBus.on('kernel:process-started', (proc: IProcess) => update(proc));
+            EventBus.on('kernel:process-stopped', (proc: IProcess) => remove(proc));
         }
 
         listenersAttached = true;

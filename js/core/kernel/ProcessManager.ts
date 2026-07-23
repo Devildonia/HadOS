@@ -1,3 +1,4 @@
+import { EventBus } from '../EventBus.js';
 import { Utils } from '../../utils.js';
 import { VFS } from '../VFS.js';
 import { Services } from '../ServiceContainer.js';
@@ -90,8 +91,9 @@ export class ProcessManager {
                 if (wm) wm.open(process.windowId);
             }
 
-            // Dispatch event for Taskbar
-            window.dispatchEvent(new CustomEvent('kernel:process-started', { detail: process }));
+            // Dispatch event for Taskbar & subscribers
+            EventBus.emit('kernel:process-started', process);
+            EventBus.emit('process-started', process);
 
             Utils.Logger.log(`Kernel: PID ${pid} started (${this.registry.processes.size} active processes)`);
             return process;
@@ -110,7 +112,8 @@ export class ProcessManager {
             process.instance.terminate();
         }
 
-        window.dispatchEvent(new CustomEvent('kernel:process-stopped', { detail: process }));
+        EventBus.emit('kernel:process-stopped', process);
+        EventBus.emit('process-stopped', process);
 
         const resManager = Services.get('ResourceManager');
         if (resManager) {
@@ -164,7 +167,8 @@ export class ProcessManager {
         this.workers.set(pid, worker);
         this.watchdog.start();
 
-        window.dispatchEvent(new CustomEvent('kernel:process-started', { detail: process }));
+        EventBus.emit('kernel:process-started', process);
+        EventBus.emit('process-started', process);
         Utils.Logger.log(`Kernel: ${opts.kind} PID ${pid} spawned [${appId}] (${this.registry.processes.size} active)`);
         return { pid, worker, process };
     }

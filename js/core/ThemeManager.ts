@@ -1,3 +1,4 @@
+import { EventBus } from './EventBus';
 import { Services } from './ServiceContainer';
 import { i18n } from '../services/i18n';
 
@@ -12,6 +13,8 @@ export class ThemeManager {
     private onDomReady: (() => void) | null;
 
     private boundLanguageChanged = () => this.swapIcons(this.currentTheme);
+    /** Unsubscribe for the EventBus 'languagechanged' subscription. */
+    private langUnsub: (() => void) | null = null;
 
     /**
      * Reads the saved theme, adopting installs from before the rename: 'win95' no
@@ -49,7 +52,10 @@ export class ThemeManager {
             document.removeEventListener('DOMContentLoaded', this.onDomReady);
             this.onDomReady = null;
         }
-        window.addEventListener('languagechanged', this.boundLanguageChanged);
+        // 'languagechanged' now flows on the EventBus (not window) since the
+        // v1.0.8_fix event unification — subscribe there or the icons never
+        // re-localise on a language switch.
+        this.langUnsub = EventBus.on('languagechanged', this.boundLanguageChanged);
         this.applyTheme(this.currentTheme);
     }
 
@@ -58,7 +64,8 @@ export class ThemeManager {
             document.removeEventListener('DOMContentLoaded', this.onDomReady);
             this.onDomReady = null;
         }
-        window.removeEventListener('languagechanged', this.boundLanguageChanged);
+        this.langUnsub?.();
+        this.langUnsub = null;
         this.initialized = false;
     }
 
@@ -106,8 +113,8 @@ export class ThemeManager {
         // Swap Icons
         this.swapIcons(themeName);
 
-        // Optional: Dispatch event so other components (like UI rendering) can react
-        window.dispatchEvent(new CustomEvent('themechanged', { detail: { theme: themeName } }));
+        // Notify components so UI rendering can react
+        EventBus.emit('themechanged', { theme: themeName });
     }
 
     swapIcons(theme: string): void {
