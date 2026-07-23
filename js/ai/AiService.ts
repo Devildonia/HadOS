@@ -63,6 +63,17 @@ const TRANSCRIBE_TIMEOUT_MS = 900_000;
 /** A chat model under this size cannot be a real LLM bundle — reject junk early. */
 const MIN_CHAT_MODEL_BYTES = 1024 * 1024;
 
+/**
+ * Idle eviction (audit v1.0.8, M1): a loaded Gemma is ~550 MB of GPU memory and
+ * Whisper ~140 MB of wasm heap — leaving them resident for the whole session
+ * turns "on-device by default" into an OOM generator on modest hardware. A
+ * runtime with no in-flight work and no use for IDLE_EVICT_MS gets its process
+ * shut down; the model BYTES stay cached (OPFS / Cache API), so the next use
+ * pays a recompile, not a redownload.
+ */
+const IDLE_EVICT_MS = 10 * 60_000;
+const IDLE_SWEEP_MS = 60_000;
+
 export interface IProgress {
     id: string;
     loaded: number;
@@ -119,6 +130,60 @@ export const AiService = (() => {
     const asrProgressSinks = new Map<string, (p: IAsrProgress) => void>();
     /** Live per-request embedding progress callbacks, routed by requestId. */
     const embedProgressSinks = new Map<string, (p: IEmbedProgress) => void>();
+
+    // ── Idle eviction bookkeeping (audit v1.0.8, M1) ──────────────────────────
+    let idleEvictMs = IDLE_EVICT_MS;
+    let idleSweepMs = IDLE_SWEEP_MS;
+    let lastAiUse = 0;
+    let lastAsrUse = 0;
+    let aiInFlight = 0;
+    let asrInFlight = 0;
+    let idleTimer: ReturnType<typeof setInterval> | null = null;
+
+    function sweepIdle(): void {
+        const now = Date.now();
+        // Never evict under an in-flight request — a mid-generation kill would
+        // surface as a random failure the user did nothing to cause.
+        if (handle && !handle.worker.isTerminated && aiInFlight === 0 && now - lastAiUse > idleEvictMs) {
+            Utils.Logger.log('[AiService] ai-runtime idle — evicting the loaded model(s); bytes stay cached.');
+            shutdown();
+        }
+        if (asrHandle && !asrHandle.worker.isTerminated && asrInFlight === 0 && now - lastAsrUse > idleEvictMs) {
+            Utils.Logger.log('[AiService] asr-runtime idle — evicting; model bytes stay cached.');
+            shutdownAsr();
+        }
+        if (!handle && !asrHandle && idleTimer !== null) {
+            clearInterval(idleTimer);
+            idleTimer = null;
+        }
+    }
+
+    function ensureIdleSweep(): void {
+        if (idleTimer === null) idleTimer = setInterval(sweepIdle, idleSweepMs);
+    }
+
+    /** Wraps a runtime call in the in-flight/last-use bookkeeping. */
+    async function trackAi<T>(work: () => Promise<T>): Promise<T> {
+        aiInFlight++;
+        ensureIdleSweep();
+        try {
+            return await work();
+        } finally {
+            aiInFlight--;
+            lastAiUse = Date.now();
+        }
+    }
+
+    async function trackAsr<T>(work: () => Promise<T>): Promise<T> {
+        asrInFlight++;
+        ensureIdleSweep();
+        try {
+            return await work();
+        } finally {
+            asrInFlight--;
+            lastAsrUse = Date.now();
+        }
+    }
 
     /** True when this browser can run the stack at all. */
     function isSupported(): boolean {
@@ -187,20 +252,24 @@ export const AiService = (() => {
     }
 
     /** Downloads (once), caches and compiles a registered model. */
-    async function loadModel(appId: string, id: string): Promise<ILoadResult> {
-        await requireConsent(appId);
-        const p = await proc();
-        await p.ready;
-        return await p.request(AI_REQUESTS.LOAD, { id }, LOAD_TIMEOUT_MS) as ILoadResult;
+    function loadModel(appId: string, id: string): Promise<ILoadResult> {
+        return trackAi(async () => {
+            await requireConsent(appId);
+            const p = await proc();
+            await p.ready;
+            return await p.request(AI_REQUESTS.LOAD, { id }, LOAD_TIMEOUT_MS) as ILoadResult;
+        });
     }
 
-    async function infer(appId: string, id: string, input: Float32Array, shape: number[]): Promise<IInferOutput> {
-        await requireConsent(appId);
-        const p = await proc();
-        await p.ready;
-        const out = await p.request(AI_REQUESTS.INFER, { id, input, shape }, INFER_TIMEOUT_MS) as IInferOutput;
-        // structuredClone hands back a Float32Array; a JSON-ish transport would not.
-        return { data: out.data instanceof Float32Array ? out.data : Float32Array.from(out.data ?? []), shape: out.shape };
+    function infer(appId: string, id: string, input: Float32Array, shape: number[]): Promise<IInferOutput> {
+        return trackAi(async () => {
+            await requireConsent(appId);
+            const p = await proc();
+            await p.ready;
+            const out = await p.request(AI_REQUESTS.INFER, { id, input, shape }, INFER_TIMEOUT_MS) as IInferOutput;
+            // structuredClone hands back a Float32Array; a JSON-ish transport would not.
+            return { data: out.data instanceof Float32Array ? out.data : Float32Array.from(out.data ?? []), shape: out.shape };
+        });
     }
 
     /**
@@ -246,30 +315,32 @@ export const AiService = (() => {
      * downloads Whisper (~80 MB, cached by the browser); consent names that.
      * Progress (download files, then the run itself) streams to `onProgress`.
      */
-    async function transcribe(
+    function transcribe(
         appId: string,
         audio: Float32Array,
         opts: { language?: string } = {},
         onProgress?: (p: IAsrProgress) => void,
     ): Promise<IAsrResult> {
-        if (!(await PermissionBroker.check(appId, TRANSCRIBE_CAPABILITY))) {
-            throw new Error(`permission denied: ${TRANSCRIBE_CAPABILITY}`);
-        }
-        const p = asrProc();
-        await p.ready;
+        return trackAsr(async () => {
+            if (!(await PermissionBroker.check(appId, TRANSCRIBE_CAPABILITY))) {
+                throw new Error(`permission denied: ${TRANSCRIBE_CAPABILITY}`);
+            }
+            const p = asrProc();
+            await p.ready;
 
-        const requestId = `asr-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-        if (onProgress) asrProgressSinks.set(requestId, onProgress);
-        try {
-            const out = await p.request(
-                ASR_REQUESTS.TRANSCRIBE,
-                { requestId, audio, language: opts.language },
-                TRANSCRIBE_TIMEOUT_MS,
-            ) as IAsrResult & { requestId: string };
-            return { text: out.text, chunks: out.chunks };
-        } finally {
-            asrProgressSinks.delete(requestId);
-        }
+            const requestId = `asr-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+            if (onProgress) asrProgressSinks.set(requestId, onProgress);
+            try {
+                const out = await p.request(
+                    ASR_REQUESTS.TRANSCRIBE,
+                    { requestId, audio, language: opts.language },
+                    TRANSCRIBE_TIMEOUT_MS,
+                ) as IAsrResult & { requestId: string };
+                return { text: out.text, chunks: out.chunks };
+            } finally {
+                asrProgressSinks.delete(requestId);
+            }
+        });
     }
 
     /** True when this browser can run the embedding model (Wasm suffices). */
@@ -281,31 +352,33 @@ export const AiService = (() => {
      * Embeds texts into L2-normalised MiniLM vectors ([n × 384], row-major).
      * First use downloads the model (~25 MB, cached); consent names that.
      */
-    async function embed(
+    function embed(
         appId: string,
         texts: string[],
         onProgress?: (p: IEmbedProgress) => void,
     ): Promise<IEmbedResult> {
-        if (!(await PermissionBroker.check(appId, EMBED_CAPABILITY))) {
-            throw new Error(`permission denied: ${EMBED_CAPABILITY}`);
-        }
-        const p = asrProc();
-        await p.ready;
+        return trackAsr(async () => {
+            if (!(await PermissionBroker.check(appId, EMBED_CAPABILITY))) {
+                throw new Error(`permission denied: ${EMBED_CAPABILITY}`);
+            }
+            const p = asrProc();
+            await p.ready;
 
-        const requestId = `emb-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-        if (onProgress) embedProgressSinks.set(requestId, onProgress);
-        try {
-            const out = await p.request(
-                EMBED_REQUESTS.EMBED,
-                { requestId, texts },
-                LOAD_TIMEOUT_MS,
-            ) as IEmbedResult & { requestId: string };
-            // structuredClone preserves Float32Array; a JSON-ish transport would not.
-            const vectors = out.vectors instanceof Float32Array ? out.vectors : Float32Array.from(out.vectors ?? []);
-            return { vectors, dims: out.dims };
-        } finally {
-            embedProgressSinks.delete(requestId);
-        }
+            const requestId = `emb-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+            if (onProgress) embedProgressSinks.set(requestId, onProgress);
+            try {
+                const out = await p.request(
+                    EMBED_REQUESTS.EMBED,
+                    { requestId, texts },
+                    LOAD_TIMEOUT_MS,
+                ) as IEmbedResult & { requestId: string };
+                // structuredClone preserves Float32Array; a JSON-ish transport would not.
+                const vectors = out.vectors instanceof Float32Array ? out.vectors : Float32Array.from(out.vectors ?? []);
+                return { vectors, dims: out.dims };
+            } finally {
+                embedProgressSinks.delete(requestId);
+            }
+        });
     }
 
     /** Stops the asr-runtime process (frees the pipeline and its memory). */
@@ -323,6 +396,9 @@ export const AiService = (() => {
         asrProgressSinks.clear();
         embedProgressSinks.clear();
         asrSpawner = fn ?? defaultAsrSpawner;
+        asrInFlight = 0;
+        lastAsrUse = 0;
+        if (idleTimer !== null) { clearInterval(idleTimer); idleTimer = null; }
     }
 
     // ── Chat (MediaPipe LLM Inference over a user-imported Gemma bundle) ──────
@@ -387,30 +463,32 @@ export const AiService = (() => {
      * Generates a persona-conditioned reply on-device, streaming deltas to
      * `onToken`. Resolves with the full reply text.
      */
-    async function chat(
+    function chat(
         appId: string,
         opts: { persona: string; history: IChatTurn[] },
         onToken?: (delta: string, done: boolean) => void,
     ): Promise<string> {
-        if (!(await PermissionBroker.check(appId, CHAT_CAPABILITY))) {
-            throw new Error(`permission denied: ${CHAT_CAPABILITY}`);
-        }
-        const model = chatModel();
-        if (!model) throw new Error('chat: no model imported — import a Gemma .task bundle first');
+        return trackAi(async () => {
+            if (!(await PermissionBroker.check(appId, CHAT_CAPABILITY))) {
+                throw new Error(`permission denied: ${CHAT_CAPABILITY}`);
+            }
+            const model = chatModel();
+            if (!model) throw new Error('chat: no model imported — import a Gemma .task bundle first');
 
-        const p = proc();
-        await p.ready;
-        await p.request(CHAT_REQUESTS.LOAD, { id: model.id, bytes: model.bytes, sha256: model.sha256 }, LOAD_TIMEOUT_MS);
+            const p = proc();
+            await p.ready;
+            await p.request(CHAT_REQUESTS.LOAD, { id: model.id, bytes: model.bytes, sha256: model.sha256 }, LOAD_TIMEOUT_MS);
 
-        const requestId = `chat-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-        if (onToken) tokenSinks.set(requestId, onToken);
-        try {
-            const prompt = buildGemmaPrompt(opts.persona, opts.history);
-            const out = await p.request(CHAT_REQUESTS.GENERATE, { requestId, prompt }, CHAT_TIMEOUT_MS) as { text: string };
-            return out.text;
-        } finally {
-            tokenSinks.delete(requestId);
-        }
+            const requestId = `chat-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+            if (onToken) tokenSinks.set(requestId, onToken);
+            try {
+                const prompt = buildGemmaPrompt(opts.persona, opts.history);
+                const out = await p.request(CHAT_REQUESTS.GENERATE, { requestId, prompt }, CHAT_TIMEOUT_MS) as { text: string };
+                return out.text;
+            } finally {
+                tokenSinks.delete(requestId);
+            }
+        });
     }
 
     /** Which accelerator the runtime settled on, and what it is holding. */
@@ -434,12 +512,22 @@ export const AiService = (() => {
         listeners.clear();
         tokenSinks.clear();
         spawner = fn ?? defaultSpawner;
+        aiInFlight = 0;
+        lastAiUse = 0;
+        if (idleTimer !== null) { clearInterval(idleTimer); idleTimer = null; }
+    }
+
+    /** Test seam: shrink the idle-eviction clock so tests need not wait minutes. */
+    function __setIdleConfig(evictMs: number | null, sweepMs: number | null): void {
+        idleEvictMs = evictMs ?? IDLE_EVICT_MS;
+        idleSweepMs = sweepMs ?? IDLE_SWEEP_MS;
+        if (idleTimer !== null) { clearInterval(idleTimer); idleTimer = null; }
     }
 
     return {
         isSupported, loadModel, infer, segment, dispose, info, onProgress, shutdown, __setSpawner,
         chat, chatSupported, chatModel, listChatModels, importChatModel, deleteChatModel,
         transcribe, transcribeSupported, shutdownAsr, __setAsrSpawner,
-        embed, embedSupported,
+        embed, embedSupported, __setIdleConfig,
     };
 })();

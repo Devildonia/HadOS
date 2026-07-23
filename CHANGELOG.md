@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Remediation of the v1.0.8 audit (9.3/10 — both findings closed in one session).
+
+### Fixed
+
+- **AI runtimes are now governed by idle eviction** (audit M1): a loaded Gemma is
+  ~550 MB of GPU memory and Whisper ~140 MB of wasm heap, and nothing ever released
+  them. `AiService` now tracks last use and in-flight work per runtime and shuts an
+  idle process down after 10 minutes (sweeping every 60 s) — never under an
+  in-flight request, so a slow generation cannot be killed mid-sentence. The model
+  bytes stay cached (OPFS / Cache API), so the next use pays a recompile, not a
+  redownload, and the respawn is transparent to callers. 3 new tests pin the
+  contract (evict + transparent respawn, no premature eviction, in-flight safety).
+- **The capability vocabulary has a single source of truth** (audit M2): the list
+  drifted between `PermissionBroker` and `AppPackage.KNOWN_PERMISSIONS` twice
+  (v1.0.4: `ai:infer`; v1.0.8: the five AI/mic capabilities) — once more than a
+  list should ever drift. New `core/capabilities.ts` declares every capability
+  once, with its consent label and whether packaged apps may declare it; both
+  consumers now DERIVE from it. Manifests declaring a host-only capability get a
+  truthful error ("permission not available to packaged apps") instead of
+  "unknown permission". 6 new tests pin the derivation.
+
 ## [1.0.8] - 2026-07-23
 
 The zero-egress release. Two new apps and four upgraded ones, all harvested from

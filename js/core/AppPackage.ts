@@ -9,11 +9,16 @@
  * ceiling the PermissionBroker enforces (the user still consents at first use).
  */
 
-/** Capabilities an app may declare. Mirrors the PermissionBroker's vocabulary. */
 import { Utils } from '../utils';
+import { PACKAGEABLE_CAPABILITIES, isKnownCapability } from './capabilities';
 
-/** List of verified system capabilities matching permission keys. */
-export const KNOWN_PERMISSIONS = ['fs:read', 'fs:write', 'notify', 'net', 'ai:infer'] as const;
+/**
+ * Capabilities a .wapp manifest may declare — DERIVED from the capability
+ * registry (`core/capabilities.ts`), never listed here again: this constant
+ * drifted from the broker's vocabulary twice (v1.0.4 and v1.0.8), which is
+ * exactly once more than a list should ever drift.
+ */
+export const KNOWN_PERMISSIONS: readonly string[] = PACKAGEABLE_CAPABILITIES;
 
 /**
  * Representation of an application's JSON package manifest metadata.
@@ -77,8 +82,14 @@ export function validateManifest(m: unknown): { ok: boolean; error?: string } {
         if (!Array.isArray(x.permissions)) {
             return { ok: false, error: 'manifest.permissions must be an array' };
         }
-        const unknown = x.permissions.find(p => !(KNOWN_PERMISSIONS as readonly string[]).includes(p));
-        if (unknown) return { ok: false, error: `unknown permission: ${unknown}` };
+        const unknown = x.permissions.find(p => !KNOWN_PERMISSIONS.includes(p));
+        if (unknown) {
+            // A real capability that packages may not declare deserves a truthful
+            // error, not "unknown" (host-only ones exist for first-party apps).
+            return isKnownCapability(unknown)
+                ? { ok: false, error: `permission not available to packaged apps: ${unknown}` }
+                : { ok: false, error: `unknown permission: ${unknown}` };
+        }
     }
     return { ok: true };
 }

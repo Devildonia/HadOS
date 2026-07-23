@@ -27,26 +27,10 @@ const GRANTS_DIR = 'C:\\HADOS\\SYSTEM';
 const GRANTS_NAME = 'permissions.json';
 const GRANTS_PATH = `${GRANTS_DIR}\\${GRANTS_NAME}`;
 
-/** Human-readable descriptions shown in the consent dialog. */
-const CAP_LABELS: Record<string, string> = {
-    'fs:read': 'read your files',
-    'fs:write': 'save files',
-    'notify': 'show notifications',
-    'net': 'access the network',
-    // Worth its own consent rather than folding into `net`: the first use downloads
-    // megabytes of model over the user's connection and then runs it against
-    // whatever the app hands it — the picture on their canvas, say.
-    'ai:infer': 'run AI on your device',
-    // The browser's SpeechRecognition API: in Chrome the microphone audio is
-    // processed on Google's servers, not on this machine. That is the opposite of
-    // the on-device promise, so it gets its own explicit, remembered consent — and
-    // the wording says where the audio goes.
-    'speech:cloud': "use your browser's speech recognition (audio may be sent to the browser vendor's servers)",
-    'ai:chat': 'generate chat replies with the imported AI model, entirely on your device (nothing is sent anywhere)',
-    'ai:transcribe': 'download a speech-to-text model (~140 MB, once) and transcribe audio entirely on your device',
-    'ai:embed': 'download a text-embedding model (~25 MB, once) to index and search your documents semantically, on your device',
-    'mic:record': 'record audio from your microphone for on-device processing (nothing is sent anywhere)',
-};
+// Consent labels come from the capability registry — the single source of truth
+// shared with AppPackage's manifest validation, so the two can never drift
+// again (audit v1.0.8, M2).
+import { CAP_LABELS } from './capabilities';
 
 /**
  * Renders the default UI prompt popup modal requesting capability authorization from the user.
