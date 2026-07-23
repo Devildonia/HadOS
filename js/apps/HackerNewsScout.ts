@@ -5,7 +5,7 @@ import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
 import { AiService } from '../ai/AiService.js';
-import { buildHnSummaryPrompt, MAX_COMMENTS } from '../ai/grounded.js';
+import { buildHnSummaryPrompt, buildHnBriefingPrompt, MAX_COMMENTS, MAX_BRIEFING_STORIES } from '../ai/grounded.js';
 
 interface HNItem {
     id: number;
@@ -63,7 +63,10 @@ export class HackerNewsScout implements IWindowsApp {
             <div class="hn-scout-container">
                 <div class="hn-header">
                     <h3>📰 Hacker News Scout <span class="hn-litert-badge" id="hn-ai-badge" style="background: #555;" title="The summary is a scripted demo — no AI model runs">Simulated summaries</span></h3>
-                    <button class="hn-refresh-btn hados-btn" id="hn-refresh-btn">🔄 Refresh</button>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="hn-refresh-btn hados-btn" id="hn-briefing-btn" style="display: none;" title="One on-device digest of the whole front page (headlines only — the articles are not read)">🗞️ Briefing</button>
+                        <button class="hn-refresh-btn hados-btn" id="hn-refresh-btn">🔄 Refresh</button>
+                    </div>
                 </div>
                 <div class="hn-main-layout">
                     <div class="hn-news-grid" id="hn-news-grid">
@@ -77,6 +80,11 @@ export class HackerNewsScout implements IWindowsApp {
                 </div>
             </div>
         `;
+
+        const briefingBtn = this.container.querySelector('#hn-briefing-btn');
+        if (briefingBtn) {
+            Utils.eventManager.add(briefingBtn, 'click', () => { void this.runBriefing(); });
+        }
 
         const refreshBtn = this.container.querySelector('#hn-refresh-btn');
         if (refreshBtn) {
@@ -224,6 +232,60 @@ export class HackerNewsScout implements IWindowsApp {
             badge.textContent = 'Simulated summaries';
             badge.style.background = '#555';
             badge.title = 'The summary is a scripted demo — no AI model runs';
+        }
+        // The briefing only exists in AI mode — a scripted digest would be theatre.
+        const briefing = this.container?.querySelector('#hn-briefing-btn') as HTMLElement | null;
+        if (briefing) briefing.style.display = this.aiReady() ? '' : 'none';
+    }
+
+    /**
+     * One on-device digest of the whole front page. Headlines and metrics only —
+     * twelve threads' worth of comments cannot fit the token budget, and the
+     * persona is told it has NOT read the articles.
+     */
+    private async runBriefing(): Promise<void> {
+        const panel = this.container?.querySelector('#hn-side-panel') as HTMLElement | null;
+        if (!panel || !this.aiReady() || this.newsList.length === 0) return;
+        if (window.playBlip) window.playBlip(700);
+
+        panel.style.display = 'flex';
+        this.activeSummaryId = -1; // not tied to a story card
+
+        panel.innerHTML = `
+            <div class="hn-panel-header">
+                <span>🗞️ Front-page briefing — on-device AI</span>
+                <button class="hados-btn" id="hn-close-panel-btn" style="padding: 1px 6px; font-size: 10px;">X</button>
+            </div>
+            <div class="hn-panel-content">
+                <div class="hn-litert-console" id="hn-console-log">
+                    [AI] Digesting ${Math.min(this.newsList.length, MAX_BRIEFING_STORIES)} front-page headlines with the imported Gemma model (articles are NOT read).
+                </div>
+                <div class="hn-summary-text" id="hn-summary-text" style="display: block;"></div>
+            </div>
+        `;
+        const closeBtn = panel.querySelector('#hn-close-panel-btn');
+        if (closeBtn) Utils.eventManager.add(closeBtn, 'click', () => {
+            panel.style.display = 'none';
+            this.activeSummaryId = null;
+        });
+
+        const summaryText = panel.querySelector('#hn-summary-text') as HTMLElement | null;
+        const consoleLog = panel.querySelector('#hn-console-log');
+        try {
+            const stories = this.newsList.map(s => {
+                let domain: string | undefined;
+                try { domain = s.url ? new URL(s.url).hostname : undefined; } catch { /* keep undefined */ }
+                return { title: s.title, score: s.score, by: s.by, descendants: s.descendants, domain };
+            });
+            const { persona, user } = buildHnBriefingPrompt(stories, i18n.getLang());
+            const text = await AiService.chat('hnscout', { persona, history: [{ role: 'user', text: user }] }, (delta) => {
+                if (summaryText && this.activeSummaryId === -1) summaryText.textContent += delta;
+            });
+            if (summaryText && this.activeSummaryId === -1) summaryText.textContent = text.trim();
+            consoleLog?.insertAdjacentHTML('beforeend', `<br>[AI] Briefing done — generated on your device.`);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            consoleLog?.insertAdjacentHTML('beforeend', `<br>[ERROR] Briefing failed: ${Utils.escapeHTML(msg)}`);
         }
     }
 

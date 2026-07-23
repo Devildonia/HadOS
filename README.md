@@ -113,6 +113,7 @@ Five apps that show the platform's range — and practice its honesty policy (an
 - 📰 **Nova** — a Hacker News reader: live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. With a Gemma model imported, the summary panel **really summarises the thread's discussion on-device** (the badge flips to `On-device AI`); without one it stays a labelled simulated demo.
 - 🎙️ **Voxcribe** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
 - 💬 **Tavern Chat** — chat with scripted characters (canned replies; says so in its description).
+- 🧚 **Hada** — a **voice assistant that never phones home**: push-to-talk → Whisper hears you → Gemma answers → the browser speaks, every step on your machine (a new `mic:record` capability gates the capture, before the browser's own mic prompt). The requirements panel honestly names any missing piece and keeps the mic disabled until the stack is real.
 - 📄 **Doc Query** — indexes a VFS document with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
 
 ### 🧠 On-device AI substrate
@@ -125,8 +126,8 @@ Nothing ever leaves the device. Per-phase design notes live in [`docs/ai/`](docs
 | Engine | Model | Delivery | Capability | Consumers |
 |---|---|---|---|---|
 | LiteRT.js | DeepLab v3 (2.7 MB) | pinned URL + SHA-256, OPFS cache | `ai:infer` | Pinta background removal |
-| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Tavern Chat · Nova · Doc Query |
-| transformers.js | Whisper base q4 (~140 MB) | downloaded on consent, Cache API | `ai:transcribe` | Media Player |
+| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Tavern Chat · Nova · Doc Query · Hada |
+| transformers.js | Whisper base q4 (~140 MB) | downloaded on consent, Cache API | `ai:transcribe` | Media Player · Hada |
 | transformers.js | MiniLM-L6 q8 (~23 MB) | downloaded on consent, Cache API | `ai:embed` | Doc Query semantic index |
 
 Two worker processes back this: the classic `ai-runtime` (LiteRT needs

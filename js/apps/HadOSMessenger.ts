@@ -7,6 +7,7 @@ import { WindowFactory } from '../ui/WindowFactory.js';
 import { VFS } from '../core/VFS.js';
 import { AiService } from '../ai/AiService.js';
 import type { IChatTurn } from '../ai/chatPrompt.js';
+import { buildMemoryPrompt, shouldCompressMemory, MEMORY_KEEP_RECENT, MEMORY_MAX_CHARS } from '../ai/grounded.js';
 
 interface Character {
     id: string;
@@ -295,13 +296,81 @@ export class HadOSMessenger implements IWindowsApp {
 
         // Load chat history
         this.renderHistory();
+        this.renderMemoryBadge(contact);
     }
 
     private handleClearChat(): void {
         if (window.playBlip) window.playBlip(700);
         const key = `messenger-history-${this.activeContactId}`;
         localStorage.removeItem(key);
+        // A cleared chat forgets: the compressed memory goes with the messages.
+        localStorage.removeItem(`messenger-memory-${this.activeContactId}`);
+        localStorage.removeItem(`messenger-memfolded-${this.activeContactId}`);
         this.renderHistory();
+    }
+
+    // ── Long-term memory (compressed by the model itself) ────────────────────
+
+    private getMemory(contactId: string): string {
+        return localStorage.getItem(`messenger-memory-${contactId}`) ?? '';
+    }
+
+    /** How many old messages have already been folded into the memory note. */
+    private getFoldedCount(contactId: string): number {
+        const n = parseInt(localStorage.getItem(`messenger-memfolded-${contactId}`) ?? '0', 10);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+    }
+
+    /**
+     * Folds messages that fell out of the 12-turn prompt window into a compact
+     * memory note, written by Gemma itself and bounded at MEMORY_MAX_CHARS —
+     * so a months-long friendship still fits every future prompt. The visible
+     * history is untouched; only the model's context is compressed. Runs after
+     * a reply, fire-and-forget: a failed compression costs nothing but memory.
+     */
+    private async maybeCompressMemory(contact: Character): Promise<void> {
+        const history = this.getHistory(contact.id);
+        const folded = this.getFoldedCount(contact.id);
+        if (!shouldCompressMemory(history.length - folded)) return;
+
+        const cutoff = history.length - MEMORY_KEEP_RECENT;
+        if (cutoff <= folded) return;
+        const overflow: IChatTurn[] = history.slice(folded, cutoff)
+            .filter(m => m.text.trim())
+            .map(m => ({ role: m.sender === 'user' ? 'user' as const : 'model' as const, text: m.text }));
+
+        try {
+            const { persona, user } = buildMemoryPrompt(this.getMemory(contact.id), overflow, i18n.getLang());
+            const note = (await AiService.chat('messenger', { persona, history: [{ role: 'user', text: user }] })).trim();
+            if (note) {
+                localStorage.setItem(`messenger-memory-${contact.id}`, note.slice(0, MEMORY_MAX_CHARS));
+                localStorage.setItem(`messenger-memfolded-${contact.id}`, String(cutoff));
+                Utils.Logger.log(`[Messenger] Memory updated for ${contact.id}: ${cutoff} messages folded into ${note.length} chars.`);
+                this.renderMemoryBadge(contact);
+            }
+        } catch (err) {
+            Utils.Logger.warn('[Messenger] Memory compression failed (will retry after the next reply):', err);
+        }
+    }
+
+    /** A small honest indicator: hover shows exactly what the character remembers. */
+    private renderMemoryBadge(contact: Character): void {
+        if (this.activeContactId !== contact.id) return;
+        const header = this.container?.querySelector('#messenger-chat-header');
+        if (!header) return;
+        let badge = header.querySelector('#messenger-memory-badge') as HTMLElement | null;
+        const memory = this.getMemory(contact.id);
+        if (!memory) { badge?.remove(); return; }
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.id = 'messenger-memory-badge';
+            badge.style.cssText = 'font-size: 12px; cursor: help; margin-right: 6px;';
+            badge.textContent = '🧠';
+            const clearBtn = header.querySelector('#messenger-clear-btn');
+            if (clearBtn) header.insertBefore(badge, clearBtn);
+            else header.appendChild(badge);
+        }
+        badge.setAttribute('title', `Memoria del personaje (generada on-device):\n${memory}`);
     }
 
     private renderHistory(): void {
@@ -483,9 +552,11 @@ export class HadOSMessenger implements IWindowsApp {
             .filter(m => m.text.trim())
             .map(m => ({ role: m.sender === 'user' ? 'user' as const : 'model' as const, text: m.text }));
 
+        const memory = this.getMemory(contact.id);
         const persona =
             `Eres ${contact.name} (${contact.description}). Personalidad: ${contact.personality}. ` +
-            `Mantente SIEMPRE en el personaje, responde en el idioma del último mensaje del usuario y sé breve (1-3 frases).`;
+            `Mantente SIEMPRE en el personaje, responde en el idioma del último mensaje del usuario y sé breve (1-3 frases).` +
+            (memory ? ` Recuerdas de conversaciones anteriores: ${memory}` : '');
 
         // The bubble only exists in the DOM while this chat is the visible one;
         // the finished reply is saved to the contact's history either way.
@@ -519,6 +590,10 @@ export class HadOSMessenger implements IWindowsApp {
                 this.saveHistory(contact.id, history);
             }
             if (bubble) bubble.textContent = reply; // reconcile with the final text
+
+            // Long conversations fold their tail into a compact memory note —
+            // fire-and-forget, after the reply the user is actually waiting for.
+            void this.maybeCompressMemory(contact);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             if (bubble) {

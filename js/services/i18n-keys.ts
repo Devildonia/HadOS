@@ -20,6 +20,7 @@ export type TranslationKey =
     | "app.settings"
     | "app.taskmanager"
     | "app.terminal"
+    | "app.voiceassistant"
     | "app.winamp"
     | "audiostudio.dictation_placeholder"
     | "audiostudio.dictation_start"

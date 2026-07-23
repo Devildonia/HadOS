@@ -38,6 +38,8 @@ const MAX_CONTEXT_CHARS = 2400;
  * when the environment has one — entity decoding by regex is a losing game —
  * and fall back to tag-stripping for exotic environments.
  */
+import { stripTurnMarkers, MAX_HISTORY_TURNS, type IChatTurn } from './chatPrompt';
+
 export function stripHtml(html: string): string {
     if (typeof DOMParser !== 'undefined') {
         try {
@@ -113,6 +115,85 @@ export function topKLines(query: string, lines: string[], k: number): IRetrieved
         .filter(l => l.score > 0)
         .sort((a, b) => b.score - a.score || a.index - b.index)
         .slice(0, k);
+}
+
+// ── Front-page briefing (Nova) ────────────────────────────────────────────────
+
+/** How many front-page stories ride into a briefing. */
+export const MAX_BRIEFING_STORIES = 12;
+
+/**
+ * Builds the persona + user turn for a single digest of the HN front page.
+ * Input is TITLES + metadata only — one briefing cannot afford the comments of
+ * twelve threads inside a 1280-token budget, and the framing says exactly what
+ * it digests: headlines, not articles.
+ */
+export function buildHnBriefingPrompt(
+    stories: Array<IHnStoryMeta & { domain?: string | undefined }>,
+    lang: string,
+): { persona: string; user: string } {
+    const persona =
+        `Eres un analista que redacta un briefing diario de la portada de Hacker News. ` +
+        `SOLO conoces los titulares y sus métricas — no has leído los artículos, no inventes su contenido. ` +
+        `Agrupa por temas, señala tendencias, y responde en ${languageName(lang)} en 4-7 frases.`;
+
+    const lines = stories.slice(0, MAX_BRIEFING_STORIES).map((s, i) => {
+        const domain = s.domain ? ` [${s.domain}]` : '';
+        return `${i + 1}. "${stripTurnMarkers(s.title).slice(0, 120)}"${domain} — ${s.score} puntos, ${s.descendants ?? 0} comentarios`;
+    });
+
+    return {
+        persona,
+        user: `Portada de Hacker News ahora mismo:\n${lines.join('\n')}\n\nRedacta el briefing.`,
+    };
+}
+
+// ── Conversation memory (Tavern Chat) ─────────────────────────────────────────
+
+/** Compress once the history outgrows this many messages… */
+export const MEMORY_TRIGGER = 24;
+/** …keeping this many recent messages verbatim (mirrors MAX_HISTORY_TURNS). */
+export const MEMORY_KEEP_RECENT = MAX_HISTORY_TURNS;
+/** The stored memory never grows past this — it must fit the prompt forever. */
+export const MEMORY_MAX_CHARS = 900;
+
+export function shouldCompressMemory(historyLength: number): boolean {
+    return historyLength > MEMORY_TRIGGER;
+}
+
+/**
+ * Builds the persona + user turn that folds the previous memory plus the
+ * messages falling OUT of the recent window into a fresh, compact memory note.
+ * The output replaces the old memory, so the note stays bounded no matter how
+ * long the friendship gets.
+ */
+export function buildMemoryPrompt(
+    oldMemory: string,
+    overflow: IChatTurn[],
+    lang: string,
+): { persona: string; user: string } {
+    const persona =
+        `Mantienes la memoria a largo plazo de un personaje de chat. Resume los hechos importantes ` +
+        `sobre el usuario y la conversación (nombres, gustos, temas recurrentes, promesas) en una nota ` +
+        `de como máximo 6 frases en ${languageName(lang)}. Devuelve SOLO la nota, sin preámbulos.`;
+
+    const mem = stripTurnMarkers(oldMemory).trim();
+    let used = 0;
+    const parts: string[] = [];
+    for (const t of overflow) {
+        let text = stripTurnMarkers(t.text).trim();
+        if (!text) continue;
+        if (text.length > 200) text = text.slice(0, 200) + '…';
+        if (used + text.length > 2000) break;
+        used += text.length;
+        parts.push(`${t.role === 'user' ? 'Usuario' : 'Personaje'}: ${text}`);
+    }
+
+    const user =
+        (mem ? `Memoria actual:\n${mem}\n\n` : '') +
+        `Mensajes nuevos a incorporar:\n${parts.join('\n') || '(ninguno)'}\n\n` +
+        `Escribe la nueva nota de memoria.`;
+    return { persona, user };
 }
 
 /** How many retrieved lines ride into the answer prompt. */

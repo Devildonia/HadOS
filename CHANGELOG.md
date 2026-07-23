@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **🧚 Hada — an on-device voice assistant (AI phase 4, new app)**: push-to-talk
+  through the whole substrate — microphone (`MediaRecorder`) → Whisper
+  (`ai:transcribe`) → Gemma (`ai:chat`) → browser speech synthesis, with a new
+  **`mic:record`** capability (*"nothing is sent anywhere"*) gating the capture
+  before the browser's own mic prompt. The requirements panel names exactly which
+  pieces are missing (no Gemma → a CTA to import it in Tavern Chat) and the mic
+  stays disabled until the stack is real — a contract pinned by tests. Voice
+  sessions are ephemeral by design. Design notes in
+  `docs/ai/phase-4-voice-briefing-memory.md`.
+- **🗞️ Nova front-page briefing**: one on-device digest of the whole front page —
+  headlines and metrics only (the persona is told it has NOT read the articles;
+  twelve threads' comments cannot fit the token budget). The button only exists in
+  AI mode: a scripted digest would be the theatre the audit banned.
+- **🧠 Tavern Chat long-term memory**: conversations past 24 messages fold their
+  tail — compressed by Gemma itself — into a bounded memory note that conditions
+  the persona, so the 12-turn prompt window stops being an amnesia horizon. The
+  visible history is untouched; a 🧠 badge's tooltip shows the exact note the
+  character remembers; clearing the chat clears the memory. Compression runs
+  after the reply, fire-and-forget, with a folded-count marker so the same
+  messages are never re-compressed.
+- 11 new tests (briefing/memory prompt builders in `AiGrounded.test.ts`, Hada's
+  honest-state contract in `HadOSVoiceAssistant.test.ts`).
+
 ## [1.0.7] - 2026-07-23
 
 The release where the AI stopped being theatre. It opens with the full remediation of

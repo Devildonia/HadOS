@@ -45,6 +45,7 @@ const CAP_LABELS: Record<string, string> = {
     'ai:chat': 'generate chat replies with the imported AI model, entirely on your device (nothing is sent anywhere)',
     'ai:transcribe': 'download a speech-to-text model (~140 MB, once) and transcribe audio entirely on your device',
     'ai:embed': 'download a text-embedding model (~25 MB, once) to index and search your documents semantically, on your device',
+    'mic:record': 'record audio from your microphone for on-device processing (nothing is sent anywhere)',
 };
 
 /**
