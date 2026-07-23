@@ -6,10 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Remediation of the v1.0.6 audit (A1–A8): the five new apps get honest labels, real
-security hygiene and documented behavior. No fake AI claims remain anywhere in the UI.
-And the first claim gets to flip back honestly: the Messenger can now hold **real
-conversations with an on-device LLM**.
+## [1.0.7] - 2026-07-23
+
+The release where the AI stopped being theatre. It opens with the full remediation of
+the v1.0.6 audit (A1–A8) — honest labels, real security hygiene, no fake AI claims
+anywhere — and then earns those labels back the hard way: a complete **on-device AI
+substrate** lands across three engines and four consented capabilities. The Messenger
+holds real conversations (Gemma via MediaPipe LLM Inference), the Media Player really
+transcribes local files (Whisper), HN Scout really summarises discussions, and the
+Doc Explorer gains true semantic search (MiniLM embeddings) with a vector canvas that
+finally shows real structure. Every feature states its mode in its own UI; every
+fallback is labelled. Plus: new README gallery shot on the HadOS chrome, and the
+version number gets a single source of truth.
 
 ### Added
 

@@ -9,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-5-%23646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Three.js](https://img.shields.io/badge/Three.js-r183-000000.svg?style=flat&logo=three.js&logoColor=white)](https://threejs.org/)
 [![PWA](https://img.shields.io/badge/PWA-offline--ready-5A0FC8.svg?style=flat&logo=pwa&logoColor=white)](https://vite-pwa-org.netlify.app/)
-[![Tests](https://img.shields.io/badge/tests-932%20passing-brightgreen.svg?style=flat)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-981%20passing-brightgreen.svg?style=flat)](#-testing)
 [![CI Status](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Devildonia/HadOS/actions/workflows/ci.yml)
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ---
 
-HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, on-device **LiteRT.js** inference, a 40-language UI, and a 932-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
+HadOS is a fully functional desktop environment that runs entirely in the browser — and under the chrome sits a deliberately **production-grade architecture**: a process Kernel that spawns **isolated Worker/iframe processes** on an opaque origin, mediated **syscalls** behind user-consented **permissions**, an async **IndexedDB/OPFS** file system, a 3D physics engine, on-device **LiteRT.js** inference, a 40-language UI, and a 981-test suite. It doubles as a **sandbox for developing modular systems** (VFS, Kernel, IPC, Rapier3D, Resource lifecycle) that can be extracted and ported into other projects.
 
 > [!NOTE]
 > HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/), and the on-device AI design in [`docs/ai/`](docs/ai/). See the [CHANGELOG](CHANGELOG.md), and [`docs/known-issues.md`](docs/known-issues.md) for what is knowingly still wrong.
@@ -56,8 +56,8 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🧠 **Real OS primitives, not a mockup.** A process `Kernel` that spawns genuinely **isolated processes** (Web Worker / sandboxed iframe) over an authenticated per-process IPC channel — a `while(true)` in an app can't freeze the desktop, and a watchdog kills it. Apps reach the system only through **mediated syscalls** gated by **user-consented capabilities**, and are confined to their own home directory.
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
-- 🤖 **On-device AI.** Real in-browser inference on **LiteRT.js** (WebGPU, WASM fallback): an isolated `ai-runtime` process, a consented `ai:infer` capability, and a download-once model cache in OPFS. Pinta uses it to **remove a photo's background** — the segmentation model runs entirely on your machine, nothing uploaded.
-- ✅ **932 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
+- 🤖 **A real on-device AI substrate.** Three inference engines behind consented capabilities, all running on your machine with nothing uploaded: **LiteRT.js** segmentation (Pinta removes photo backgrounds), **MediaPipe LLM Inference** over a user-imported Gemma (the Messenger holds real conversations, HN Scout summarises discussions, Doc Explorer answers grounded questions), and **transformers.js** (Whisper transcribes local media with real timestamps; MiniLM embeddings power true semantic search). Isolated worker processes, per-app consent, download-once caches.
+- ✅ **981 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
 - 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, macOS-style glass, and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
 - 🗣️ **Honest by policy.** Simulated features say so on their face (a summary panel is labelled *"simulated demo"*, demo data is stamped `[DEMO]`), and anything that could send data off-device — like browser speech recognition — sits behind an explicit consent prompt. Every external audit finding is remediated and encoded as a regression test.
 - 🌍 **40 languages.** The entire UI — apps, dialogs, folder names, the works — ships localized in 40 locales, with typed i18n keys and a locale-sync script that keeps all 40 files in shape.
@@ -115,6 +115,26 @@ Five apps that show the platform's range — and practice its honesty policy (an
 - 💬 **Messenger** — chat with scripted characters (canned replies; says so in its description).
 - 📄 **Doc Explorer** — indexes a VFS document with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
 
+### 🧠 On-device AI substrate
+
+Three inference engines, one architecture: every model runs in an **isolated worker
+process**, every use is gated by a **consented capability** the broker remembers per
+app, and every feature **states its mode in its own UI** (real vs. labelled fallback).
+Nothing ever leaves the device. Per-phase design notes live in [`docs/ai/`](docs/ai/).
+
+| Engine | Model | Delivery | Capability | Consumers |
+|---|---|---|---|---|
+| LiteRT.js | DeepLab v3 (2.7 MB) | pinned URL + SHA-256, OPFS cache | `ai:infer` | Pinta background removal |
+| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Messenger · HN Scout · Doc Explorer |
+| transformers.js | Whisper base q4 (~140 MB) | downloaded on consent, Cache API | `ai:transcribe` | Media Player |
+| transformers.js | MiniLM-L6 q8 (~23 MB) | downloaded on consent, Cache API | `ai:embed` | Doc Explorer semantic index |
+
+Two worker processes back this: the classic `ai-runtime` (LiteRT needs
+`importScripts()`; MediaPipe rides along) and the module `asr-runtime`
+(transformers.js needs dynamic `import()`) — their loaders want opposite worlds, so
+they stay separate. The model registry is a **security boundary**: apps name models
+by id, and no URL ever crosses the syscall surface.
+
 ### 🕹️ Games Arcade
 Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life Restart Sim · 🐦 Flappy Neon · ⚽ Football Rush · 🔫 Ultimate DOOM · 🧱 Tetris Tryhard · 🔴 Chapas Prime (Three.js) · 🌙 Nocturna (Web Audio rhythm) · 👾 H.I.P. Game Boy (3D WebGL).
 
@@ -133,6 +153,9 @@ Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life 
 | Build / Dev | Vite 5, `vite-plugin-pwa` (Workbox `injectManifest`) |
 | 3D / Physics | Three.js r183, Rapier3D (WASM) |
 | 2D Physics | Matter.js |
+| AI — vision | LiteRT.js (`@litertjs/core`) — DeepLab v3 segmentation, WebGPU/WASM |
+| AI — language | MediaPipe LLM Inference (`@mediapipe/tasks-genai`) — Gemma over WebGPU |
+| AI — speech & embeddings | transformers.js (`@huggingface/transformers`) — Whisper + MiniLM on WASM |
 | Audio | Web Audio API (procedural synthesis) |
 | Graphics | WebGL2, GLSL shaders |
 | Testing | Vitest 4 (+ v8 coverage), Playwright |
@@ -199,9 +222,9 @@ Use `↑` / `↓` to navigate command history.
 
 ## ✅ Testing
 
-**932 tests across 83 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
+**981 tests across 87 files** — unit, *characterization* (behavior-locking tests for the Kernel, Window Manager, and Audio Manager), regression tests that encode every audit finding, error-path tests (storage quota, denied permissions, crashed processes), and Playwright end-to-end boot/interaction specs. Coverage thresholds are enforced as blocking CI gates.
 
-**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.ts`](test/e2e/css-baseline.spec.ts)). None of those 912 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
+**Plus a CSS baseline** ([`test/e2e/css-baseline.spec.ts`](test/e2e/css-baseline.spec.ts)). None of those 981 tests evaluate a stylesheet — jsdom does not load external CSS, so `style.css` could be deleted and they would all still pass. The baseline pins the **parsed CSSOM** (every rule, in cascade order), the **computed styles** of every chrome surface in both themes and at desktop and phone viewports, and **screenshots**. Run it before and after any stylesheet change; only pass `--update-snapshots` when a visual change is intended.
 
 ```bash
 npm test              # watch mode
@@ -285,11 +308,13 @@ HadOS/
 │  │  ├─ ProcessWatchdog·SyscallBroker    # liveness + mediated system access
 │  │  ├─ PermissionBroker·PackageManager  # consent/grants + .wapp install
 │  │  └─ SessionManager·ResourceManager   # session resume + leak-free teardown
-│  ├─ ai/          # AiService facade, LiteRtRuntime, model cache (OPFS), segmentation
+│  ├─ ai/          # the AI substrate: AiService facade, LiteRT/GenAI/ASR/Embed engines,
+│  │               #   model cache (OPFS), Gemma prompt template, grounded-generation
+│  │               #   helpers, vector math (cosine top-K, PCA) — all seam-tested
 │  ├─ apps/        # Notapad, Pinta, Terminal, TaskPilot, MediaPlayer… (auto-registered)
 │  │  ├─ audiostudio/ · explorer/ · notepad/ · paint/ · taskmanager/  # per-app modules
 │  ├─ sdk/         # guest-side App Runtime SDK (appRuntime, guestBoot)
-│  ├─ workers/     # worker-process entries (compute.worker.ts, ai-runtime)
+│  ├─ workers/     # worker-process entries: compute, ai (classic), asr (module)
 │  ├─ ui/          # WindowFactory, WindowInteractions (drag/snap), TaskbarDock, ShaderWallpaper…
 │  ├─ audio/       # AudioManager, procedural synth
 │  ├─ services/    # i18n (typed keys) and other cross-cutting services
@@ -298,7 +323,8 @@ HadOS/
 ├─ style.css       # entry: an ORDERED @import manifest, nothing else (order is load-bearing)
 ├─ docs/
 │  ├─ webos-roadmap/  # per-phase design notes (0 → 5)
-│  ├─ ai/             # on-device AI design notes (LiteRT substrate, Pinta cutout)
+│  ├─ ai/             # on-device AI design notes (phases 0-3: segmentation, LLM chat,
+│  │                  #   Whisper transcription, semantic embeddings)
 │  └─ known-issues.md # what is knowingly still wrong, with evidence
 ├─ public/
 │  ├─ games/       # sandboxed iframe games
@@ -366,9 +392,10 @@ Best experienced in a recent **Chromium-based browser** (Chrome, Edge, Brave). R
 The 6-phase **Web OS** roadmap (async VFS → isolated processes → syscalls → permissions →
 packaging → session) shipped during the Windows App Center line (v1.6.6); design notes per
 phase live in [`docs/webos-roadmap/`](docs/webos-roadmap/). Since then, the HadOS line has
-added the **on-device AI substrate** ([`docs/ai/`](docs/ai/)) with Pinta's background
-removal as its first consumer, the unified **This PC** explorer, the **magnetic taskbar**,
-the macOS-style glass, and 40-language folder localization. What's next:
+added the complete **on-device AI substrate** ([`docs/ai/`](docs/ai/), phases 0–3:
+segmentation, LLM chat, Whisper transcription, semantic embeddings), the unified
+**This PC** explorer, the **magnetic taskbar**, the macOS-style glass, and 40-language
+folder localization. What's next:
 
 - **Real zip container** for `.wapp` packages (the manager already takes a parsed package, so a zip loader plugs in) plus **package signing** via SubtleCrypto, and a store/catalog UI.
 - **Permissions UI** — review, grant and revoke app capabilities from Settings.

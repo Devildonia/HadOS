@@ -1,6 +1,6 @@
 {
   "name": "hados",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "description": "HadOS — a Web OS in the browser: isolated processes, mediated syscalls, user-consented capabilities, packaged apps and an async IndexedDB/OPFS file system.",
   "main": "main.ts",
