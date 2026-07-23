@@ -195,6 +195,7 @@
   "audiostudio.paused": "일시중지됨",
   "audiostudio.tab_podcast": "팟캐스트 크리에이터",
   "audiostudio.tab_dictation": "음성 독재자",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "녹음 시작",
   "audiostudio.dictation_stop": "멈추다",
   "audiostudio.dictation_placeholder": "음성 스크립트가 여기에 표시됩니다...",

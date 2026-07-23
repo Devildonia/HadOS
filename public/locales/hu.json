@@ -195,6 +195,7 @@
   "audiostudio.paused": "Szüneteltetve",
   "audiostudio.tab_podcast": "Podcast készítő",
   "audiostudio.tab_dictation": "Hangdiktátor",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "Indítsa el a Felvételt",
   "audiostudio.dictation_stop": "Stop",
   "audiostudio.dictation_placeholder": "A hangátirat itt fog megjelenni...",

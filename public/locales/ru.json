@@ -195,6 +195,7 @@
   "audiostudio.paused": "Приостановлено",
   "audiostudio.tab_podcast": "Создатель подкаста",
   "audiostudio.tab_dictation": "Голосовой Диктатор",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "Начать запись",
   "audiostudio.dictation_stop": "Останавливаться",
   "audiostudio.dictation_placeholder": "Транскрипция вашего голоса появится здесь...",

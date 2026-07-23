@@ -30,11 +30,32 @@ export const NOTEPAD_BODY_HTML = `
                 <div class="notepad-dropdown-item" data-notepad-action="find">Find...     Ctrl+F</div>
             </div>
         </div>
+        <div class="notepad-menu-entry" id="notepad-menu-ai">
+            <span class="notepad-menu-label">AI</span>
+            <div class="notepad-dropdown" id="notepad-dropdown-ai">
+                <div class="notepad-dropdown-item" data-notepad-action="ai-summarize">Summarize</div>
+                <div class="notepad-dropdown-item" data-notepad-action="ai-rewrite">Rewrite clearer</div>
+                <div class="notepad-dropdown-item" data-notepad-action="ai-translate">Translate</div>
+                <div class="notepad-dropdown-item" data-notepad-action="ai-title">Suggest title</div>
+            </div>
+        </div>
         <div class="notepad-menu-entry" id="notepad-menu-help">
             <span class="notepad-menu-label">Help</span>
             <div class="notepad-dropdown" id="notepad-dropdown-help">
                 <div class="notepad-dropdown-item" data-notepad-action="about">About Notapad</div>
             </div>
+        </div>
+    </div>
+    <div class="notepad-dialog" id="notepad-ai-dialog" style="display:none; max-width: 90%;">
+        <div class="notepad-dialog-title" id="notepad-ai-title">AI</div>
+        <div class="notepad-dialog-body">
+            <div id="notepad-ai-result" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto; font-size: 11px; padding: 4px; border: 1px solid rgba(128,128,128,.4);"></div>
+            <div id="notepad-ai-note" style="font-size: 10px; color: #888; margin-top: 4px;">Generado on-device con el modelo Gemma importado — revisa antes de aplicar.</div>
+        </div>
+        <div class="notepad-dialog-buttons">
+            <button class="hados-btn" id="notepad-ai-replace">Reemplazar</button>
+            <button class="hados-btn" id="notepad-ai-append">Insertar al final</button>
+            <button class="hados-btn" id="notepad-ai-cancel">Descartar</button>
         </div>
     </div>
     <div class="notepad-dialog" id="notepad-open-dialog" style="display:none;">

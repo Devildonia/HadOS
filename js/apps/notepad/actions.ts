@@ -84,6 +84,10 @@ export function executeAction(instance: any, action: string): void {
         case 'paste':      document.execCommand('paste'); break;
         case 'select-all': instance.textarea?.select(); break;
         case 'find':       instance._showFindDialog(); break;
+        case 'ai-summarize': instance._aiAction('summarize'); break;
+        case 'ai-rewrite':   instance._aiAction('rewrite'); break;
+        case 'ai-translate': instance._aiAction('translate'); break;
+        case 'ai-title':     instance._aiAction('title'); break;
         case 'about':      instance._showAbout(); break;
         default: Utils.Logger.log('[Notepad] Unknown action:', action);
     }

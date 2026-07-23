@@ -20,6 +20,7 @@ import { WindowFactory } from '../ui/WindowFactory.js';
 import { PermissionBroker } from '../core/PermissionBroker.js';
 import { AiService } from '../ai/AiService.js';
 import { decodeTo16kMono } from '../ai/audioDecode.js';
+import { buildIntentPrompt, parseIntent, type IAppOption } from '../ai/intents.js';
 import type { IChatTurn } from '../ai/chatPrompt.js';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking';
@@ -61,6 +62,17 @@ export class HadOSVoiceAssistant implements IWindowsApp {
         return !!AiService.chatModel() && AiService.chatSupported() && AiService.transcribeSupported();
     }
 
+    /** The Kernel's live app registry — the ONLY things a voice intent can open. */
+    private appOptions(): IAppOption[] {
+        try {
+            return Object.entries(Kernel.getRegistry().apps)
+                .filter(([id]) => id !== 'voiceassistant') // Hada opening Hada helps nobody
+                .map(([id, entry]) => ({ id, name: (entry as { metadata?: { name?: string } }).metadata?.name ?? id }));
+        } catch {
+            return [];
+        }
+    }
+
     private micSupported(): boolean {
         return typeof navigator !== 'undefined'
             && !!navigator.mediaDevices?.getUserMedia
@@ -94,7 +106,7 @@ export class HadOSVoiceAssistant implements IWindowsApp {
 
         this.renderRequirements();
         this.addBubble('assistant',
-            'Hola, soy Hada 🧚 — la voz de HadOS. Pulsa el micrófono y háblame: te transcribo con Whisper y te respondo con Gemma, todo en tu equipo. Nada sale de aquí.');
+            'Hola, soy Hada 🧚 — la voz de HadOS. Pulsa el micrófono y háblame: te transcribo con Whisper y te respondo con Gemma, todo en tu equipo. Nada sale de aquí. También puedo abrir apps por ti — prueba "abre Pinta".');
     }
 
     /** The honesty panel: which pieces are ready, which are missing and why. */
@@ -202,17 +214,30 @@ export class HadOSVoiceAssistant implements IWindowsApp {
             this.state = 'thinking';
             this.setStatus('Pensando (Gemma, en tu equipo)…');
             const bubble = this.addBubble('assistant', '');
-            const persona =
-                `Eres Hada, la asistente de voz de HadOS (un sistema operativo web que corre en el navegador). ` +
-                `Toda la conversación ocurre en el dispositivo del usuario. Responde en el idioma del usuario, ` +
-                `con frases cortas y claras pensadas para ser leídas en voz alta (1-3 frases).`;
-            const reply = (await AiService.chat('voiceassistant', { persona, history: this.turns }, (delta) => {
+
+            // One call decides intent-or-conversation: the persona offers the
+            // Kernel's app allowlist and a single strict JSON shape for "open X".
+            const apps = this.appOptions();
+            const persona = buildIntentPrompt(apps, i18n.getLang());
+            const raw = (await AiService.chat('voiceassistant', { persona, history: this.turns }, (delta) => {
                 if (bubble) {
                     bubble.textContent += delta;
                     const feed = this.container?.querySelector('#va-feed');
                     if (feed) feed.scrollTop = feed.scrollHeight;
                 }
             })).trim();
+
+            // Validation is the boundary: a malformed or out-of-list "intent"
+            // can only ever become words, never an action.
+            const { intent, speech } = parseIntent(raw, apps.map(a => a.id));
+            let reply = speech;
+            if (intent) {
+                const appName = apps.find(a => a.id === intent.app)?.name ?? intent.app;
+                const proc = Kernel.launch(intent.app);
+                reply = proc
+                    ? (speech || `Abriendo ${appName}.`)
+                    : `No he podido abrir ${appName}.`;
+            }
             if (bubble) bubble.textContent = reply;
             this.turns.push({ role: 'model', text: reply });
 
@@ -261,6 +286,6 @@ export class HadOSVoiceAssistant implements IWindowsApp {
 Kernel.registerApp('voiceassistant', HadOSVoiceAssistant, {
     name: 'Hada',
     icon: '🧚',
-    description: 'On-device voice assistant: Whisper hears, Gemma answers, the browser speaks — nothing leaves your machine.',
+    description: 'On-device voice assistant: Whisper hears, Gemma answers (and can open apps from the allowlist), the browser speaks — nothing leaves your machine.',
     singleton: true
 });

@@ -195,6 +195,7 @@
   "audiostudio.paused": "Pausado",
   "audiostudio.tab_podcast": "Creador de Podcast",
   "audiostudio.tab_dictation": "Dictador de Voz",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "Iniciar Grabación",
   "audiostudio.dictation_stop": "Detener",
   "audiostudio.dictation_placeholder": "Tu transcripción de voz aparecerá aquí...",

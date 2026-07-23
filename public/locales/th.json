@@ -195,6 +195,7 @@
   "audiostudio.paused": "หยุดชั่วคราว",
   "audiostudio.tab_podcast": "ผู้สร้างพอดแคสต์",
   "audiostudio.tab_dictation": "เผด็จการเสียง",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "เริ่มการบันทึก",
   "audiostudio.dictation_stop": "หยุด",
   "audiostudio.dictation_placeholder": "การถอดเสียงของคุณจะปรากฏที่นี่...",

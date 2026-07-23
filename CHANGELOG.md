@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Remediation of the v1.0.8 audit (9.3/10 — both findings closed in one session).
 
+### Added
+
+- **🧚 Hada can operate the OS (AI phase 6)** — the tool-use pattern, tamed: one
+  Gemma call decides intent-or-conversation; the persona offers the Kernel's live
+  app registry as an allowlist and one strict JSON shape, and `parseIntent` is the
+  boundary — malformed JSON, unknown actions or out-of-list apps degrade to plain
+  speech (**a wrong guess can only produce words, never actions**; never eval).
+  "Hada, abre Pinta" now actually opens Pinta, with spoken confirmation. Design
+  notes in `docs/ai/phase-6-hands-pen-and-ear.md`.
+- **📝 Notapad AI menu** — Summarize / Rewrite / Translate / Suggest title over
+  the selection or the note, streamed into a dialog where **only the user's click
+  applies anything** (Reemplazar / Insertar / Descartar). Source capped to the
+  token budget with honest truncation notice; multi-window safe.
+- **🎼 Voxcribe Melody Lab** — Gemma composes in a constrained notation
+  (note+octave:duration), validated token by token and played by the local Web
+  Audio synth. Real generation with its taste honestly labelled ("el gusto
+  musical de un modelo de 1B"). The tab system became a table loop on the way.
+- 15 new tests (`AiPhase6.test.ts`): the intent security boundary, writing prompt
+  contracts, melody parsing (A4=440, accidentals, caps, invalid-token skipping).
+
 ### Fixed
 
 - **AI runtimes are now governed by idle eviction** (audit M1): a loaded Gemma is

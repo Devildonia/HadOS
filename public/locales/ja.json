@@ -195,6 +195,7 @@
   "audiostudio.paused": "一時停止中",
   "audiostudio.tab_podcast": "ポッドキャストクリエイター",
   "audiostudio.tab_dictation": "声の独裁者",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "録音を開始する",
   "audiostudio.dictation_stop": "停止",
   "audiostudio.dictation_placeholder": "あなたの音声文字起こしがここに表示されます...",

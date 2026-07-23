@@ -7,6 +7,7 @@ import { VFS } from '../core/VFS.js';
 
 import { NOTEPAD_BODY_HTML } from './notepad/templates.js';
 import * as actions from './notepad/actions.js';
+import * as aiActions from './notepad/ai.js';
 import * as dialogs from './notepad/dialogs.js';
 import * as files from './notepad/files.js';
 
@@ -270,6 +271,11 @@ class Notepad {
     }
 
     // ─── About ────────────────────────────────────────────────────────────────
+
+    /** AI writing actions (phase 6) — the model proposes, the user applies. */
+    public _aiAction(kind: 'summarize' | 'rewrite' | 'translate' | 'title'): void {
+        void aiActions.runAiAction({ windowId: this.windowId, textarea: this.textarea }, kind);
+    }
 
     private _showAbout(): void {
         dialogs.showAbout(this);

@@ -195,6 +195,7 @@
   "audiostudio.paused": "已暂停",
   "audiostudio.tab_podcast": "播客创作者",
   "audiostudio.tab_dictation": "语音独裁者",
+  "audiostudio.tab_melody": "Melody Lab",
   "audiostudio.dictation_start": "开始录音",
   "audiostudio.dictation_stop": "停止",
   "audiostudio.dictation_placeholder": "您的语音转录将出现在此处...",

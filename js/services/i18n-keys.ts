@@ -35,6 +35,7 @@ export type TranslationKey =
     | "audiostudio.style_debate"
     | "audiostudio.style_narrator"
     | "audiostudio.tab_dictation"
+    | "audiostudio.tab_melody"
     | "audiostudio.tab_podcast"
     | "audiostudio.url_placeholder"
     | "dialog.browse"
