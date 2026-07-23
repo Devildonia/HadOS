@@ -57,6 +57,23 @@ conversations with an on-device LLM**.
     media to Whisper's 16 kHz mono contract on the main thread.
   - 7 new tests (`test/AiAsr.test.ts`) plus updated Media Player specs asserting
     the honest YouTube state.
+- **Grounded generation in HN Scout and Doc Explorer (AI phase 3)** — the last two
+  simulated features join the substrate, riding the SAME imported Gemma model as
+  the Messenger (no new download). Design notes in
+  `docs/ai/phase-3-grounded-generation.md`.
+  - **HN Scout summarises the discussion for real**: the linked article is
+    unreachable from a browser, but the thread's comments come from the official
+    API — Gemma summarises them on-device, streamed into the panel. The header
+    badge is the mode contract: `On-device AI` with a model, `Simulated summaries`
+    without (plus an import hint in the demo console).
+  - **Doc Explorer answers become generated and grounded**: keyword retrieval
+    stays (and keeps saying so), but the top lines ride into Gemma under a strict
+    only-from-context instruction with `[línea N]` citations; the source-line box
+    stays for provenance. Without a model, the quoting fallback remains, labelled.
+  - Shared pure helpers in `js/ai/grounded.ts` (HTML stripping of untrusted
+    comments, token-budget caps, top-K retrieval) pinned by 13 new tests
+    (`test/AiGrounded.test.ts`). Both apps consent separately: `ai:chat` is
+    granted per app, so the Messenger's grant does not bleed into them.
 
 - **Five apps documented** (shipped in 1.0.6 without a CHANGELOG entry — audit A8):
   - **AudioStudio** — scripted podcasts via browser `speechSynthesis`, plus voice

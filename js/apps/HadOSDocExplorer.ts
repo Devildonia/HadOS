@@ -5,6 +5,8 @@ import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
 import { VFS } from '../core/VFS.js';
+import { AiService } from '../ai/AiService.js';
+import { topKLines, buildDocAnswerPrompt, DOC_CONTEXT_LINES } from '../ai/grounded.js';
 
 interface VectorPoint {
     x: number;
@@ -79,7 +81,9 @@ export class HadOSDocExplorer implements IWindowsApp {
 
                     <div class="docexplorer-chat-feed" id="docexplorer-chat-feed">
                         <div class="docexplorer-chat-bubble ai">
-                            Welcome to <b>Doc Explorer</b>. Load a document from the dropdown above and ask about it — answers quote the line that best matches your words. Local keyword search; no AI model runs.
+                            Welcome to <b>Doc Explorer</b>. Load a document from the dropdown above and ask about it. Retrieval is local keyword search; ${(AiService.chatModel() && AiService.chatSupported())
+                                ? 'answers are <b>generated on-device</b> by the imported Gemma model, grounded in the retrieved lines.'
+                                : 'answers quote the best matching line — no AI model runs (import a Gemma model in the Messenger for generated answers).'}
                         </div>
                     </div>
 
@@ -229,12 +233,16 @@ export class HadOSDocExplorer implements IWindowsApp {
 
         this.logConsole(`[Index] ${this.points.length} lines indexed (keyword search — no embeddings).`, 'success');
 
-        // Show welcome chat bubble for doc
+        // Show welcome chat bubble for doc — honest about which answerer runs.
         const feed = this.container?.querySelector('#docexplorer-chat-feed');
         if (feed) {
+            const aiReady = !!AiService.chatModel() && AiService.chatSupported();
+            const mode = aiReady
+                ? 'Answers are generated on-device by the imported Gemma model, grounded in the retrieved lines (retrieval is keyword-based).'
+                : 'Answers quote the best keyword match — no AI model runs. Import a Gemma model in the Messenger for generated answers.';
             feed.insertAdjacentHTML('beforeend', `
                 <div class="docexplorer-chat-bubble ai">
-                    Loaded document <b>${Utils.escapeHTML(this.currentFileName)}</b> containing ${this.points.length} indexed lines. Answers quote the best keyword match — no AI model runs.
+                    Loaded document <b>${Utils.escapeHTML(this.currentFileName)}</b> containing ${this.points.length} indexed lines. ${mode}
                 </div>
             `);
             feed.scrollTop = feed.scrollHeight;
@@ -291,6 +299,14 @@ export class HadOSDocExplorer implements IWindowsApp {
         // No invented "24ms cosine" figures: it is a word-overlap ratio.
         this.logConsole(`[Search] Best match: line #${bestIndex} (${(highestScore * 100).toFixed(0)}% of query words present)`, 'success');
 
+        // With an imported Gemma model, the ANSWER becomes real: the retrieved
+        // lines go to the model as context and it answers grounded in them.
+        // Retrieval stays keyword-based and keeps saying so.
+        if (AiService.chatModel() && AiService.chatSupported()) {
+            void this.answerWithModel(query, feed, bestIndex, matchingChunk);
+            return;
+        }
+
         // Show the quoted answer. Document content is untrusted (VFS, writable by
         // apps) — everything is escaped before touching innerHTML (audit A2).
         setTimeout(() => {
@@ -308,6 +324,46 @@ export class HadOSDocExplorer implements IWindowsApp {
             feed.scrollTop = feed.scrollHeight;
             if (window.playBlip) window.playBlip(700);
         }, 600);
+    }
+
+    /**
+     * A REAL grounded answer: the keyword-retrieved top lines ride into the
+     * imported Gemma model as context, with a strict instruction to answer only
+     * from them and cite line numbers. Streams into the bubble; the source line
+     * box stays, because provenance matters more with a generator in the loop.
+     */
+    private async answerWithModel(query: string, feed: Element, bestIndex: number, matchingChunk: string): Promise<void> {
+        const retrieved = topKLines(query, this.docChunks, DOC_CONTEXT_LINES);
+        this.logConsole(`[AI] Feeding the top ${retrieved.length} lines to the imported Gemma model (on-device)...`, 'info');
+
+        feed.insertAdjacentHTML('beforeend', `
+            <div class="docexplorer-chat-bubble ai">
+                <div><b>🧠</b> <span class="doc-ai-answer"></span></div>
+                <div class="docexplorer-source-box">
+                    <b>Source line #${bestIndex}:</b> "${Utils.escapeHTML(matchingChunk)}"
+                </div>
+            </div>
+        `);
+        const answerEls = feed.querySelectorAll('.doc-ai-answer');
+        const answerEl = answerEls[answerEls.length - 1] as HTMLElement | undefined;
+        feed.scrollTop = feed.scrollHeight;
+
+        try {
+            const { persona, user } = buildDocAnswerPrompt(query, retrieved, i18n.getLang());
+            const text = await AiService.chat('docexplorer', { persona, history: [{ role: 'user', text: user }] }, (delta) => {
+                if (answerEl) {
+                    answerEl.textContent += delta; // model output: textContent only
+                    feed.scrollTop = feed.scrollHeight;
+                }
+            });
+            if (answerEl) answerEl.textContent = text.trim();
+            this.logConsole(`[AI] Grounded answer generated from ${retrieved.length} retrieved lines.`, 'success');
+            if (window.playBlip) window.playBlip(700);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (answerEl) answerEl.textContent = `⚠️ IA local: ${msg}`;
+            this.logConsole(`[AI] On-device answer failed: ${msg}`, 'meta');
+        }
     }
 
     private generateGroundedAnswer(query: string, chunk: string): string {
@@ -411,6 +467,6 @@ export class HadOSDocExplorer implements IWindowsApp {
 Kernel.registerApp('docexplorer', HadOSDocExplorer, {
     name: 'Doc Explorer',
     icon: '🔍',
-    description: 'Ask questions about a local document — keyword search that quotes the best match.',
+    description: 'Ask questions about a local document — keyword retrieval, with on-device AI answers when a Gemma model is imported.',
     singleton: true
 });

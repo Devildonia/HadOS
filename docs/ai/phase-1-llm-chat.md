@@ -116,6 +116,7 @@ work, and the full grant → verify → compile → stream path.
   `file.stream().getReader()` satisfies `modelAssetBuffer`) is the obvious next
   step if it hurts on 8 GB machines.
 - One chat model loaded at a time (a second Gemma would double GPU memory).
-- The other simulated features (HN summaries, Media Player / Doc Explorer Q&A)
-  still say "simulated" — wiring them to `AiService.chat` is phase 2, and their
-  labels flip only when it lands.
+- ~~The other simulated features still say "simulated"~~ — phase 2 gave the
+  Media Player real Whisper transcription, and phase 3 wired HN Scout's
+  summaries and the Doc Explorer's answers to `AiService.chat`
+  (`docs/ai/phase-3-grounded-generation.md`). Their labels flip per mode.
