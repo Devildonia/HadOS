@@ -6,7 +6,8 @@ import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
 import { VFS } from '../core/VFS.js';
 import { AiService } from '../ai/AiService.js';
-import { topKLines, buildDocAnswerPrompt, DOC_CONTEXT_LINES } from '../ai/grounded.js';
+import { topKLines, buildDocAnswerPrompt, DOC_CONTEXT_LINES, type IRetrievedLine } from '../ai/grounded.js';
+import { semanticTopK, pca3 } from '../ai/vectorMath.js';
 
 interface VectorPoint {
     x: number;
@@ -31,6 +32,12 @@ export class HadOSDocExplorer implements IWindowsApp {
 
     private docChunks: string[] = [];
     private currentFileName: string = '';
+
+    /** Real MiniLM embeddings of docChunks ([n × 384], L2-normalised rows), or
+     *  null while retrieval is keyword-based (no consent / no support / error). */
+    private semanticIndex: Float32Array | null = null;
+    private semanticDim: number = 384;
+    private semanticBuilding: boolean = false;
 
     private boundOpenFile = () => this.handleOpenFile();
     private boundSendQuery = () => this.handleSendQuery();
@@ -97,7 +104,7 @@ export class HadOSDocExplorer implements IWindowsApp {
                 <div class="docexplorer-right">
                     <!-- Canvas Space -->
                     <div class="docexplorer-canvas-container">
-                        <span class="docexplorer-canvas-label">${spaceText}</span>
+                        <span class="docexplorer-canvas-label" id="docexplorer-space-label">${spaceText}</span>
                         <canvas class="docexplorer-canvas" id="docexplorer-canvas"></canvas>
                     </div>
 
@@ -155,6 +162,15 @@ export class HadOSDocExplorer implements IWindowsApp {
             const rootFiles = (VFS.listDir('C:\\') || []).filter(f => f.endsWith('.TXT') || f.endsWith('.txt'));
             rootFiles.forEach(file => {
                 select.innerHTML += `<option value="C:\\${file}">C:\\${file}</option>`;
+            });
+        } catch {}
+
+        // List documents in C:\DOCUMENTS — where Notapad actually saves. This was
+        // missing: the OS's own save location was invisible to its document reader.
+        try {
+            const docs = (VFS.listDir('C:\\DOCUMENTS') || []).filter(f => f.toLowerCase().endsWith('.txt'));
+            docs.forEach(file => {
+                select.innerHTML += `<option value="C:\\DOCUMENTS\\${file}">C:\\DOCUMENTS\\${file}</option>`;
             });
         } catch {}
 
@@ -233,6 +249,9 @@ export class HadOSDocExplorer implements IWindowsApp {
 
         this.logConsole(`[Index] ${this.points.length} lines indexed (keyword search — no embeddings).`, 'success');
 
+        // Try to upgrade the index to REAL embeddings (consent-gated, ~25 MB once).
+        void this.buildSemanticIndex();
+
         // Show welcome chat bubble for doc — honest about which answerer runs.
         const feed = this.container?.querySelector('#docexplorer-chat-feed');
         if (feed) {
@@ -247,6 +266,71 @@ export class HadOSDocExplorer implements IWindowsApp {
             `);
             feed.scrollTop = feed.scrollHeight;
         }
+    }
+
+    /**
+     * Upgrades the index to REAL MiniLM embeddings: every line becomes a 384-dim
+     * unit vector (on-device, ~25 MB model behind the `ai:embed` consent), search
+     * becomes true cosine similarity, and the vector-space canvas switches from
+     * decorative random points to a PCA projection of the actual embeddings.
+     * Denied consent or any failure keeps the honest keyword mode.
+     */
+    private async buildSemanticIndex(): Promise<void> {
+        this.semanticIndex = null;
+        this.updateSpaceLabel(false); // a fresh document starts decorative again
+        if (this.semanticBuilding || this.docChunks.length === 0) return;
+        if (!AiService.embedSupported()) {
+            this.logConsole(`[Index] Semantic indexing unavailable in this environment — keyword search stays.`, 'meta');
+            return;
+        }
+
+        this.semanticBuilding = true;
+        try {
+            let lastPct = -1;
+            const { vectors, dims } = await AiService.embed('docexplorer', this.docChunks, (p) => {
+                if (p.phase === 'download' && p.total > 0) {
+                    const pct = Math.floor((p.loaded / p.total) * 100);
+                    if (pct >= lastPct + 25) { // don't spam the console
+                        lastPct = pct;
+                        this.logConsole(`[Index] Downloading MiniLM embedding model... ${pct}%`, 'info');
+                    }
+                } else if (p.phase === 'embed' && p.loaded === 0) {
+                    this.logConsole(`[Index] Embedding ${p.total} lines on-device...`, 'info');
+                }
+            });
+
+            const [n, dim] = dims;
+            if (n !== this.docChunks.length) throw new Error(`embedding count mismatch (${n} vs ${this.docChunks.length})`);
+            this.semanticIndex = vectors;
+            this.semanticDim = dim;
+
+            // The canvas earns its keep: project the real vectors to 3D via PCA
+            // and place each line's point at its actual projected position.
+            const coords = pca3(vectors, n, dim);
+            const R = 80; // same scale the decorative sphere used
+            this.points.forEach((pt, i) => {
+                pt.x = coords[i * 3]! * R;
+                pt.y = coords[i * 3 + 1]! * R;
+                pt.z = coords[i * 3 + 2]! * R;
+            });
+            this.updateSpaceLabel(true);
+
+            this.logConsole(`[Index] ${n} lines embedded (MiniLM q8, on-device) — semantic search active; the canvas now shows a PCA projection of the real vectors.`, 'success');
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.logConsole(`[Index] Semantic indexing not active (${msg}) — keyword search stays.`, 'meta');
+        } finally {
+            this.semanticBuilding = false;
+        }
+    }
+
+    /** Keeps the canvas caption telling the truth about what the points mean. */
+    private updateSpaceLabel(real: boolean): void {
+        const label = this.container?.querySelector('#docexplorer-space-label') as HTMLElement | null;
+        if (!label) return;
+        label.textContent = real
+            ? (i18n.t('docexplorer.vector_space_real') || 'Proyección PCA de los embeddings (real)')
+            : (i18n.t('docexplorer.vector_space') || 'Visualización del índice (decorativa)');
     }
 
     private handleSendQuery(): void {
@@ -267,10 +351,16 @@ export class HadOSDocExplorer implements IWindowsApp {
         `);
         feed.scrollTop = feed.scrollHeight;
 
+        // Retrieval — REAL cosine over MiniLM embeddings when the semantic index
+        // exists; the honest keyword overlap otherwise.
+        if (this.semanticIndex) {
+            void this.searchSemantic(query, feed);
+            return;
+        }
+
         // Keyword retrieval — described as what it is, not as vector search.
         this.logConsole(`[Search] Matching query words against ${this.points.length} lines...`, 'info');
 
-        // Simple mock search (cosine similarity simulation)
         // Find chunk with highest word match ratio
         let bestIndex = 0;
         let highestScore = -1;
@@ -301,14 +391,54 @@ export class HadOSDocExplorer implements IWindowsApp {
 
         // With an imported Gemma model, the ANSWER becomes real: the retrieved
         // lines go to the model as context and it answers grounded in them.
-        // Retrieval stays keyword-based and keeps saying so.
         if (AiService.chatModel() && AiService.chatSupported()) {
-            void this.answerWithModel(query, feed, bestIndex, matchingChunk);
+            void this.answerWithModel(query, feed, bestIndex, matchingChunk, topKLines(query, this.docChunks, DOC_CONTEXT_LINES));
             return;
         }
 
-        // Show the quoted answer. Document content is untrusted (VFS, writable by
-        // apps) — everything is escaped before touching innerHTML (audit A2).
+        this.renderQuotedAnswer(query, feed, bestIndex, matchingChunk);
+    }
+
+    /**
+     * REAL semantic retrieval: the query becomes a MiniLM vector (same consent,
+     * already granted at indexing) and lines are ranked by true cosine — so the
+     * similarity figures in the log are finally measurements, not theatre.
+     */
+    private async searchSemantic(query: string, feed: Element): Promise<void> {
+        const index = this.semanticIndex;
+        if (!index) return;
+
+        try {
+            this.logConsole(`[Search] Embedding the query and scoring ${this.docChunks.length} lines by cosine (on-device)...`, 'info');
+            const { vectors } = await AiService.embed('docexplorer', [query]);
+            const top = semanticTopK(vectors, index, this.semanticDim, DOC_CONTEXT_LINES);
+            if (top.length === 0) {
+                this.logConsole(`[Search] No lines to score.`, 'meta');
+                return;
+            }
+
+            const best = top[0]!;
+            this.activeChunkId = best.index;
+            this.points.forEach(pt => { pt.score = 0; });
+            top.forEach(t => { const pt = this.points[t.index]; if (pt) pt.score = Math.max(0, t.score); });
+
+            const matchingChunk = this.docChunks[best.index] || '';
+            this.logConsole(`[Search] Best match: line #${best.index} (cosine ${best.score.toFixed(2)} — real embedding similarity)`, 'success');
+
+            const retrieved: IRetrievedLine[] = top.map(t => ({ index: t.index, text: this.docChunks[t.index] ?? '', score: t.score }));
+            if (AiService.chatModel() && AiService.chatSupported()) {
+                await this.answerWithModel(query, feed, best.index, matchingChunk, retrieved);
+            } else {
+                this.renderQuotedAnswer(query, feed, best.index, matchingChunk);
+            }
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.logConsole(`[Search] Semantic search failed (${msg}) — try again or reload the document.`, 'meta');
+        }
+    }
+
+    /** The no-model answer: an honest quote of the best line, escaped (audit A2). */
+    private renderQuotedAnswer(query: string, feed: Element, bestIndex: number, matchingChunk: string): void {
         setTimeout(() => {
             const sourceText = i18n.t('docexplorer.answering') || 'Best matching line';
             const answer = this.generateGroundedAnswer(query, matchingChunk);
@@ -332,8 +462,7 @@ export class HadOSDocExplorer implements IWindowsApp {
      * from them and cite line numbers. Streams into the bubble; the source line
      * box stays, because provenance matters more with a generator in the loop.
      */
-    private async answerWithModel(query: string, feed: Element, bestIndex: number, matchingChunk: string): Promise<void> {
-        const retrieved = topKLines(query, this.docChunks, DOC_CONTEXT_LINES);
+    private async answerWithModel(query: string, feed: Element, bestIndex: number, matchingChunk: string, retrieved: IRetrievedLine[]): Promise<void> {
         this.logConsole(`[AI] Feeding the top ${retrieved.length} lines to the imported Gemma model (on-device)...`, 'info');
 
         feed.insertAdjacentHTML('beforeend', `

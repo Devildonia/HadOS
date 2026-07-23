@@ -113,7 +113,7 @@ Five apps that show the platform's range — and practice its honesty policy (an
 - 📰 **Hacker News Scout** — live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. With a Gemma model imported, the summary panel **really summarises the thread's discussion on-device** (the badge flips to `On-device AI`); without one it stays a labelled simulated demo.
 - 🎙️ **AudioStudio** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
 - 💬 **Messenger** — chat with scripted characters (canned replies; says so in its description).
-- 📄 **Doc Explorer** — indexes a VFS document; retrieval is keyword overlap and the logs say exactly that (no embeddings). With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**; without one, it quotes the best match.
+- 📄 **Doc Explorer** — indexes a VFS document with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
 
 ### 🕹️ Games Arcade
 Sandboxed in isolated iframes and registered with the Kernel: 🎮 Virtual Life Restart Sim · 🐦 Flappy Neon · ⚽ Football Rush · 🔫 Ultimate DOOM · 🧱 Tetris Tryhard · 🔴 Chapas Prime (Three.js) · 🌙 Nocturna (Web Audio rhythm) · 👾 H.I.P. Game Boy (3D WebGL).

@@ -74,6 +74,21 @@ conversations with an on-device LLM**.
     comments, token-budget caps, top-K retrieval) pinned by 13 new tests
     (`test/AiGrounded.test.ts`). Both apps consent separately: `ai:chat` is
     granted per app, so the Messenger's grant does not bleed into them.
+- **Real semantic search in the Doc Explorer (AI phase 3, level B)** — retrieval
+  itself becomes real: `Xenova/all-MiniLM-L6-v2` (q8, ~23 MB) embeds every line
+  into a 384-dim unit vector in the same `asr-runtime` worker, behind a new
+  **`ai:embed`** capability. Queries are ranked by TRUE cosine similarity — the
+  logged figures are measurements now — verified live with a zero-keyword-overlap
+  query. The vector-space canvas stops being decorative: `pca3` (pure power
+  iteration, deterministic) projects the real embeddings to 3D and the caption
+  switches to *"Proyección PCA de los embeddings (real)"*. Denied consent or any
+  failure keeps the honest keyword mode. 11 new tests (`test/AiEmbed.test.ts`).
+  - Flushed out along the way: the canvas caption in all 40 locales still said
+    **"LiteRT Local Vector Space"** — a pre-audit lie the A4 remediation missed
+    because it only fixed the code fallback; both label keys are honest in every
+    language now. And **Notapad saves to `C:\DOCUMENTS`, which the Doc Explorer
+    did not list** — the OS's own save location was invisible to its own document
+    reader. Fixed.
 
 - **Five apps documented** (shipped in 1.0.6 without a CHANGELOG entry — audit A8):
   - **AudioStudio** — scripted podcasts via browser `speechSynthesis`, plus voice

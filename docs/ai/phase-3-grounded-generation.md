@@ -53,10 +53,38 @@ honesty, retrieval ranking/ties/K/stop-words, answer prompt citations + empty
 retrieval. The apps' own specs still pin the no-model behaviour (simulated
 panel, keyword answer), which is now the fallback path.
 
+## Level B — real embeddings (same phase, second landing)
+
+The Doc Explorer's retrieval itself became real: **`Xenova/all-MiniLM-L6-v2`**
+(q8, ~23 MB — verified live: no QDQ trouble on this ort, unlike whisper's q8)
+runs in the same `asr-runtime` worker (one transformers.js stack, one process),
+behind a new **`ai:embed`** capability whose consent names the download.
+
+- **Indexing**: on document load, every line becomes a 384-dim unit vector
+  (`AiService.embed`, `embed:texts` over the process IPC, `MAX_EMBED_TEXTS` 512
+  cap). Denied consent or any failure keeps the honest keyword mode.
+- **Search**: the query is embedded and lines are ranked by TRUE cosine
+  (`semanticTopK` — rows are L2-normalised so cosine is a dot product). The log
+  figures are finally measurements: *"Best match: line #5 (cosine 0.46 — real
+  embedding similarity)"*. Verified live with a zero-keyword-overlap query
+  ("boats sailing at night" → "Sailors navigate stormy seas guided by the
+  northern stars").
+- **The canvas earns its keep**: `pca3` (power iteration + deflation, pure,
+  deterministic) projects the real vectors to 3D and the points sit at their
+  actual projected positions. The caption switches between
+  `Visualización del índice (decorativa)` and
+  `Proyección PCA de los embeddings (real)` — and the retake flushed out that
+  the locales still carried the pre-audit **"LiteRT Local Vector Space"** lie
+  in all 40 languages; both keys are honest now.
+- Grounded answers (level A) consume the semantic retrieval when it exists:
+  real ranking in, cited generation out.
+
+Found along the way: **Notapad saves to `C:\DOCUMENTS`, which the Doc Explorer
+did not list** — the OS's own save location was invisible to its document
+reader. Fixed.
+
 ## What still is NOT real (and says so)
 
 - HN Scout without a model: canned keyword-matched text, labelled.
-- Doc Explorer retrieval: keyword overlap, not embeddings — the canvas
-  visualisation remains decorative and labelled. Real embeddings (MiniLM via
-  the transformers.js stack from phase 2) are the natural level B.
+- Doc Explorer without `ai:embed` consent: keyword overlap, labelled.
 - The Media Player's RAG chat tab: still keyword search over the transcript.

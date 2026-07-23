@@ -17,6 +17,8 @@ import { AI_REQUESTS, AI_EVENTS, type ILoadResult } from './aiRuntimeHandlers';
 import { CHAT_REQUESTS, CHAT_EVENTS, type IChatTokenEvent } from './chatHandlers';
 import { ASR_REQUESTS, ASR_EVENTS } from './asrHandlers';
 import type { IAsrResult, IAsrProgress } from './AsrEngine';
+import { EMBED_REQUESTS, EMBED_EVENTS } from './embedHandlers';
+import type { IEmbedResult, IEmbedProgress } from './EmbedEngine';
 import { AiModelCache } from './AiModelCache';
 import {
     getModelForTask, getDefaultChatModel, listChatModels, registerChatModel,
@@ -33,9 +35,12 @@ export const AI_CAPABILITY = 'ai:infer';
  *  the honest consent text differs: this one runs a user-imported LLM. */
 export const CHAT_CAPABILITY = 'ai:chat';
 
-/** The capability transcription is gated on — its consent text names the ~80 MB
+/** The capability transcription is gated on — its consent text names the ~140 MB
  *  one-time Whisper download, which neither of the others involves. */
 export const TRANSCRIBE_CAPABILITY = 'ai:transcribe';
+
+/** The capability semantic indexing is gated on (~25 MB MiniLM download). */
+export const EMBED_CAPABILITY = 'ai:embed';
 
 /** The app id the ai-runtime process itself runs under. */
 const RUNTIME_APP_ID = 'ai-runtime';
@@ -112,6 +117,8 @@ export const AiService = (() => {
     const listeners = new Set<ProgressListener>();
     /** Live per-request ASR progress callbacks, routed by requestId. */
     const asrProgressSinks = new Map<string, (p: IAsrProgress) => void>();
+    /** Live per-request embedding progress callbacks, routed by requestId. */
+    const embedProgressSinks = new Map<string, (p: IEmbedProgress) => void>();
 
     /** True when this browser can run the stack at all. */
     function isSupported(): boolean {
@@ -151,6 +158,14 @@ export const AiService = (() => {
         asrHandle.worker.onRequest(ASR_EVENTS.PROGRESS, (payload) => {
             const ev = payload as IAsrProgress & { requestId: string };
             const sink = asrProgressSinks.get(ev.requestId);
+            if (sink) {
+                try { sink(ev); } catch { /* a bad listener must not fail the run */ }
+            }
+            return true;
+        });
+        asrHandle.worker.onRequest(EMBED_EVENTS.PROGRESS, (payload) => {
+            const ev = payload as IEmbedProgress & { requestId: string };
+            const sink = embedProgressSinks.get(ev.requestId);
             if (sink) {
                 try { sink(ev); } catch { /* a bad listener must not fail the run */ }
             }
@@ -257,6 +272,42 @@ export const AiService = (() => {
         }
     }
 
+    /** True when this browser can run the embedding model (Wasm suffices). */
+    function embedSupported(): boolean {
+        return isSupported() && typeof WebAssembly !== 'undefined';
+    }
+
+    /**
+     * Embeds texts into L2-normalised MiniLM vectors ([n × 384], row-major).
+     * First use downloads the model (~25 MB, cached); consent names that.
+     */
+    async function embed(
+        appId: string,
+        texts: string[],
+        onProgress?: (p: IEmbedProgress) => void,
+    ): Promise<IEmbedResult> {
+        if (!(await PermissionBroker.check(appId, EMBED_CAPABILITY))) {
+            throw new Error(`permission denied: ${EMBED_CAPABILITY}`);
+        }
+        const p = asrProc();
+        await p.ready;
+
+        const requestId = `emb-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+        if (onProgress) embedProgressSinks.set(requestId, onProgress);
+        try {
+            const out = await p.request(
+                EMBED_REQUESTS.EMBED,
+                { requestId, texts },
+                LOAD_TIMEOUT_MS,
+            ) as IEmbedResult & { requestId: string };
+            // structuredClone preserves Float32Array; a JSON-ish transport would not.
+            const vectors = out.vectors instanceof Float32Array ? out.vectors : Float32Array.from(out.vectors ?? []);
+            return { vectors, dims: out.dims };
+        } finally {
+            embedProgressSinks.delete(requestId);
+        }
+    }
+
     /** Stops the asr-runtime process (frees the pipeline and its memory). */
     function shutdownAsr(): void {
         if (asrHandle) {
@@ -270,6 +321,7 @@ export const AiService = (() => {
     function __setAsrSpawner(fn: Spawner | null): void {
         asrHandle = null;
         asrProgressSinks.clear();
+        embedProgressSinks.clear();
         asrSpawner = fn ?? defaultAsrSpawner;
     }
 
@@ -388,5 +440,6 @@ export const AiService = (() => {
         isSupported, loadModel, infer, segment, dispose, info, onProgress, shutdown, __setSpawner,
         chat, chatSupported, chatModel, listChatModels, importChatModel, deleteChatModel,
         transcribe, transcribeSupported, shutdownAsr, __setAsrSpawner,
+        embed, embedSupported,
     };
 })();
