@@ -30,7 +30,7 @@ describe('Global Event Listeners', () => {
             
             <div id="icon-games-folder" class="icon" tabindex="0"></div>
             <div id="icon-vlrs-folder" class="icon"></div>
-            <div id="icon-flappy-neon-exe" class="icon"></div>
+            <div id="icon-flappy-neon-exe" class="icon" tabindex="0"></div>
             
             <button id="back-to-games-from-flappy"></button>
             
@@ -89,14 +89,16 @@ describe('Global Event Listeners', () => {
     });
 
     it('should handle icon double clicks (folders and executables)', () => {
+        // The Games desktop icon no longer wires an ondblclick here — it uses a
+        // declarative `data-explorer-path` handled by EventDelegation, so it opens
+        // the single FileX explorer instead of a second bespoke window (verified
+        // in EventDelegation-explorer.test.ts). This test covers the icons that
+        // still route through setupIconAction.
         const gamesFolder = document.getElementById('icon-games-folder')!;
+        expect((gamesFolder as any).ondblclick).toBeFalsy();
+
         const vlrsFolder = document.getElementById('icon-vlrs-folder')!;
         const flappyExe = document.getElementById('icon-flappy-neon-exe')!;
-
-        // Games now opens the real explorer at C:\GAMES (no live instance in the
-        // test → openExplorerAt falls back to Kernel.launch), not the bespoke window.
-        (gamesFolder as any).ondblclick();
-        expect(Kernel.launch).toHaveBeenCalledWith('explorer', { path: 'C:\\GAMES' });
 
         (vlrsFolder as any).ondblclick();
         expect(WindowManager.close).toHaveBeenCalledWith('win-games-folder');
@@ -174,11 +176,11 @@ describe('Global Event Listeners', () => {
     });
 
     it('should trigger double clicks via Keyboard (Enter/Space)', () => {
-        const gamesFolder = document.getElementById('icon-games-folder')!;
-
-        const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
-        gamesFolder.dispatchEvent(enterEvent);
-
-        expect(Kernel.launch).toHaveBeenCalledWith('explorer', { path: 'C:\\GAMES' });
+        // Enter/Space on a focused icon fires a dblclick, which its handler runs.
+        // Use an icon that still owns an ondblclick here (Games moved to
+        // data-explorer-path / EventDelegation).
+        const flappyExe = document.getElementById('icon-flappy-neon-exe')!;
+        flappyExe.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        expect(Kernel.launch).toHaveBeenCalledWith('flappy-neon');
     });
 });

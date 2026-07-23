@@ -28,6 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `makeResizable` was also missing from the `IWindowManager` interface.
 - 6 regression tests (`test/ProxyAppsAndResize.test.ts`) pin the real-window
   lifecycle and the resize-by-default behaviour.
+- **The Games shortcut opened FileX twice, at two different addresses**: the
+  desktop icon (and Start-Menu item) both wired an `ondblclick` opening the real
+  explorer at `C:\GAMES` *and* a `data-launch="games-folder"` that spawned a
+  second bespoke `win-games-folder` window at `C:\HADOS\DESKTOP\GAMES`. Games now
+  live at a single address: the icon and menu use a declarative
+  `data-explorer-path="C:\GAMES"` handled by `EventDelegation`, opening the one
+  FileX explorer and nothing else. "Back to games" and the per-game folders route
+  to the same `C:\GAMES` explorer, so navigation loops back into FileX.
+- **Resizing a FileX window showed two colours and stretched to full screen**:
+  the explorer body was `display:block`, so its content did not fill the flex
+  window — enlarging revealed the window background below the content (the "two
+  colours") and shrank oddly. `.window-body.explorer-window` is now a flex column
+  whose content area grows/scrolls (`flex:1 1 auto; min-height:0; overflow-y:auto`),
+  so it tracks the window at any size.
+- Regression tests: `test/EventDelegation-explorer.test.ts` pins the single-window
+  Games behaviour (desktop double-click and Start-Menu click open FileX once,
+  never the legacy `games-folder` app).
 
 ## [1.0.9] - 2026-07-23
 

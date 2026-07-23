@@ -8,6 +8,7 @@
 import { Services } from './ServiceContainer.js';
 import { Utils } from '../utils.js';
 import { EventBus } from './EventBus.js';
+import { openExplorerAt } from '../apps/FileExplorer.js';
 
 let documentListenersAttached = false;
 let boundWallpaperUpload: HTMLInputElement | null = null;
@@ -16,6 +17,15 @@ let boundIeAddressInput: HTMLInputElement | null = null;
 
 function onDocumentDblClick(e: MouseEvent): void {
     const target = e.target as HTMLElement;
+
+    // Folder shortcuts open the single FileX explorer at a path — one window,
+    // never a second bespoke folder window (see the Games-opens-twice bug).
+    const pathEl = target.closest('[data-explorer-path]') as HTMLElement;
+    if (pathEl?.dataset.explorerPath) {
+        openExplorerAt(pathEl.dataset.explorerPath);
+        return;
+    }
+
     const el = target.closest('[data-launch]') as HTMLElement;
     if (!el) return;
 
@@ -32,6 +42,15 @@ function onDocumentDblClick(e: MouseEvent): void {
 
 function onDocumentClick(e: MouseEvent): void {
     const target = e.target as HTMLElement;
+
+    // Folder shortcut in the Start Menu → open FileX at the path (single window).
+    const menuPathEl = target.closest('[data-explorer-path]') as HTMLElement;
+    if (menuPathEl?.dataset.explorerPath && menuPathEl.closest('#start-menu')) {
+        openExplorerAt(menuPathEl.dataset.explorerPath);
+        const menu = document.getElementById('start-menu');
+        if (menu) menu.style.display = 'none';
+        return;
+    }
 
     // data-launch via single click (Start Menu items)
     const launchEl = target.closest('[data-launch]') as HTMLElement;

@@ -152,10 +152,16 @@
     overflow: auto;
 }
 
-/* v1.0.7.5: Fix double color in explorer windows */
+/* Explorer window: a vertical flex column so the file grid fills the window.
+ * Without this the body was `display:block` and the grid did not grow, leaving a
+ * gap below it where the window's translucent background showed through — the
+ * "two colours" seen when the window was resized taller (the v1.0.7.5 fix set
+ * the colours but never completed the flex layout). */
 .window-body.explorer-window {
     padding: 0;
     background: var(--window-content-bg);
+    display: flex;
+    flex-direction: column;
 }
 
 /* Toolbar and Address bar = gray (Windows 95 authentic) */
@@ -163,12 +169,22 @@
 .window-body.explorer-window .explorer-address {
     background: var(--window-bg);
     padding: 8px;
+    flex: 0 0 auto;
 }
 
-/* Content area = white */
+/* Content area fills the remaining height and scrolls its own overflow, so a
+ * resized window is one solid colour and long folders scroll instead of
+ * stretching the window. */
 .window-body.explorer-window .explorer-content {
     background: var(--window-content-bg);
     padding: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.window-body.explorer-window .window-statusbar {
+    flex: 0 0 auto;
 }
 
 .window-body h3 {

@@ -53,7 +53,9 @@ export function setupEventListeners(): void {
     setupStartMenu();
 
     // Games is now a shortcut into the real explorer, not a bespoke window.
-    setupIconAction('icon-games-folder', () => openExplorerAt('C:\\GAMES'));
+    // 'icon-games-folder' now opens FileX at C:\GAMES via its data-explorer-path
+    // (handled in EventDelegation) — a single window, no legacy games-folder
+    // window opening alongside it.
     setupIconAction('icon-vlrs-folder', () => closeWindowThenOpen('win-games-folder', 'win-vlrs-folder'));
     setupIconAction('icon-flappy-folder', () => closeWindowThenOpen('win-games-folder', 'win-flappy-folder'));
     setupIconAction('icon-football-folder', () => closeWindowThenOpen('win-games-folder', 'win-football-folder'));
