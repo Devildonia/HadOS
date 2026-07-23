@@ -56,7 +56,7 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - 🧠 **Real OS primitives, not a mockup.** A process `Kernel` that spawns genuinely **isolated processes** (Web Worker / sandboxed iframe) over an authenticated per-process IPC channel — a `while(true)` in an app can't freeze the desktop, and a watchdog kills it. Apps reach the system only through **mediated syscalls** gated by **user-consented capabilities**, and are confined to their own home directory.
 - 🦴 **A 3D physics pet.** An interactive ragdoll powered by **Rapier3D + Three.js** with grab physics, procedural animation, and an AI state machine — a differentiator you won't find in most desktop clones.
 - 🔬 **Determinism by design.** Zero `Math.random()` in logic paths; seeded PRNG where reproducibility matters. Hot paths are zero-allocation with a fixed-timestep loop.
-- 🤖 **A real on-device AI substrate.** Three inference engines behind consented capabilities, all running on your machine with nothing uploaded: **LiteRT.js** segmentation (Pinta removes photo backgrounds), **MediaPipe LLM Inference** over a user-imported Gemma (the Messenger holds real conversations, HN Scout summarises discussions, Doc Explorer answers grounded questions), and **transformers.js** (Whisper transcribes local media with real timestamps; MiniLM embeddings power true semantic search). Isolated worker processes, per-app consent, download-once caches.
+- 🤖 **A real on-device AI substrate.** Three inference engines behind consented capabilities, all running on your machine with nothing uploaded: **LiteRT.js** segmentation (Pinta removes photo backgrounds), **MediaPipe LLM Inference** over a user-imported Gemma (Tavern Chat holds real conversations, Nova summarises Hacker News discussions, Doc Query answers grounded questions), and **transformers.js** (Whisper transcribes local media with real timestamps; MiniLM embeddings power true semantic search). Isolated worker processes, per-app consent, download-once caches.
 - ✅ **981 tests** (unit, characterization & Playwright E2E) with coverage gates in CI — rare in this niche.
 - 🎨 **Intentional aesthetics.** A chrome of its own — dark surfaces, the blue of the mark, macOS-style glass, and a raymarched logo wallpaper — driven by a token-based theme engine, plus a "Modern" theme. No AI-default look.
 - 🗣️ **Honest by policy.** Simulated features say so on their face (a summary panel is labelled *"simulated demo"*, demo data is stamped `[DEMO]`), and anything that could send data off-device — like browser speech recognition — sits behind an explicit consent prompt. Every external audit finding is remediated and encoded as a regression test.
@@ -72,8 +72,8 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 | ![HadOS desktop — glass chrome, raymarched wallpaper](docs/screenshots/desktop-hados.png) | ![Modern theme desktop](docs/screenshots/desktop-modern.png) |
 | **Start Menu** | **This PC — a real, quota-backed drive** |
 | ![Start Menu with the circular centered start button](docs/screenshots/start-menu.png) | ![FileX at This PC showing the HadOS drive with real storage quota](docs/screenshots/explorer-thispc.png) |
-| **Multitasking — Task Manager & Terminal** | **Media apps — Media Player & HN Scout** |
-| ![Task Manager and Terminal windows](docs/screenshots/apps-system.png) | ![Media Player with a YouTube embed and Hacker News Scout with live stories](docs/screenshots/apps-media.png) |
+| **Multitasking — Task Pilot & Shell Core** | **Media apps — Media Player & Nova** |
+| ![Task Pilot and Shell Core windows](docs/screenshots/apps-system.png) | ![Media Player with a YouTube embed and Nova with live Hacker News stories](docs/screenshots/apps-media.png) |
 | **3D Physics Ragdoll** | **Games Arcade (sandboxed)** |
 | ![3D physics ragdoll pet on the desktop](docs/screenshots/ragdoll-3d.png) | ![Game running in a sandboxed window](docs/screenshots/games-arcade.png) |
 
@@ -105,15 +105,15 @@ The "desktop in the browser" space is crowded — so this project leans on **eng
 - **Workshop** — customize skins, scale, and behavior.
 
 ### 🛠️ Built-in Applications
-📝 **Notapad** (VFS save/load, find & replace, multi-window) · 🎨 **Pinta** (tools, color pickers, undo/redo, **AI background removal on-device**) · 📂 **FileX** (unified explorer with This PC) · 🌐 **Navea** browser (history + URL safety filter) · 📻 Webamp · ⚙️ Control Panel & Settings (HDR, wallpapers, themes, language) · 🖥️ **Terminal** (VFS-backed shell) · 📊 **Task Pilot** (live process monitor) · 🧩 **Plugin Manager**.
+📝 **Notapad** (VFS save/load, find & replace, multi-window) · 🎨 **Pinta** (tools, color pickers, undo/redo, **AI background removal on-device**) · 📂 **FileX** (unified explorer with This PC) · 🌐 **Navea** browser (history + URL safety filter) · 📻 Webamp · ⚙️ Control Panel & Settings (HDR, wallpapers, themes, language) · 🖥️ **Shell Core** (VFS-backed terminal) · 📊 **Task Pilot** (live process monitor) · 🧩 **Plugin Manager**.
 
 ### 🎙️ Media & demo apps
 Five apps that show the platform's range — and practice its honesty policy (anything simulated is labelled as such, in the UI itself):
 - 🎬 **Media Player** — local video/audio and YouTube. The embed is driven **directly via postMessage** (`enablejsapi=1` widget protocol) — no external YouTube script, so the strict CSP stays intact. **Local files get REAL on-device transcription** (Whisper, ~140 MB one-time download behind consent) with model timestamps driving the karaoke highlight and click-to-seek; YouTube's panel honestly explains that an embed's audio is unreachable from the browser.
-- 📰 **Hacker News Scout** — live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. With a Gemma model imported, the summary panel **really summarises the thread's discussion on-device** (the badge flips to `On-device AI`); without one it stays a labelled simulated demo.
-- 🎙️ **AudioStudio** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
-- 💬 **Messenger** — chat with scripted characters (canned replies; says so in its description).
-- 📄 **Doc Explorer** — indexes a VFS document with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
+- 📰 **Nova** — a Hacker News reader: live top stories from the official Firebase API; if the network fails you get an honest error with a Retry button, and demo data only by explicit opt-in, stamped `[DEMO]`. With a Gemma model imported, the summary panel **really summarises the thread's discussion on-device** (the badge flips to `On-device AI`); without one it stays a labelled simulated demo.
+- 🎙️ **Voxcribe** — scripted podcasts via browser text-to-speech, plus voice dictation via the browser's speech recognition — gated behind a **consent prompt that warns audio may leave the device** (`speech:cloud` capability).
+- 💬 **Tavern Chat** — chat with scripted characters (canned replies; says so in its description).
+- 📄 **Doc Query** — indexes a VFS document with **real MiniLM embeddings** (~23 MB behind consent): search is true cosine similarity, and the vector-space canvas shows a **PCA projection of the actual vectors**. With a Gemma model imported, the retrieved lines feed the model and **answers are generated on-device, grounded and cited**. Deny the consent and it falls back to labelled keyword search.
 
 ### 🧠 On-device AI substrate
 
@@ -125,9 +125,9 @@ Nothing ever leaves the device. Per-phase design notes live in [`docs/ai/`](docs
 | Engine | Model | Delivery | Capability | Consumers |
 |---|---|---|---|---|
 | LiteRT.js | DeepLab v3 (2.7 MB) | pinned URL + SHA-256, OPFS cache | `ai:infer` | Pinta background removal |
-| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Messenger · HN Scout · Doc Explorer |
+| MediaPipe LLM | Gemma 3 1B (~550 MB) | **user-imported** (license-gated), hash-verified | `ai:chat` | Tavern Chat · Nova · Doc Query |
 | transformers.js | Whisper base q4 (~140 MB) | downloaded on consent, Cache API | `ai:transcribe` | Media Player |
-| transformers.js | MiniLM-L6 q8 (~23 MB) | downloaded on consent, Cache API | `ai:embed` | Doc Explorer semantic index |
+| transformers.js | MiniLM-L6 q8 (~23 MB) | downloaded on consent, Cache API | `ai:embed` | Doc Query semantic index |
 
 Two worker processes back this: the classic `ai-runtime` (LiteRT needs
 `importScripts()`; MediaPipe rides along) and the module `asr-runtime`
@@ -203,7 +203,7 @@ npm run preview
 | `Shift` + `Alt` + `Tab` | Cycle windows backward |
 | `Shift` + `F10` | Context menu |
 
-**MS-DOS Prompt commands**
+**Shell Core commands**
 ```text
 help            Show available commands
 ver             Print version info
@@ -260,7 +260,7 @@ graph TD
     Services --> Apps[In-realm Apps]
     Apps --> Notepad
     Apps --> Paint
-    Apps --> Terminal[MS-DOS Prompt]
+    Apps --> Shell[Shell Core]
 
     K -->|spawnWorker / spawnIframe| Proc[Isolated Processes]
     Proc --> W[Web Worker]
@@ -311,7 +311,7 @@ HadOS/
 │  ├─ ai/          # the AI substrate: AiService facade, LiteRT/GenAI/ASR/Embed engines,
 │  │               #   model cache (OPFS), Gemma prompt template, grounded-generation
 │  │               #   helpers, vector math (cosine top-K, PCA) — all seam-tested
-│  ├─ apps/        # Notapad, Pinta, Terminal, TaskPilot, MediaPlayer… (auto-registered)
+│  ├─ apps/        # Notapad, Pinta, Shell Core, Task Pilot, Media Player… (auto-registered)
 │  │  ├─ audiostudio/ · explorer/ · notepad/ · paint/ · taskmanager/  # per-app modules
 │  ├─ sdk/         # guest-side App Runtime SDK (appRuntime, guestBoot)
 │  ├─ workers/     # worker-process entries: compute, ai (classic), asr (module)
@@ -383,7 +383,7 @@ The app ships as an installable PWA. A Workbox service worker (generated from th
 
 ## 🌍 Browser Support
 
-Best experienced in a recent **Chromium-based browser** (Chrome, Edge, Brave). Requires **WebGL2** for the 3D ragdoll and shader wallpapers. Firefox and Safari run the desktop and 2D features; some heavy 3D/HDR effects and the JS-heap readout in Task Manager are Chromium-only.
+Best experienced in a recent **Chromium-based browser** (Chrome, Edge, Brave). Requires **WebGL2** for the 3D ragdoll and shader wallpapers. Firefox and Safari run the desktop and 2D features; some heavy 3D/HDR effects and the JS-heap readout in Task Pilot are Chromium-only.
 
 ---
 
@@ -412,9 +412,9 @@ See the [CHANGELOG](CHANGELOG.md) `[Unreleased]` section for the latest.
 - **Persistence** is client-side: the VFS tree lives in **IndexedDB** and binary files in **OPFS** (hundreds of MB, subject to the browser's storage quota), with a `localStorage` fallback where IndexedDB is unavailable. Durability on an abrupt close is best-effort — async writes are flushed on `visibilitychange`, which is more reliable than `beforeunload`.
 - **Single-user / client-side only** — no accounts, no server sync.
 - **Third-party code isolation** — apps run in a sandboxed iframe with an **opaque origin** (`allow-scripts`, no `allow-same-origin`) and reach the system only through a dedicated, authenticated channel: they cannot touch the host DOM, `localStorage` or IndexedDB. A **separate origin** (subdomain) would still add defence in depth — it would also isolate the guest's *own* storage and cover sandbox escapes — but it is no longer required for third-party isolation. By design, no untrusted code is `eval`'d.
-- Fake "hardware" figures in the Task Manager *System* tab are **simulated** (deterministic), not real device telemetry.
+- Fake "hardware" figures in Task Pilot's *System* tab are **simulated** (deterministic), not real device telemetry.
 - **Voice dictation uses the browser's own speech recognition** (`webkitSpeechRecognition`), which in Chromium may send audio to the browser vendor's servers. HadOS gates it behind an explicit consent prompt (`speech:cloud` capability) that says exactly that — but the recognition itself is not on-device.
-- **Every AI feature states its mode in its own UI.** Real on-device inference: Pinta's background removal (LiteRT.js), the Media Player's transcription of local files (Whisper), and — once a Gemma bundle is imported — the Messenger's chat, HN Scout's discussion summaries and Doc Explorer's grounded answers (MediaPipe LLM Inference). Without the Gemma import, the latter three fall back to clearly-labelled scripted/keyword behaviour.
+- **Every AI feature states its mode in its own UI.** Real on-device inference: Pinta's background removal (LiteRT.js), the Media Player's transcription of local files (Whisper), and — once a Gemma bundle is imported — Tavern Chat's conversations, Nova's discussion summaries and Doc Query's grounded answers (MediaPipe LLM Inference). Without the Gemma import, the latter three fall back to clearly-labelled scripted/keyword behaviour.
 
 ---
 
