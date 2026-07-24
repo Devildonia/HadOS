@@ -550,9 +550,14 @@ export class HadOSDocExplorer implements IWindowsApp {
 
     private startCanvasAnimation(): void {
         const render = () => {
+            // Bail if the host tore rAF down (jsdom teardown between tests, or a
+            // non-browser context): a pending frame would otherwise throw
+            // ReferenceError and fail the whole suite as an unhandled error.
+            if (typeof requestAnimationFrame !== 'function') return;
             this.drawVectorSpace();
             this.animationFrameId = requestAnimationFrame(render);
         };
+        if (typeof requestAnimationFrame !== 'function') return;
         render();
     }
 
