@@ -7,13 +7,17 @@
     display: flex;
     align-items: center;
     height: 26px;
-    padding: 0 8px;
+    padding: 0 6px;
     border: 2px solid;
     border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
 }
 
 #taskbar-clock {
     font-size: 11px;
-    min-width: 45px;
+    /* Hug the time text instead of a fixed 45px box that left the tray
+       rectangle gaping around a ~26px "HH:MM". tabular-nums keeps every digit
+       the same width, so the box never jitters as the minute ticks. */
+    padding: 0 6px;
     text-align: center;
+    font-variant-numeric: tabular-nums;
 }

@@ -231,45 +231,45 @@ export class Settings implements IWindowsApp {
                         <div class="wallpaper-preview" style="background-color: #008080;"></div>
                         <span>${i18n.t('settings.display_none')}</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_1.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_1.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_01.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_01.webp');">
                         </div>
-                        <span>Windows 95</span>
+                        <span>HadOS 1</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_2.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_2.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_02.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_02.webp');">
                         </div>
-                        <span>Classics</span>
+                        <span>HadOS 2</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_3.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_3.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_03.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_03.webp');">
                         </div>
-                        <span>Logo 1</span>
+                        <span>HadOS 3</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_4.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_4.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_04.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_04.webp');">
                         </div>
-                        <span>Prism Blue</span>
+                        <span>HadOS 4</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_5.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_5.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_05.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_05.webp');">
                         </div>
-                        <span>Waving Logo</span>
+                        <span>HadOS 5</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_6.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_6.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_06.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_06.webp');">
                         </div>
-                        <span>Windows 1.0</span>
+                        <span>HadOS 6</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_7.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_7.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_07.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_07.webp');">
                         </div>
-                        <span>Logo Green</span>
+                        <span>HadOS 7</span>
                     </div>
-                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/w95_8.webp">
-                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/w95_8.webp');">
+                    <div class="wallpaper-item" data-wallpaper="assets/wallpapers/Had_08.webp">
+                        <div class="wallpaper-preview" style="background-image: url('assets/wallpapers/Had_08.webp');">
                         </div>
-                        <span>Win 10 Retro</span>
+                        <span>HadOS 8</span>
                     </div>
                 </div>
             </div>

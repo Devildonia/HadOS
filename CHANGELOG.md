@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **New desktop wallpaper set**: the eight Windows-nostalgia wallpapers
+  (`w95_1..8.webp`, labelled "Windows 95" / "Win 10 Retro" / …) are replaced by
+  eight HadOS wallpapers (`Had_01..08.webp`, labelled "HadOS 1..8") in the
+  Display settings picker. (The old `w95_*.webp` files are now unreferenced.)
+
+### Fixed
+
+- **Taskbar clock rectangle gaped around the time**: `#taskbar-clock` had a fixed
+  `min-width: 45px` while "HH:MM" renders ~26px, so the system-tray box left dead
+  space around it. The clock now hugs its text (`min-width` dropped, small
+  symmetric padding) with `font-variant-numeric: tabular-nums` so the box never
+  jitters as the minute ticks, and the tray inset tightened 8px → 6px.
+
 ## [1.0.10] - 2026-07-24
 
 A polish release closing the v1.0.9 RC audit (GO, 9.7/10). No new features — a
