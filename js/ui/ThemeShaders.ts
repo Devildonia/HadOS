@@ -306,10 +306,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // Slow organic drift.
     vec2 st = uv * rotate2D(0.1 * sin(iTime * 0.15));
 
-    // HadOS dark palette.
-    vec3 bgColor   = vec3(0.04, 0.05, 0.07); // ultra-dark night blue
-    vec3 gridColor = vec3(0.12, 0.16, 0.22); // subtle metallic grid
-    vec3 glowColor = vec3(0.20, 0.35, 0.55); // technical cyan/blue glow
+    // HadOS dark palette — lifted off pure black so the grid actually reads on a
+    // desktop (the first pass sat too close to #000 to notice).
+    vec3 bgColor   = vec3(0.06, 0.09, 0.14); // deep night blue, not black
+    vec3 gridColor = vec3(0.22, 0.32, 0.45); // brighter metallic grid
+    vec3 glowColor = vec3(0.26, 0.46, 0.72); // technical cyan/blue glow
 
     // Main grid + a finer secondary grid (uv pre-scaled x2 → 2*aa line width).
     float mainGrid = grid(st + vec2(iTime * 0.01, iTime * 0.005), 4.0, aa);
@@ -317,14 +318,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // Soft vignette + a dispersed central pulse (simplified glow).
     float dist = length(uv);
-    float vignette = smoothstep(1.2, 0.2, dist);
+    float vignette = smoothstep(1.35, 0.2, dist);
     float pulse = 0.5 + 0.5 * sin(iTime * 0.8 - dist * 3.0);
-    float ambientGlow = (0.05 / (dist + 0.3)) * pulse;
+    float ambientGlow = (0.10 / (dist + 0.3)) * pulse;
 
     // Composite.
     vec3 finalColor = bgColor;
-    finalColor += gridColor * (mainGrid + subGrid) * 0.4;
-    finalColor += glowColor * ambientGlow * 0.25;
+    finalColor += gridColor * (mainGrid + subGrid) * 0.65;
+    finalColor += glowColor * ambientGlow * 0.5;
     finalColor *= vignette;
 
     fragColor = vec4(finalColor, 1.0);
