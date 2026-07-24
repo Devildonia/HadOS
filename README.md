@@ -30,6 +30,7 @@ HadOS is a fully functional desktop environment that runs entirely in the browse
 > HadOS continues the project formerly released as **Windows App Center**, which reached v1.6.7 and is [archived here](https://github.com/Devildonia/windows-app-center) with its full history. The architecture was built and audited across that line — every audit finding is encoded as a regression test — and follows a 6-phase **Web OS** design; per-phase notes live in [`docs/webos-roadmap/`](docs/webos-roadmap/), and the on-device AI design in [`docs/ai/`](docs/ai/). See the [CHANGELOG](CHANGELOG.md), and [`docs/known-issues.md`](docs/known-issues.md) for what is knowingly still wrong.
 
 ## 📋 Table of Contents
+- [Demo](#-demo)
 - [Why this exists](#-why-this-exists)
 - [Screenshots](#-screenshots)
 - [Features](#-features)
@@ -46,6 +47,16 @@ HadOS is a fully functional desktop environment that runs entirely in the browse
 - [Known Limitations](#-known-limitations)
 - [Contributing](#-contributing)
 - [License & Credits](#-license)
+
+---
+
+## 🎬 Demo
+
+<p align="center">
+  <img src="docs/screenshots/demo.gif" alt="HadOS demo — a sped-up tour of FileX, Notapad, Pinta, Tavern Chat, Nova, and the Modern-theme grid shader" width="760">
+</p>
+
+<sub>A sped-up, silent montage. The full **narrated 1080p · 60fps** walkthrough is produced by the zero-touch pipeline — `npm run generate:demo-video` (Playwright → ElevenLabs → FFmpeg); see [`docs/demo-video.md`](docs/demo-video.md).</sub>
 
 ---
 
