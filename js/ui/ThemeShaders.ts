@@ -255,141 +255,79 @@ void main() {
 }
 `;
 
-// Modern UI Shader (Provided cool geometric raymarching effect)
+/**
+ * Modern-theme wallpaper — the HadOS technical grid.
+ *
+ * Replaces the old raymarcher that literally drew Windows window-frames in blue
+ * (`//windows`, WBCOL/WBCOL2) — the last visible Windows trace on the desktop.
+ *
+ * Adapted from the proposed Shadertoy fragment for this engine's WebGL1 / GLSL
+ * ES 1.00 context: precision header + a `main()` that forwards to `mainImage`,
+ * `iMouse` dropped (unused, and the engine never binds it), and — the one real
+ * porting hazard — `grid()` rewritten WITHOUT `fwidth`. The context does not
+ * enable `OES_standard_derivatives`, so a derivative call would fail to compile
+ * and paint a black screen. Instead the per-pixel line width is passed in: one
+ * unit of the screen-normalised `uv` (divided by iResolution.y) spans exactly
+ * `1.0/iResolution.y` pixels, and the sub-grid samples a pre-scaled uv, so each
+ * call passes its own `|d uv / d pixel|` and lines stay ~1px crisp at any scale.
+ */
 export const SHADER_MODERN = `
-#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
 #endif
 
 uniform vec2 iResolution;
 uniform float iTime;
 
-#define PI     3.1415926535897921284
-#define REP    40
-#define d2r(x) (x * PI / 180.0)
-#define WBCOL  (vec3(0.5, 0.7,  1.7))
-#define WBCOL2 (vec3(0.15, 0.8, 1.7))
-// We don't have iFrame passed as uniform currently, simulating it as 0
-#define ZERO   0
-
-float hash( vec2 p ) {
-	float h = dot( p, vec2( 127.1, 311.7 ) );
-	return fract( sin( h ) * 458.325421) * 2.0 - 1.0;
+// Subtle geometric grid. \`aa\` is the screen-space size of one uv unit
+// (|d uv / d pixel|); scale*aa is the fwidth the original derived, so the lines
+// render ~1px without needing the derivatives extension.
+float grid(vec2 uv, float scale, float aa) {
+    vec2 px = vec2(scale * aa);
+    vec2 g = abs(fract(uv * scale - 0.5) - 0.5) / px;
+    float line = min(g.x, g.y);
+    return 1.0 - min(line, 1.0);
 }
 
-float noise( vec2 p ) {
-	vec2 i = floor( p );
-	vec2 f = fract( p );
-	
-	f = f * f * ( 3.0 - 2.0 * f );
-	
-	return mix(
-		mix( hash( i + vec2( 0.0, 0.0 ) ), hash( i + vec2( 1.0, 0.0 ) ), f.x ),
-		mix( hash( i + vec2( 0.0, 1.0 ) ), hash( i + vec2( 1.0, 1.0 ) ), f.x ),
-		f.y
-	);
+mat2 rotate2D(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return mat2(c, -s, s, c);
 }
 
-vec2 rot(vec2 p, float a) {
-	return vec2(
-		p.x * cos(a) - p.y * sin(a),
-		p.x * sin(a) + p.y * cos(a));
-}
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // Screen-normalised coordinates, centred at (0,0). Dividing by y means one
+    // uv unit spans iResolution.y pixels — the basis for the grid line width.
+    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    float aa = 1.0 / iResolution.y;
 
-float nac(vec3 p, vec2 F, vec3 o) {
-	const float R = 0.0001;
-	p += o;
-	return length(max(abs(p.xy)-vec2(F),0.0)) - R;	
-}
+    // Slow organic drift.
+    vec2 st = uv * rotate2D(0.1 * sin(iTime * 0.15));
 
-float by(vec3 p, float F, vec3 o) {
-	const float R = 0.0001;
-	p += o;
-	return length(max(abs(mod(p.xy, 3.0))-F,0.0)) - R;	
-}
+    // HadOS dark palette.
+    vec3 bgColor   = vec3(0.04, 0.05, 0.07); // ultra-dark night blue
+    vec3 gridColor = vec3(0.12, 0.16, 0.22); // subtle metallic grid
+    vec3 glowColor = vec3(0.20, 0.35, 0.55); // technical cyan/blue glow
 
-float recta(vec3 p, vec3 F, vec3 o) {
-	const float R = 0.0001;
-	p += o;
-	return length(max(abs(p)-F,0.0)) - R;	
-}
+    // Main grid + a finer secondary grid (uv pre-scaled x2 → 2*aa line width).
+    float mainGrid = grid(st + vec2(iTime * 0.01, iTime * 0.005), 4.0, aa);
+    float subGrid  = grid(st * 2.0 + vec2(-iTime * 0.015, iTime * 0.01), 8.0, 2.0 * aa) * 0.3;
 
-float map1(vec3 p, float scale) {
-	float G = 0.50;
-	float F = 0.50 * scale;
-	float t =  nac(p, vec2(F,F), vec3( G,  G, 0.0));
-	t = min(t, nac(p, vec2(F,F), vec3( G, -G, 0.0)));
-	t = min(t, nac(p, vec2(F,F), vec3(-G,  G, 0.0)));
-	t = min(t, nac(p, vec2(F,F), vec3(-G, -G, 0.0)));
-	return t;
-}
+    // Soft vignette + a dispersed central pulse (simplified glow).
+    float dist = length(uv);
+    float vignette = smoothstep(1.2, 0.2, dist);
+    float pulse = 0.5 + 0.5 * sin(iTime * 0.8 - dist * 3.0);
+    float ambientGlow = (0.05 / (dist + 0.3)) * pulse;
 
-float map2(vec3 p) {
-	float t = map1(p, 0.9);
-    t = max(t, recta(p, vec3(1.0, 1.0, 0.02), vec3(0.0, 0.0, 0.0)));
-	return t;
-}
+    // Composite.
+    vec3 finalColor = bgColor;
+    finalColor += gridColor * (mainGrid + subGrid) * 0.4;
+    finalColor += glowColor * ambientGlow * 0.25;
+    finalColor *= vignette;
 
-float gennoise(vec2 p) {
-	float d = 0.5;
-	mat2 h = mat2( 1.6, 1.2, -1.2, 1.6 );
-	
-	float color = 0.0;
-	for( int i = 0; i < 2; i++ ) {
-		color += d * noise( p * 5.0 + iTime);
-		p *= h;
-		d /= 2.0;
-	}
-	return color;
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-    fragColor = vec4(0.0);
-    for(int count = 0 ; count < 2; count++) {
-        vec2 uv = -1.0 + 2.0 * ( fragCoord.xy / iResolution.xy );
-        uv *= 1.4;
-        uv.x += hash(uv.xy + iTime + float(count)) / 512.0;
-        uv.y += hash(uv.yx + iTime + float(count)) / 512.0;
-        vec3 dir = normalize(vec3(uv * vec2(iResolution.x / iResolution.y, 1.0), 1.0 + sin(iTime) * 0.01));
-        dir.xz = rot(dir.xz, d2r(70.0));
-        dir.xy = rot(dir.xy, d2r(90.0));
-        vec3 pos    = vec3(-0.1 + sin(iTime * 0.3) * 0.1, 2.0 + cos(iTime * 0.4) * 0.1, -3.5);
-        vec3  col   = vec3(0.0);
-        float t     = 0.0;
-        float M     = 1.002;
-        float bsh   = 0.01;
-        float dens  = 0.0;
-
-        for(int i = ZERO ; i < REP * 24; i++) {
-            float temp = map1(pos + dir * t, 0.6);
-            if(temp < 0.2) {
-                col += WBCOL * 0.005 * dens;
-            }
-            t += bsh * M;
-            bsh *= M;
-            dens += 0.025;
-        }
-
-        //windows
-        t = 0.0;
-        float y = 0.0;
-        for(int i = ZERO ; i < REP; i++) {
-            float temp = map2(pos + dir * t);
-            if(temp < 0.025) {
-                col += WBCOL2 * 0.5;
-            }
-            t += temp;
-            y++;
-        }
-        col += ((2.0 + uv.x) * WBCOL2) + (y / (25.0 * 50.0));
-        col += gennoise(dir.xz) * 0.5;
-        col *= 1.0 - uv.y * 0.5;
-        col *= vec3(0.03);
-        col  = pow(col, vec3(0.717));
-        
-        fragColor += vec4(col, 1.0 / (t));
-    }
-    fragColor /= vec4(2.5);
+    fragColor = vec4(finalColor, 1.0);
 }
 
 void main() {

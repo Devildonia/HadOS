@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Modern-theme wallpaper shader replaced — the last Windows trace is gone**:
+  the modern theme's animated wallpaper was a raymarcher that literally drew blue
+  Windows window-frames (`//windows`, WBCOL/WBCOL2). It is now the HadOS technical
+  grid — a dark night-blue field with a subtle drifting geometric grid, a soft
+  central glow and a vignette, in the HadOS palette. Adapted for the engine's
+  WebGL1/GLSL ES 1.00 context: `iMouse` dropped (never bound) and `grid()`
+  rewritten **without `fwidth`** (the context doesn't enable
+  `OES_standard_derivatives`, so a derivative call would fail to compile) —
+  the per-pixel line width is derived from `iResolution` instead, so lines stay
+  ~1px crisp. Verified: compiles and links clean in a real WebGL1 context and
+  renders the intended palette (base ~rgb(10,13,18), grid highlights, vignetted
+  edges).
 - **New desktop wallpaper set**: the eight Windows-nostalgia wallpapers
   (`w95_1..8.webp`, labelled "Windows 95" / "Win 10 Retro" / …) are replaced by
   eight HadOS wallpapers (`Had_01..08.webp`, labelled "HadOS 1..8") in the
