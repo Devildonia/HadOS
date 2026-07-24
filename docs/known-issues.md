@@ -253,15 +253,17 @@ that theme gets its own assets.
   whatever bug you just fixed appearing to still be there. Hard-reload, or spawn with a cache
   buster while iterating. Production is unaffected: Workbox revisions precached files per build.
 
-- **The e2e CI job cannot pass: ubuntu runner, win32-only snapshots.** `.github/workflows/ci.yml`
-  runs Playwright on `ubuntu-latest`, and `playwright.config.js` sets no `snapshotPathTemplate`, so
-  the default includes the platform — CI looks for `…-chromium-linux.txt/.png` while every snapshot
-  committed is `…-chromium-win32.*`. Missing snapshots fail under CI rather than being written.
-  This predates the AI work (it arrived with the css-baseline spec in c9aaa0a) and is invisible
-  locally, where the win32 files match. Three ways out, none free: generate the linux set in a
-  container and commit both; move the e2e job to `windows-latest`; or drop `{platform}` from
-  `snapshotPathTemplate` and accept that font rendering differs across OSes, which the screenshot
-  assertions would then trip over (the text snapshots would be fine).
+- **The e2e CI job runs on `windows-latest` to match the win32 snapshots.** `playwright.config.ts`
+  sets no `snapshotPathTemplate`, so the default snapshot name includes the platform, and every
+  committed snapshot is `…-chromium-win32.*`. The job used to run on `ubuntu-latest`, where CI looked
+  for `…-chromium-linux.*` that do not exist and failed on a cosmetic platform mismatch (this
+  arrived with the css-baseline spec in c9aaa0a and was deferred while the repo was private). For the
+  public launch the job was moved to `windows-latest` so the platform matches. Residual risk: the two
+  screenshot baselines (`desktop-hados.png`, `start-menu-and-window-hados.png`) are pixel-compared
+  with `maxDiffPixels: 100`; font anti-aliasing can differ between the machine that blessed them and
+  the GitHub runner, so a screenshot spec could still flake even on Windows. The text baselines
+  (CSSOM, computed styles) are deterministic. A later pass should regenerate the snapshot set on the
+  runner (or in a matching container) rather than a dev machine.
 
 - **A removed background is invisible on Pinta's white canvas.** "Quitar fondo" clears alpha, and
   the CSS `background: white` under the bitmap shows straight through — so on a photo whose

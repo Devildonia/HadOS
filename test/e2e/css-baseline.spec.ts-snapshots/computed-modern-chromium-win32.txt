@@ -143,8 +143,8 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 89.5px
-  height: 23px
+  width: 86.2656px
+  height: 21.5px
   min-height: auto
   max-height: none
   padding: 0px
@@ -1385,11 +1385,11 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 301.547px
+  width: 290.656px
   height: 26px
   min-height: auto
   max-height: none
-  padding: 0px 8px
+  padding: 0px 6px
   margin: 0px
   top: auto
   left: auto

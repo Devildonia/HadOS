@@ -1385,7 +1385,7 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 132px
+  width: 127.734px
   height: 24px
   min-height: auto
   max-height: none

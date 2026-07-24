@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### CI
+
+- **e2e job moved to `windows-latest`** so it matches the committed `-win32`
+  Playwright snapshots (it ran on `ubuntu-latest`, which looked for a nonexistent
+  `-linux` set and failed on a cosmetic platform mismatch — deferred while the
+  repo was private). Re-blessed the CSS-baseline snapshots for the rc.1 visual
+  changes (the window titlebar icon, the tightened `#system-tray`/clock). e2e
+  passes locally on Windows (12/12); see `docs/known-issues.md` for the residual
+  screenshot font-AA caveat.
+
 ## [1.0.0-rc.1] - 2026-07-24
 
 First **public** release candidate. The project's internal 1.0.x line is

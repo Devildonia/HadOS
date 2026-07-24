@@ -35,7 +35,12 @@ jobs:
   e2e:
     name: End-to-End Tests (Playwright)
     needs: quality
-    runs-on: ubuntu-latest
+    # windows-latest: the committed Playwright snapshots are '-win32' (generated on
+    # Windows). Playwright looks up snapshots by platform, so an ubuntu runner never
+    # finds them and the job fails on a cosmetic platform mismatch. Running on
+    # Windows matches the snapshot set. (A later pass will regenerate a linux set or
+    # move to a matching container; this keeps CI green for the public launch.)
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
