@@ -2,12 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 
-// Read the key from the environment only — never hardcode a secret. Put it in a
-// gitignored `.env` (ELEVENLABS_API_KEY=...) or export it before running.
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+// The key is read from the environment ONLY, and lazily (at call time) — never
+// hardcode a secret, and never read it at import time, since the caller loads
+// `.env` after the imports are evaluated. Put it in a gitignored `.env`
+// (ELEVENLABS_API_KEY=...) or export it before running.
+const apiKey = () => process.env.ELEVENLABS_API_KEY;
 // Voice: Adam (pNInz6obpgDQGcFmaJgB) or Rachel (21m00Tcm4TlvDq8ikWAM)
-const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB';
-const MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
+const voiceId = () => process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB';
+const modelId = () => process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 
 export interface SceneSpeech {
     id: string;
@@ -24,7 +26,7 @@ export interface GeneratedClip {
 
 /** True when a key is present, so callers can gracefully skip the voiceover. */
 export function hasElevenLabsKey(): boolean {
-    return !!ELEVENLABS_API_KEY;
+    return !!apiKey();
 }
 
 /** Probe an mp3's duration with ffprobe; 0 if it can't be read. */
@@ -42,7 +44,8 @@ function probeDurationSec(file: string): number {
 }
 
 export async function generateSceneAudios(scenes: SceneSpeech[], outputDir: string): Promise<GeneratedClip[]> {
-    if (!ELEVENLABS_API_KEY) {
+    const key = apiKey();
+    if (!key) {
         console.warn('[ElevenLabs] No ELEVENLABS_API_KEY — skipping voiceover (video will be silent, subtitles only).');
         return [];
     }
@@ -55,16 +58,16 @@ export async function generateSceneAudios(scenes: SceneSpeech[], outputDir: stri
         console.log(`[ElevenLabs] Generating audio for scene '${scene.id}'...`);
 
         try {
-            const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+            const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId()}`, {
                 method: 'POST',
                 headers: {
                     'Accept': 'audio/mpeg',
                     'Content-Type': 'application/json',
-                    'xi-api-key': ELEVENLABS_API_KEY,
+                    'xi-api-key': key,
                 },
                 body: JSON.stringify({
                     text: scene.text,
-                    model_id: MODEL_ID,
+                    model_id: modelId(),
                     voice_settings: { stability: 0.5, similarity_boost: 0.75 },
                 }),
             });

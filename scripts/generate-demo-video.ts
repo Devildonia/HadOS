@@ -42,6 +42,27 @@ const FINAL_MP4 = path.join(OUTPUT_DIR, `hados-demo-${HEIGHT}p.mp4`);
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+/**
+ * Minimal .env loader (no dependency). tsx/node do not read .env on their own,
+ * so without this a key placed in .env would be silently ignored and the video
+ * would render mute. Real env vars already set win over the file.
+ */
+function loadEnv(): void {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (!fs.existsSync(envPath)) return;
+    for (const raw of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line || line.startsWith('#')) continue;
+        const eq = line.indexOf('=');
+        if (eq === -1) continue;
+        const k = line.slice(0, eq).trim();
+        let v = line.slice(eq + 1).trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+        if (k && process.env[k] === undefined) process.env[k] = v;
+    }
+    console.log('[demo] Loaded .env');
+}
+
 // ---- Dev server -------------------------------------------------------------
 async function ensureServer(): Promise<ChildProcess | null> {
     try {
@@ -284,6 +305,7 @@ async function recordScreen(): Promise<{ rawVideo: string; scenes: SceneSpeech[]
 
 // ---- Main -------------------------------------------------------------------
 async function main() {
+    loadEnv();
     for (const d of [OUTPUT_DIR, AUDIO_DIR]) if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
 
     const server = await ensureServer();
