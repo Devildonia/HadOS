@@ -74,7 +74,7 @@ describe('EventDelegation', () => {
             Services.register('DesktopManager', mockDM as any);
 
             document.body.innerHTML = `
-                <div data-wallpaper="assets/wallpapers/w95_1.webp">Mountain</div>
+                <div data-wallpaper="assets/wallpapers/Had_01.webp">Mountain</div>
             `;
 
             initEventDelegation();
@@ -83,7 +83,7 @@ describe('EventDelegation', () => {
                 new MouseEvent('click', { bubbles: true })
             );
 
-            expect(mockDM.setWallpaper).toHaveBeenCalledWith('assets/wallpapers/w95_1.webp');
+            expect(mockDM.setWallpaper).toHaveBeenCalledWith('assets/wallpapers/Had_01.webp');
         });
 
         it('should handle empty wallpaper (default shader)', () => {

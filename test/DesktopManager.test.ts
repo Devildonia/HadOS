@@ -47,9 +47,9 @@ describe('DesktopManager', () => {
 
     describe('setWallpaper', () => {
         it('should set background image on desktop element', () => {
-            DesktopManager.setWallpaper('assets/wallpapers/w95_1.webp');
+            DesktopManager.setWallpaper('assets/wallpapers/Had_01.webp');
             const desktop = document.getElementById('desktop')!;
-            expect(desktop.style.backgroundImage).toContain('w95_1.webp');
+            expect(desktop.style.backgroundImage).toContain('Had_01.webp');
         });
 
         it('should hide shader when image wallpaper is set', () => {
