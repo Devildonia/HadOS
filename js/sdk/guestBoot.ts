@@ -4,11 +4,19 @@
  * handshake from the host (parent), then runs an App Runtime over that dedicated
  * port using the SDK — demonstrating "the SDK inside the iframe runtime".
  *
- * Served from 'self' so it loads under the app's strict CSP (`script-src 'self'`),
- * which blocks inline/cross-origin guest scripts. Paired with an iframe that has
- * `allow-same-origin` (first-party realm/document isolation + a dedicated,
- * spoof-proof channel). True opaque-origin isolation would require serving guests
- * from a separate origin — see docs/webos-roadmap.
+ * Isolation model — real opaque origin, NOT a first-party realm:
+ * This is the entry that `vite.guest.config.ts` bundles into a single self-
+ * contained CLASSIC IIFE (`public/process-guest.js`, loaded by
+ * `public/process-guest.html`). The host runs it in an iframe with
+ * `sandbox="allow-scripts"` and NO `allow-same-origin` — an opaque (`null`)
+ * origin. The blocker for opaque origins was never the CSP: it's that an opaque
+ * origin cannot fetch ES modules (CORS refuses them from a null origin), which
+ * is what used to force `allow-same-origin`. A classic script executes without a
+ * CORS check, so shipping the guest as one inlined IIFE is exactly what lets us
+ * drop `allow-same-origin` and get true origin isolation — no separate origin
+ * required. Per-process auth (host transfers the port only to the frame it
+ * created; the guest accepts only from `window.parent`) rides on top.
+ * See IframeProcess.ts, vite.guest.config.ts, and docs/webos-roadmap.
  */
 
 import { createPortRuntime } from './appRuntime';
