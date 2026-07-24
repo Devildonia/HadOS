@@ -38,7 +38,7 @@ export class HadOSAudioStudio implements IWindowsApp {
             width: 580,
             height: 520,
             resizable: true,
-            icon: '🎙️'
+            icon: 'assets/icons/voxcribe.webp'
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -130,7 +130,7 @@ export class HadOSAudioStudio implements IWindowsApp {
 // Auto-register. The description says what the engines actually are.
 Kernel.registerApp('audiostudio', HadOSAudioStudio, {
     name: 'Voxcribe',
-    icon: '🎙️',
+    icon: 'assets/icons/voxcribe.webp',
     description: 'Scripted podcasts (browser TTS), on-device Whisper dictation, and Gemma-composed melodies played by the local synth.',
     singleton: true
 });

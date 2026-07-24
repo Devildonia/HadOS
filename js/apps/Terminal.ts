@@ -34,7 +34,7 @@ export class Terminal implements IWindowsApp {
             width: 560,
             height: 360,
             resizable: true,
-            icon: '🖥️',
+            icon: 'assets/icons/shell_core.webp',
             statusBar: { text: this.cwd }
         });
 
@@ -376,7 +376,7 @@ export class Terminal implements IWindowsApp {
 // Auto-register
 Kernel.registerApp('terminal', Terminal, {
     name: 'Shell Core',
-    icon: '🖥️',
+    icon: 'assets/icons/shell_core.webp',
     description: 'Command line interface.',
     singleton: false
 });

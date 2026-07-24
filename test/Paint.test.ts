@@ -72,7 +72,7 @@ describe('Paint', () => {
             const registry = Kernel.getRegistry();
             expect(registry.apps['paint']).toBeDefined();
             expect(registry.apps['paint']!.metadata.name).toBe('Pinta');
-            expect(registry.apps['paint']!.metadata.icon).toBe('🎨');
+            expect(registry.apps['paint']!.metadata.icon).toBe('assets/icons/pinta.webp');
         });
     });
 

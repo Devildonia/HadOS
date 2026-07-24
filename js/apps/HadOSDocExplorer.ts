@@ -59,7 +59,7 @@ export class HadOSDocExplorer implements IWindowsApp {
             width: 780,
             height: 480,
             resizable: true,
-            icon: '🔍'
+            icon: 'assets/icons/doc_query.webp'
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -636,8 +636,8 @@ export class HadOSDocExplorer implements IWindowsApp {
 
 // Auto-register
 Kernel.registerApp('docexplorer', HadOSDocExplorer, {
-    name: 'Doc Explorer',
-    icon: '🔍',
+    name: 'Doc Query',
+    icon: 'assets/icons/doc_query.webp',
     description: 'Ask questions about a local document — keyword retrieval, with on-device AI answers when a Gemma model is imported.',
     singleton: true
 });

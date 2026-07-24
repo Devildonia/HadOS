@@ -98,7 +98,7 @@ class FileExplorer extends WindowApp {
             title: 'C:\\',
             width: 600,
             height: 400,
-            icon: '🗂️'
+            icon: 'assets/icons/filex.webp'
         });
         const body = wf.getBody(this.windowId);
         if (body) {
@@ -201,7 +201,7 @@ class FileExplorer extends WindowApp {
 // Register with Kernel
 Kernel.registerApp('explorer', FileExplorer, {
     name: 'FileX',
-    icon: '📂',
+    icon: 'assets/icons/filex.webp',
     description: 'File management',
     singleton: true
 });

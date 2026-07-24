@@ -108,7 +108,7 @@ class Notepad {
             title: 'Untitled - Notapad',
             width: 500,
             height: 400,
-            icon: '📝'
+            icon: 'assets/icons/notapad.webp'
         });
         const body = wf.getBody(this.windowId);
         if (body) {
@@ -311,7 +311,7 @@ class Notepad {
 // Register with Kernel
 Kernel.registerApp('notepad', Notepad, {
     name: 'Notapad',
-    icon: '📝',
+    icon: 'assets/icons/notapad.webp',
     description: 'Simple text editor',
     singleton: true
 });

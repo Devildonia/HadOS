@@ -52,7 +52,7 @@ export class HadOSMessenger implements IWindowsApp {
             width: 680,
             height: 440,
             resizable: true,
-            icon: '💬'
+            icon: 'assets/icons/tavern_chat.webp'
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -797,8 +797,8 @@ export class HadOSMessenger implements IWindowsApp {
 
 // Auto-register
 Kernel.registerApp('messenger', HadOSMessenger, {
-    name: 'HadOS Messenger',
-    icon: '💬',
+    name: 'Tavern Chat',
+    icon: 'assets/icons/tavern_chat.webp',
     description: 'Chat with characters — real on-device AI (imported Gemma) when available, scripted replies otherwise.',
     singleton: true
 });

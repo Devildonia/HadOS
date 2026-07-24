@@ -66,10 +66,10 @@ class Paint {
         if (!wf) return;
         wf.create({
             id: this.windowId,
-            title: `untitled - ${i18n.t('paint.title') || 'Pinta'}`,
+            title: `untitled - ${i18n.t('app.paint') || 'Pinta'}`,
             width: 600,
             height: 470,
-            icon: '🎨'
+            icon: 'assets/icons/pinta.webp'
         });
         const body = wf.getBody(this.windowId);
         if (body) {
@@ -132,7 +132,7 @@ class Paint {
     private translateUI(): void {
         const wf = Services.get('WindowFactory');
         if (wf) {
-            wf.setTitle(this.windowId, `untitled - ${i18n.t('paint.title') || 'Pinta'}`);
+            wf.setTitle(this.windowId, `untitled - ${i18n.t('app.paint') || 'Pinta'}`);
         }
         this.ui?.setup();
         
@@ -461,7 +461,7 @@ class Paint {
 // Register with Kernel
 Kernel.registerApp('paint', Paint, {
     name: 'Pinta',
-    icon: '🎨',
+    icon: 'assets/icons/pinta.webp',
     description: 'Basic drawing application with modular architecture',
     singleton: true
 });

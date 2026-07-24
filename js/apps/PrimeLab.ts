@@ -38,7 +38,7 @@ export class PrimeLab implements IWindowsApp {
             title: 'Prime Lab',
             width: 380,
             height: 240,
-            icon: '🧮',
+            icon: 'assets/icons/prime_lab.webp',
         });
         this.container = WindowFactory.getBody(this.windowId);
         if (!this.container) return;
@@ -108,7 +108,7 @@ export class PrimeLab implements IWindowsApp {
 // Auto-register (glob-imported at boot).
 Kernel.registerApp('prime-lab', PrimeLab, {
     name: 'Prime Lab',
-    icon: '🧮',
+    icon: 'assets/icons/prime_lab.webp',
     description: 'Compute primes in an isolated worker process.',
     singleton: true,
 });

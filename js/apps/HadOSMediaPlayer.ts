@@ -68,7 +68,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
             width: 780,
             height: 520,
             resizable: true,
-            icon: '🎬'
+            icon: 'assets/icons/mediaplayer.png'
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -718,7 +718,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
 // Auto-register
 Kernel.registerApp('mediaplayer', HadOSMediaPlayer, {
     name: 'Media Player',
-    icon: '🎬',
+    icon: 'assets/icons/mediaplayer.png',
     description: 'Local and YouTube media player. Local files can be transcribed for real, on-device (Whisper).',
     singleton: true
 });

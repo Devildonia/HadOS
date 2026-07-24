@@ -62,7 +62,7 @@ export class HackerNewsScout implements IWindowsApp {
             width: 780,
             height: 480,
             resizable: true,
-            icon: '📰'
+            icon: 'assets/icons/nova.webp'
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -646,8 +646,8 @@ export class HackerNewsScout implements IWindowsApp {
 
 // Auto-register
 Kernel.registerApp('hnscout', HackerNewsScout, {
-    name: 'HN Scout',
-    icon: '📰',
+    name: 'Nova',
+    icon: 'assets/icons/nova.webp',
     description: 'Hacker News reader — real on-device discussion summaries when a Gemma model is imported; simulated demo otherwise.',
     singleton: true
 });

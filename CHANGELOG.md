@@ -60,6 +60,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Regression tests: `test/WindowFactory.test.ts` (icon stays out of the title
   span; `setTitleIcon` renders asset paths as `<img>`) and `test/Kernel.test.ts`
   (launch stamps the registered icon; no-op when the app registers none).
+- **Most apps launched with an emoji in the titlebar instead of their own
+  icon**: the previous fix made the titlebar honour the *registered* icon, but
+  most apps still *registered* an emoji (💬, 🎨, 📝, …) even though a bespoke
+  `assets/icons/*.webp` existed and was already used by their desktop icon and
+  taskbar-theme mapping. Registration icons are now the real assets for Pinta,
+  Notapad, FileX, Shell Core, Tavern Chat, Voxcribe, Doc Query, Media Player,
+  Nova, Plugin Manager, Prime Lab and the Games shortcut — so titlebar, taskbar
+  and desktop icon all show one identity. (Tabula and Hada keep emoji: no bespoke
+  asset exists for them yet.)
+- **Pinta's window read "untitled - Paint"**: the title used the generic
+  translated word `paint.title` ("Paint"/"Malování"/…) instead of the brand
+  `app.paint` ("Pinta"). It now shows the brand, matching the desktop label.
+- **Taskbar name mismatched the window for three apps**: the registry `name`
+  said "HadOS Messenger" / "Doc Explorer" / "HN Scout" while the window and
+  desktop label read "Tavern Chat" / "Doc Query" / "Nova". Aligned the registry
+  names to the brands.
 
 ## [1.0.9] - 2026-07-23
 

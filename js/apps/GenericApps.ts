@@ -20,6 +20,6 @@ class GenericWindowApp {
 // Generic windows
 Kernel.registerApp('games-folder', class extends GenericWindowApp {
     constructor() { super({ windowId: 'win-games-folder' }); }
-}, { name: 'Games', icon: '📂', singleton: true });
+}, { name: 'Games', icon: 'assets/icons/games.webp', singleton: true });
 
 // Games folder registration remains here

@@ -39,7 +39,7 @@ export class PluginManagerApp implements IWindowsApp {
             width: 520,
             height: 400,
             resizable: true,
-            icon: '🧩'
+            icon: 'assets/icons/plugin_manager.webp'
         });
 
         this.container = WindowFactory.getBody(this.windowId);
@@ -199,7 +199,7 @@ export class PluginManagerApp implements IWindowsApp {
 // Auto-register
 Kernel.registerApp('pluginmanager', PluginManagerApp, {
     name: 'Plugin Manager',
-    icon: '🧩',
+    icon: 'assets/icons/plugin_manager.webp',
     description: 'Install and manage applications and modules.',
     singleton: true
 });
