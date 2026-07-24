@@ -11,16 +11,16 @@ const apiKey = () => process.env.ELEVENLABS_API_KEY;
 const voiceId = () => process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB';
 const modelId = () => process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 
-export interface SceneSpeech {
+/** A line of narration to synthesize. */
+export interface SceneText {
     id: string;
     text: string;
-    startTimeSec: number;
 }
 
+/** A synthesized clip. `startTimeSec` is filled in later, from the recording. */
 export interface GeneratedClip {
     id: string;
     audioPath: string;
-    startTimeSec: number;
     durationSec: number;
 }
 
@@ -43,7 +43,7 @@ function probeDurationSec(file: string): number {
     }
 }
 
-export async function generateSceneAudios(scenes: SceneSpeech[], outputDir: string): Promise<GeneratedClip[]> {
+export async function generateSceneAudios(scenes: SceneText[], outputDir: string): Promise<GeneratedClip[]> {
     const key = apiKey();
     if (!key) {
         console.warn('[ElevenLabs] No ELEVENLABS_API_KEY — skipping voiceover (video will be silent, subtitles only).');

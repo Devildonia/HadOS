@@ -1,30 +1,27 @@
 /**
  * HadOS zero-touch demo-video pipeline.
  *
- *   Playwright (scripted scenes)  ->  raw video
- *              |                           |
- *   scene timeline (id, text, t)    ElevenLabs TTS (optional)
- *              |                           |
- *              +----------- FFmpeg --------+  -> burned subtitles + mixed VO -> final mp4
+ *   ElevenLabs TTS (per scene, up front) ─┐
+ *   Playwright (scenes paced to the VO) ──┤─► FFmpeg ─► burned subtitles + VO ─► mp4
  *
  * Two recording modes (MODE env):
  *   - preview (default): Playwright headless recordVideo. Deterministic, runs
- *     anywhere (CI, this workspace). Smooth but variable frame rate — use it to
- *     review choreography, subtitles and pacing.
- *   - screen: a HEADED, full-screen (kiosk) browser captured by `ffmpeg gdigrab`
- *     at a locked 60fps. True 60fps of the live WebGL desktop, but it records the
- *     real screen: run it on your own machine, full-screen, and do not touch the
- *     machine until it finishes. gdigrab must grab the *desktop*, not the window
- *     title — GPU/WebGL windows capture black under title mode.
+ *     anywhere; smooth but variable frame rate. Review choreography/subtitles.
+ *   - screen: a HEADED full-screen browser captured by `ffmpeg gdigrab` at a
+ *     locked 60fps — true 60fps of the live WebGL desktop. Records the real
+ *     screen, so run it on your own machine and do not touch it until it ends.
+ *     It captures only the HadOS monitor's region (see captureRegion) and forces
+ *     true fullscreen via CDP so nothing else is in frame.
  *
- * Voiceover needs ELEVENLABS_API_KEY in a gitignored .env; without it the video
- * is rendered silent with subtitles only.
+ * The narration is generated FIRST, so each scene can hold until its voiceover
+ * finishes — clips never overlap. Voiceover needs ELEVENLABS_API_KEY in a
+ * gitignored .env; without it the video renders silent, subtitles only.
  */
 import { chromium, type Page, type Browser } from 'playwright-core';
 import { spawn, ChildProcess, execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { generateSceneAudios, hasElevenLabsKey, type SceneSpeech, type GeneratedClip } from './tts-elevenlabs';
+import { generateSceneAudios, hasElevenLabsKey, type GeneratedClip } from './tts-elevenlabs';
 
 // ---- Config -----------------------------------------------------------------
 const PORT = 4173;
@@ -33,6 +30,7 @@ const MODE = (process.env.MODE || 'preview') as 'preview' | 'screen';
 const WIDTH = Number(process.env.WIDTH || 1920);
 const HEIGHT = Number(process.env.HEIGHT || 1080);
 const FPS = Number(process.env.FPS || 60);
+const GAP_SEC = 0.7; // silence between narration lines
 
 const OUTPUT_DIR = path.resolve(process.cwd(), 'docs', 'videos');
 const AUDIO_DIR = path.join(OUTPUT_DIR, 'audio');
@@ -41,12 +39,9 @@ const SRT_PATH = path.join(OUTPUT_DIR, 'subs.srt');
 const FINAL_MP4 = path.join(OUTPUT_DIR, `hados-demo-${HEIGHT}p.mp4`);
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+const estReadSec = (text: string) => Math.max(2.5, Math.min(9, text.length * 0.06));
 
-/**
- * Minimal .env loader (no dependency). tsx/node do not read .env on their own,
- * so without this a key placed in .env would be silently ignored and the video
- * would render mute. Real env vars already set win over the file.
- */
+/** Minimal .env loader (tsx/node do not read .env). Real env vars win. */
 function loadEnv(): void {
     const envPath = path.resolve(process.cwd(), '.env');
     if (!fs.existsSync(envPath)) return;
@@ -65,188 +60,183 @@ function loadEnv(): void {
 
 // ---- Dev server -------------------------------------------------------------
 async function ensureServer(): Promise<ChildProcess | null> {
-    try {
-        if ((await fetch(BASE_URL)).ok) {
-            console.log(`[demo] Server already running at ${BASE_URL}`);
-            return null;
-        }
-    } catch { /* not running */ }
-
+    try { if ((await fetch(BASE_URL)).ok) { console.log(`[demo] Server already running at ${BASE_URL}`); return null; } }
+    catch { /* not running */ }
     console.log('[demo] Starting Vite dev server...');
     const proc = spawn('npx', ['vite', '--host', '127.0.0.1', '--port', String(PORT)], { shell: true, stdio: 'pipe' });
     for (let i = 0; i < 40; i++) {
         await sleep(1000);
-        try { if ((await fetch(BASE_URL)).ok) { console.log('[demo] Server ready'); return proc; } } catch { /* keep polling */ }
+        try { if ((await fetch(BASE_URL)).ok) { console.log('[demo] Server ready'); return proc; } } catch { /* poll */ }
     }
     throw new Error('Failed to start dev server');
 }
 
-// ---- Scene choreography -----------------------------------------------------
-/**
- * Drives the OS and records a scene timeline. `mark` stamps the current elapsed
- * time (seconds since recording start) with the narration for that beat. Every
- * app open is guarded so a missing app skips its scene rather than failing.
- */
-async function choreograph(page: Page, t0: number): Promise<SceneSpeech[]> {
-    const scenes: SceneSpeech[] = [];
-    const mark = (id: string, text: string) => {
-        scenes.push({ id, text, startTimeSec: Math.max(0, (Date.now() - t0) / 1000) });
-    };
-    const has = async (sel: string) => (await page.locator(sel).count()) > 0;
-    const open = async (iconSel: string, winSel: string) => {
-        if (!(await has(iconSel))) return false;
-        await page.locator(iconSel).dblclick();
-        try { await page.waitForSelector(winSel, { state: 'visible', timeout: 8000 }); } catch { return false; }
-        return true;
-    };
+// ---- Scenes -----------------------------------------------------------------
+interface SceneDef { id: string; text: string; run: (page: Page) => Promise<void>; }
+interface SceneMark { id: string; text: string; startTimeSec: number; }
 
-    // 1 — Boot & the technical-grid desktop (starts on the glass HadOS theme).
-    mark('s1_boot', 'This is HadOS — a complete desktop environment that runs entirely in your browser, with a process kernel, a virtual file system, and a GPU-rendered wallpaper.');
-    await page.waitForSelector('#desktop', { state: 'visible', timeout: 30000 });
-    await sleep(4500);
+const has = async (page: Page, sel: string) => (await page.locator(sel).count()) > 0;
+async function open(page: Page, iconSel: string, winSel: string): Promise<boolean> {
+    if (!(await has(page, iconSel))) return false;
+    await page.locator(iconSel).dblclick();
+    try { await page.waitForSelector(winSel, { state: 'visible', timeout: 8000 }); } catch { return false; }
+    return true;
+}
 
-    // 2 — Start menu.
-    mark('s2_start', 'The start menu unifies system tools, accessories, and on-device AI apps.');
-    await page.click('#start-button').catch(() => {});
-    await sleep(1400);
-    const sub = page.locator('#start-menu .menu-item.has-submenu').first();
-    if (await sub.count()) { await sub.hover(); await sleep(1800); }
-    await page.click('#desktop', { position: { x: 960, y: 500 } }).catch(() => {});
-    await sleep(900);
-
-    // 3 — FileX explorer & the virtual file system.
-    mark('s3_filex', 'FileX is a real file explorer over a persistent virtual file system, backed by IndexedDB and O-P-F-S, with genuine storage quotas.');
-    if (await open('#icon-explorer', '#win-explorer')) await sleep(2600);
-
-    // 4 — Notapad with on-device AI.
-    mark('s4_notepad', 'Notapad edits files with find and replace, and an on-device AI menu that summarizes, rewrites, and translates — no server, no data leaving the machine.');
-    if (await open('#icon-notepad', '#win-notepad')) {
-        const ta = page.locator('#win-notepad textarea, #win-notepad .notepad-editor').first();
-        if (await ta.count()) {
-            await ta.focus();
-            await ta.type('HadOS runs on-device AI: summarize, rewrite, translate — all local.', { delay: 22 });
-        }
-        await sleep(2400);
-    }
-
-    // 5 — Pinta drawing on canvas.
-    mark('s5_pinta', 'Pinta is a full paint app with real canvas tools, undo, and on-device background removal.');
-    if (await open('#icon-paint', '#win-paint')) {
-        const canvas = page.locator('#win-paint canvas').first();
-        const box = await canvas.boundingBox().catch(() => null);
-        if (box) {
+/** The tour. Each `run` performs the visible actions; the driver holds the scene
+ *  until its narration finishes, so audio never overlaps. */
+const SCENES: SceneDef[] = [
+    {
+        id: 's1_boot',
+        text: 'This is HadOS — a complete desktop environment that runs entirely in your browser, with a process kernel, a virtual file system, and a GPU-rendered wallpaper.',
+        run: async (page) => { await page.waitForSelector('#desktop', { state: 'visible', timeout: 30000 }); },
+    },
+    {
+        id: 's2_start',
+        text: 'The start menu unifies system tools, accessories, and on-device AI apps.',
+        run: async (page) => {
+            await page.click('#start-button').catch(() => {});
+            const sub = page.locator('#start-menu .menu-item.has-submenu').first();
+            if (await sub.count()) { await sleep(700); await sub.hover(); await sleep(900); }
+            await page.click('#desktop', { position: { x: 960, y: 500 } }).catch(() => {});
+        },
+    },
+    {
+        id: 's3_filex',
+        text: 'FileX is a real file explorer over a persistent virtual file system, backed by IndexedDB and O-P-F-S, with genuine storage quotas.',
+        run: async (page) => { await open(page, '#icon-explorer', '#win-explorer'); },
+    },
+    {
+        id: 's4_notepad',
+        text: 'Notapad edits files with find and replace, and an on-device AI menu that summarizes, rewrites, and translates — no server, no data leaving the machine.',
+        run: async (page) => {
+            if (!(await open(page, '#icon-notepad', '#win-notepad'))) return;
+            const ta = page.locator('#win-notepad textarea, #win-notepad .notepad-editor').first();
+            if (await ta.count()) { await ta.focus(); await ta.type('HadOS runs on-device AI: summarize, rewrite, translate — all local.', { delay: 22 }); }
+        },
+    },
+    {
+        id: 's5_pinta',
+        text: 'Pinta is a full paint app with real canvas tools, undo, and on-device background removal.',
+        run: async (page) => {
+            if (!(await open(page, '#icon-paint', '#win-paint'))) return;
+            const box = await page.locator('#win-paint canvas').first().boundingBox().catch(() => null);
+            if (!box) return;
             const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
-            await page.mouse.move(cx - 130, cy);
-            await page.mouse.down();
-            for (let a = 0; a <= 360; a += 8) {
-                const r = (a * Math.PI) / 180;
-                await page.mouse.move(cx + 130 * Math.cos(r), cy + 95 * Math.sin(r));
-                await sleep(12);
-            }
+            await page.mouse.move(cx - 130, cy); await page.mouse.down();
+            for (let a = 0; a <= 360; a += 8) { const r = (a * Math.PI) / 180; await page.mouse.move(cx + 130 * Math.cos(r), cy + 95 * Math.sin(r)); await sleep(10); }
             await page.mouse.up();
-        }
-        await sleep(1800);
+        },
+    },
+    {
+        id: 's6_tavern',
+        text: 'Tavern Chat holds a real conversation with on-device characters, running a local language model right in the browser.',
+        run: async (page) => { await open(page, '#icon-messenger', '#win-messenger, [id^="win-dynamic"]'); },
+    },
+    {
+        id: 's7_nova',
+        text: 'Nova pulls live Hacker News into a clean reading view, with on-device summaries when a local model is loaded.',
+        run: async (page) => { await open(page, '#icon-hnscout', '#win-hnscout, [id^="win-dynamic"]'); },
+    },
+    {
+        id: 's8_theme',
+        text: 'One click switches themes. The Modern theme reveals the HadOS grid shader — an animated technical wallpaper, drawn in Web-G-L.',
+        run: async (page) => {
+            await page.evaluate(() => {
+                document.body.classList.remove('theme-hados');
+                document.body.classList.add('theme-modern');
+                document.body.setAttribute('data-theme', 'modern');
+                localStorage.setItem('os-theme', 'modern');
+                (window as any).Services?.get?.('ThemeManager')?.applyTheme?.('modern');
+            });
+        },
+    },
+    {
+        id: 's9_outro',
+        text: 'And a 3D physics ragdoll lives on the desktop. HadOS: a browser that thinks it is an operating system.',
+        run: async (page) => { const b = page.locator('#ragdollToggle'); if (await b.count()) await b.click().catch(() => {}); },
+    },
+];
+
+/** Runs the scenes, holding each until its narration length (or reading time)
+ *  elapses, and stamps each scene's start time relative to `t0`. */
+async function choreograph(page: Page, t0: number, durations: Map<string, number>): Promise<SceneMark[]> {
+    const marks: SceneMark[] = [];
+    for (const sc of SCENES) {
+        const start = (Date.now() - t0) / 1000;
+        marks.push({ id: sc.id, text: sc.text, startTimeSec: Math.max(0, start) });
+        await sc.run(page);
+        const elapsed = (Date.now() - t0) / 1000 - start;
+        const need = (durations.get(sc.id) ?? estReadSec(sc.text)) + GAP_SEC;
+        if (elapsed < need) await sleep((need - elapsed) * 1000);
     }
-
-    // 6 — Tavern Chat: on-device conversational AI.
-    mark('s6_tavern', 'Tavern Chat holds a real conversation with on-device characters, running a local language model right in the browser.');
-    if (await open('#icon-messenger', '#win-messenger, [id^="win-dynamic"]')) await sleep(2600);
-
-    // 7 — Nova: live Hacker News reader (on-device summaries when a model is loaded).
-    mark('s7_nova', 'Nova pulls live Hacker News into a clean reading view, with on-device summaries when a local model is loaded.');
-    if (await open('#icon-hnscout', '#win-hnscout, [id^="win-dynamic"]')) await sleep(2600);
-
-    // 8 — Switch to the Modern theme: the HadOS grid shader.
-    mark('s8_theme', 'One click switches themes. The Modern theme reveals the HadOS grid shader — an animated technical wallpaper, drawn in Web-G-L.');
-    await page.evaluate(() => {
-        document.body.classList.remove('theme-hados');
-        document.body.classList.add('theme-modern');
-        document.body.setAttribute('data-theme', 'modern');
-        localStorage.setItem('os-theme', 'modern');
-        (window as any).Services?.get?.('ThemeManager')?.applyTheme?.('modern');
-    });
-    await sleep(4500);
-
-    // 9 — Ragdoll physics pet & outro.
-    mark('s9_outro', 'And a 3D physics ragdoll lives on the desktop. HadOS: a browser that thinks it is an operating system.');
-    const ragBtn = page.locator('#ragdollToggle');
-    if (await ragBtn.count()) { await ragBtn.click().catch(() => {}); await sleep(3500); }
-    else await sleep(2500);
-
-    return scenes;
+    return marks;
 }
 
 // ---- Subtitles (.srt) -------------------------------------------------------
 function toSrtTime(sec: number): string {
     const ms = Math.max(0, Math.round(sec * 1000));
-    const h = Math.floor(ms / 3_600_000);
-    const m = Math.floor((ms % 3_600_000) / 60_000);
-    const s = Math.floor((ms % 60_000) / 1000);
-    const mmm = ms % 1000;
     const p = (n: number, w = 2) => String(n).padStart(w, '0');
-    return `${p(h)}:${p(m)}:${p(s)},${p(mmm, 3)}`;
+    return `${p(Math.floor(ms / 3_600_000))}:${p(Math.floor((ms % 3_600_000) / 60_000))}:${p(Math.floor((ms % 60_000) / 1000))},${p(ms % 1000, 3)}`;
 }
 
-/**
- * End of each cue. With a voiceover, run for the VO's length; without one, run
- * for an estimated reading time — either way capped to just before the next
- * scene, so a slow (e.g. headless) gap never leaves a subtitle lingering.
- */
-function writeSrt(scenes: SceneSpeech[], clips: GeneratedClip[], totalSec: number): void {
-    const durOf = new Map(clips.map(c => [c.id, c.durationSec]));
-    const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+function writeSrt(marks: SceneMark[], durations: Map<string, number>, totalSec: number): void {
     const lines: string[] = [];
-    scenes.forEach((sc, i) => {
-        const start = sc.startTimeSec;
-        const nextStart = i + 1 < scenes.length ? scenes[i + 1]!.startTimeSec : totalSec;
-        const vo = durOf.get(sc.id) || 0;
-        const readTime = clamp(sc.text.length * 0.06, 2.5, 8); // ~word-per-sec fallback
-        const baseDur = vo > 0 ? vo + 0.3 : readTime;
-        const end = Math.min(nextStart - 0.15, start + baseDur);
-        lines.push(String(i + 1));
-        lines.push(`${toSrtTime(start)} --> ${toSrtTime(Math.max(start + 1.2, end))}`);
-        lines.push(sc.text);
-        lines.push('');
+    marks.forEach((m, i) => {
+        const start = m.startTimeSec;
+        const nextStart = i + 1 < marks.length ? marks[i + 1]!.startTimeSec : totalSec;
+        const dur = (durations.get(m.id) ?? estReadSec(m.text)) + 0.3;
+        const end = Math.min(nextStart - 0.15, start + dur);
+        lines.push(String(i + 1), `${toSrtTime(start)} --> ${toSrtTime(Math.max(start + 1.2, end))}`, m.text, '');
     });
     fs.writeFileSync(SRT_PATH, lines.join('\n'), 'utf8');
-    console.log(`[demo] Subtitles written: ${SRT_PATH} (${scenes.length} cues)`);
+    console.log(`[demo] Subtitles written (${marks.length} cues)`);
 }
 
 // ---- FFmpeg composite -------------------------------------------------------
-/** Burn subtitles + mix delayed per-scene VO onto the raw recording -> mp4. */
-function composite(rawVideo: string, clips: GeneratedClip[]): void {
-    // Subtitles are referenced by basename with cwd=OUTPUT_DIR, dodging Windows
-    // path/colon escaping inside the filter graph.
+interface PlacedClip extends GeneratedClip { startTimeSec: number; }
+
+function composite(rawVideo: string, clips: PlacedClip[]): void {
     const style = "force_style='FontName=Segoe UI,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H90000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=48'";
     const subsFilter = fs.existsSync(SRT_PATH) ? `subtitles='subs.srt':${style}` : null;
 
     const inputs = [`-i "${rawVideo}"`, ...clips.map(c => `-i "${c.audioPath}"`)].join(' ');
     const parts: string[] = [];
+    parts.push(`[0:v]${['fps=' + FPS, subsFilter, 'format=yuv420p'].filter(Boolean).join(',')}[v]`);
 
-    // Video chain: force 60fps + burn subs, yuv420p for universal playback.
-    const vChain = ['fps=' + FPS, subsFilter, 'format=yuv420p'].filter(Boolean).join(',');
-    parts.push(`[0:v]${vChain}[v]`);
-
-    // Audio chain: delay each VO to its scene start, then mix.
     let audioMap = '';
     if (clips.length) {
-        clips.forEach((c, i) => {
-            const d = Math.round(c.startTimeSec * 1000);
-            parts.push(`[${i + 1}:a]adelay=${d}|${d}[a${i}]`);
-        });
+        clips.forEach((c, i) => { const d = Math.round(c.startTimeSec * 1000); parts.push(`[${i + 1}:a]adelay=${d}|${d}[a${i}]`); });
         parts.push(`${clips.map((_, i) => `[a${i}]`).join('')}amix=inputs=${clips.length}:dropout_transition=0:normalize=0[a]`);
         audioMap = '-map "[a]" -c:a aac -b:a 192k';
     }
 
     const cmd = `ffmpeg -y ${inputs} -filter_complex "${parts.join(';')}" -map "[v]" ${audioMap} ` +
         `-c:v libx264 -preset slow -crf 18 -r ${FPS} -pix_fmt yuv420p "${FINAL_MP4}"`;
-
     console.log(`[demo] FFmpeg composite:\n${cmd}`);
     execSync(cmd, { stdio: 'inherit', cwd: OUTPUT_DIR });
 }
 
+// ---- Capture region (screen mode) -------------------------------------------
+/**
+ * The screen region to capture, in PHYSICAL pixels — the HadOS monitor only, so
+ * a multi-monitor desktop does not record every screen (`-i desktop` alone grabs
+ * the whole virtual desktop, e.g. 8320×2320 across three monitors). Auto-detected
+ * from the fullscreen window's monitor; override with CAPTURE_X/Y/W/H.
+ */
+async function captureRegion(page: Page): Promise<{ x: number; y: number; w: number; h: number }> {
+    const auto = await page.evaluate(() => {
+        const dpr = window.devicePixelRatio || 1;
+        return { x: Math.round(window.screenX * dpr), y: Math.round(window.screenY * dpr), w: Math.round(window.screen.width * dpr), h: Math.round(window.screen.height * dpr) };
+    });
+    const num = (k: string, d: number) => (process.env[k] !== undefined ? Number(process.env[k]) : d);
+    const r = { x: num('CAPTURE_X', auto.x), y: num('CAPTURE_Y', auto.y), w: num('CAPTURE_W', auto.w), h: num('CAPTURE_H', auto.h) };
+    r.w -= r.w % 2; r.h -= r.h % 2;
+    return r;
+}
+
 // ---- Recording modes --------------------------------------------------------
-async function recordPreview(): Promise<{ rawVideo: string; scenes: SceneSpeech[]; totalSec: number }> {
+async function recordPreview(durations: Map<string, number>): Promise<{ rawVideo: string; marks: SceneMark[]; totalSec: number }> {
     console.log(`[demo] MODE=preview — Playwright headless recordVideo @ ${WIDTH}x${HEIGHT}`);
     const browser: Browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
@@ -257,9 +247,8 @@ async function recordPreview(): Promise<{ rawVideo: string; scenes: SceneSpeech[
     const page = await context.newPage();
     const t0 = Date.now();
     await page.goto(BASE_URL);
-
-    let scenes: SceneSpeech[] = [];
-    try { scenes = await choreograph(page, t0); }
+    let marks: SceneMark[] = [];
+    try { marks = await choreograph(page, t0, durations); }
     finally { await context.close(); await browser.close(); }
 
     const totalSec = (Date.now() - t0) / 1000;
@@ -268,66 +257,45 @@ async function recordPreview(): Promise<{ rawVideo: string; scenes: SceneSpeech[
     const rawVideo = path.join(OUTPUT_DIR, `hados-demo-${HEIGHT}p-raw.webm`);
     fs.copyFileSync(path.join(TEMP_DIR, webm), rawVideo);
     fs.rmSync(TEMP_DIR, { recursive: true, force: true });
-    return { rawVideo, scenes, totalSec };
+    return { rawVideo, marks, totalSec };
 }
 
-/**
- * The screen region to capture, in PHYSICAL pixels. Auto-detected from the
- * fullscreen window's monitor (position + size × devicePixelRatio) so a
- * multi-monitor desktop records only the HadOS screen — `-i desktop` alone grabs
- * the whole virtual desktop (e.g. 8320×2320 across three monitors). Override any
- * field with CAPTURE_X / CAPTURE_Y / CAPTURE_W / CAPTURE_H if detection is off.
- */
-async function captureRegion(page: Page): Promise<{ x: number; y: number; w: number; h: number }> {
-    const auto = await page.evaluate(() => {
-        const dpr = window.devicePixelRatio || 1;
-        return {
-            x: Math.round(window.screenX * dpr),
-            y: Math.round(window.screenY * dpr),
-            w: Math.round(window.screen.width * dpr),
-            h: Math.round(window.screen.height * dpr),
-        };
-    });
-    const num = (k: string, d: number) => (process.env[k] !== undefined ? Number(process.env[k]) : d);
-    const r = { x: num('CAPTURE_X', auto.x), y: num('CAPTURE_Y', auto.y), w: num('CAPTURE_W', auto.w), h: num('CAPTURE_H', auto.h) };
-    r.w -= r.w % 2; r.h -= r.h % 2; // even dims for yuv420p
-    return r;
-}
-
-async function recordScreen(): Promise<{ rawVideo: string; scenes: SceneSpeech[]; totalSec: number }> {
-    console.log(`[demo] MODE=screen — headed kiosk + ffmpeg gdigrab @ ${FPS}fps (do not touch the machine)`);
+async function recordScreen(durations: Map<string, number>): Promise<{ rawVideo: string; marks: SceneMark[]; totalSec: number }> {
+    console.log(`[demo] MODE=screen — headed fullscreen + ffmpeg gdigrab @ ${FPS}fps (do NOT touch the machine)`);
     const rawVideo = path.join(OUTPUT_DIR, `hados-demo-${HEIGHT}p-raw.mp4`);
-    const browser = await chromium.launch({
-        headless: false,
-        args: ['--start-fullscreen', '--kiosk', '--disable-infobars', `--window-size=${WIDTH},${HEIGHT}`],
-    });
+    const browser = await chromium.launch({ headless: false, args: ['--start-fullscreen', '--kiosk', '--disable-infobars'] });
     const context = await browser.newContext({ viewport: null, locale: 'en-US' });
     const page = await context.newPage();
     await page.goto(BASE_URL);
     await page.waitForSelector('#desktop', { state: 'visible', timeout: 30000 });
-    await sleep(1500); // let the window settle full-screen
 
-    // Grab only the HadOS monitor's region (not the whole multi-monitor desktop).
+    // Force TRUE fullscreen (Playwright's --kiosk/--start-fullscreen is unreliable;
+    // without this the browser records windowed, with the rest of the monitor in frame).
+    try {
+        const cdp = await context.newCDPSession(page);
+        const { windowId } = await cdp.send('Browser.getWindowForTarget') as any;
+        await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'fullscreen' } } as any);
+    } catch (e) { console.warn('[demo] Could not force fullscreen via CDP:', e); }
+    await sleep(1500);
+
     const reg = await captureRegion(page);
     console.log(`[demo] Capturing region ${reg.w}x${reg.h} at (${reg.x},${reg.y}) — override with CAPTURE_X/Y/W/H`);
     const ff = spawn('ffmpeg', [
         '-y', '-f', 'gdigrab', '-framerate', String(FPS),
-        '-offset_x', String(reg.x), '-offset_y', String(reg.y),
-        '-video_size', `${reg.w}x${reg.h}`, '-i', 'desktop',
+        '-offset_x', String(reg.x), '-offset_y', String(reg.y), '-video_size', `${reg.w}x${reg.h}`, '-i', 'desktop',
         '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-r', String(FPS), rawVideo,
     ], { stdio: ['pipe', 'inherit', 'inherit'] });
-    await sleep(1200); // let the recorder spin up
+    await sleep(1200);
     const t0 = Date.now();
 
-    let scenes: SceneSpeech[] = [];
-    try { scenes = await choreograph(page, t0); }
+    let marks: SceneMark[] = [];
+    try { marks = await choreograph(page, t0, durations); }
     finally {
         try { ff.stdin?.write('q'); } catch { /* ignore */ }
         await new Promise<void>(res => ff.on('close', () => res()));
         await context.close(); await browser.close();
     }
-    const totalSec = (Date.now() - t0) / 1000;
-    return { rawVideo, scenes, totalSec };
+    return { rawVideo, marks, totalSec: (Date.now() - t0) / 1000 };
 }
 
 // ---- Main -------------------------------------------------------------------
@@ -337,15 +305,21 @@ async function main() {
 
     const server = await ensureServer();
     try {
-        const { rawVideo, scenes, totalSec } = MODE === 'screen' ? await recordScreen() : await recordPreview();
-        console.log(`[demo] Recorded ${scenes.length} scenes over ${totalSec.toFixed(1)}s -> ${rawVideo}`);
+        // 1) Narration first, so scenes can be paced to it (no overlap).
+        const audio: GeneratedClip[] = hasElevenLabsKey()
+            ? await generateSceneAudios(SCENES.map(s => ({ id: s.id, text: s.text })), AUDIO_DIR)
+            : (console.warn('[demo] No ELEVENLABS_API_KEY — silent render, subtitles only.'), []);
+        const durations = new Map(audio.map(c => [c.id, c.durationSec]));
 
-        const clips = hasElevenLabsKey()
-            ? await generateSceneAudios(scenes, AUDIO_DIR)
-            : (console.warn('[demo] No ELEVENLABS_API_KEY — silent render, subtitles only.'), [] as GeneratedClip[]);
+        // 2) Record, holding each scene until its line finishes.
+        const rec = MODE === 'screen' ? await recordScreen(durations) : await recordPreview(durations);
+        console.log(`[demo] Recorded ${rec.marks.length} scenes over ${rec.totalSec.toFixed(1)}s -> ${rec.rawVideo}`);
 
-        writeSrt(scenes, clips, totalSec);
-        composite(rawVideo, clips);
+        // 3) Place each clip at its scene's start, write subs, composite.
+        const startOf = new Map(rec.marks.map(m => [m.id, m.startTimeSec]));
+        const placed: PlacedClip[] = audio.map(c => ({ ...c, startTimeSec: startOf.get(c.id) ?? 0 }));
+        writeSrt(rec.marks, durations, rec.totalSec);
+        composite(rec.rawVideo, placed);
 
         console.log(`\n[demo] Done -> ${FINAL_MP4}`);
     } finally {
