@@ -39,8 +39,12 @@ npm run generate:demo-video
 
 - Run it on your own machine, at 1920×1080 or higher.
 - Do **not** touch the machine until it finishes (any overlay is recorded).
-- gdigrab grabs the whole desktop on purpose — GPU/WebGL windows capture black
-  under window-title mode.
+- It records only the HadOS monitor's region, auto-detected from the fullscreen
+  window (GPU/WebGL windows capture black under gdigrab window-title mode, so it
+  grabs a *region of the desktop* instead). On a multi-monitor setup, if the
+  region is wrong, pin it with `CAPTURE_X/Y/W/H` (physical pixels) — e.g. a
+  1920×1080 primary monitor at the top-left is `CAPTURE_X=0 CAPTURE_Y=0
+  CAPTURE_W=1920 CAPTURE_H=1080`.
 
 PowerShell:
 
@@ -61,6 +65,8 @@ MODE=screen WIDTH=1920 HEIGHT=1080 FPS=60 npm run generate:demo-video
 | `MODE` | `preview` | `preview` (headless) or `screen` (gdigrab 60fps) |
 | `WIDTH` / `HEIGHT` | `1920` / `1080` | recording resolution |
 | `FPS` | `60` | output frame rate |
+| `CAPTURE_X` / `CAPTURE_Y` | auto | screen mode: top-left of the capture region, physical px |
+| `CAPTURE_W` / `CAPTURE_H` | auto | screen mode: capture size, physical px |
 | `ELEVENLABS_API_KEY` | — | required for voiceover; silent + subtitles without it |
 | `ELEVENLABS_VOICE_ID` | Adam | any ElevenLabs voice id |
 | `ELEVENLABS_MODEL_ID` | `eleven_multilingual_v2` | TTS model |

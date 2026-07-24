@@ -271,6 +271,29 @@ async function recordPreview(): Promise<{ rawVideo: string; scenes: SceneSpeech[
     return { rawVideo, scenes, totalSec };
 }
 
+/**
+ * The screen region to capture, in PHYSICAL pixels. Auto-detected from the
+ * fullscreen window's monitor (position + size × devicePixelRatio) so a
+ * multi-monitor desktop records only the HadOS screen — `-i desktop` alone grabs
+ * the whole virtual desktop (e.g. 8320×2320 across three monitors). Override any
+ * field with CAPTURE_X / CAPTURE_Y / CAPTURE_W / CAPTURE_H if detection is off.
+ */
+async function captureRegion(page: Page): Promise<{ x: number; y: number; w: number; h: number }> {
+    const auto = await page.evaluate(() => {
+        const dpr = window.devicePixelRatio || 1;
+        return {
+            x: Math.round(window.screenX * dpr),
+            y: Math.round(window.screenY * dpr),
+            w: Math.round(window.screen.width * dpr),
+            h: Math.round(window.screen.height * dpr),
+        };
+    });
+    const num = (k: string, d: number) => (process.env[k] !== undefined ? Number(process.env[k]) : d);
+    const r = { x: num('CAPTURE_X', auto.x), y: num('CAPTURE_Y', auto.y), w: num('CAPTURE_W', auto.w), h: num('CAPTURE_H', auto.h) };
+    r.w -= r.w % 2; r.h -= r.h % 2; // even dims for yuv420p
+    return r;
+}
+
 async function recordScreen(): Promise<{ rawVideo: string; scenes: SceneSpeech[]; totalSec: number }> {
     console.log(`[demo] MODE=screen — headed kiosk + ffmpeg gdigrab @ ${FPS}fps (do not touch the machine)`);
     const rawVideo = path.join(OUTPUT_DIR, `hados-demo-${HEIGHT}p-raw.mp4`);
@@ -284,9 +307,13 @@ async function recordScreen(): Promise<{ rawVideo: string; scenes: SceneSpeech[]
     await page.waitForSelector('#desktop', { state: 'visible', timeout: 30000 });
     await sleep(1500); // let the window settle full-screen
 
-    // Capture the whole desktop (GPU/WebGL content only composites there).
+    // Grab only the HadOS monitor's region (not the whole multi-monitor desktop).
+    const reg = await captureRegion(page);
+    console.log(`[demo] Capturing region ${reg.w}x${reg.h} at (${reg.x},${reg.y}) — override with CAPTURE_X/Y/W/H`);
     const ff = spawn('ffmpeg', [
-        '-y', '-f', 'gdigrab', '-framerate', String(FPS), '-i', 'desktop',
+        '-y', '-f', 'gdigrab', '-framerate', String(FPS),
+        '-offset_x', String(reg.x), '-offset_y', String(reg.y),
+        '-video_size', `${reg.w}x${reg.h}`, '-i', 'desktop',
         '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-r', String(FPS), rawVideo,
     ], { stdio: ['pipe', 'inherit', 'inherit'] });
     await sleep(1200); // let the recorder spin up
