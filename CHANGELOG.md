@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-07-24
+
+A polish release closing the v1.0.9 RC audit (GO, 9.7/10). No new features — a
+sweep of window-chrome and app-identity fixes plus the audit's one doc finding.
+
 ### Fixed
 
 - **Task Pilot / Display Properties left zombie taskbar buttons and refused to
@@ -76,6 +81,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   said "HadOS Messenger" / "Doc Explorer" / "HN Scout" while the window and
   desktop label read "Tavern Chat" / "Doc Query" / "Nova". Aligned the registry
   names to the brands.
+
+### Documentation
+
+- **`guestBoot.ts` header described the old iframe-isolation model** (the RC
+  audit's only finding): it still said the guest was "paired with an iframe that
+  has `allow-same-origin`" and that true opaque-origin isolation "would require a
+  separate origin", contradicting the shipped code. Rewritten to the real model —
+  a classic IIFE (`process-guest.js`) in a `sandbox="allow-scripts"` opaque-origin
+  iframe; the blocker was ES-module CORS from a null origin, never the CSP.
 
 ## [1.0.9] - 2026-07-23
 
