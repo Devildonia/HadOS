@@ -75,4 +75,36 @@ describe('WindowFactory', () => {
         const span = document.querySelector('.window-header span')!;
         expect(span.textContent).toBe('New Title');
     });
+
+    it('keeps the app icon out of the title span so retitling never clobbers it', () => {
+        const id = WindowFactory.create({ id: 'iconed-win', title: 'Paint', icon: '🎨' });
+        const win = document.getElementById(id)!;
+
+        // Icon lives in its own <i>, not in the title <span>.
+        const iconEl = win.querySelector('.window-header .window-icon')!;
+        expect(iconEl.tagName).toBe('I');
+        expect(iconEl.textContent).toBe('🎨');
+        expect(win.querySelector('.window-header span')!.textContent).toBe('Paint');
+
+        // Retitling (as FileExplorer/Notepad do) must not wipe the icon.
+        WindowFactory.setTitle(id, 'C:\\');
+        expect(win.querySelector('.window-header span')!.textContent).toBe('C:\\');
+        expect(win.querySelector('.window-header .window-icon')!.textContent).toBe('🎨');
+    });
+
+    it('setTitleIcon renders an asset path as an <img> (matching the taskbar)', () => {
+        const id = WindowFactory.create({ id: 'img-icon-win', title: 'Ragdoll', icon: '🎭' });
+        WindowFactory.setTitleIcon(id, 'assets/icons/ragdoll_workshop.webp');
+
+        const iconEl = document.querySelector('#img-icon-win .window-icon')!;
+        const img = iconEl.querySelector('img');
+        expect(img).not.toBeNull();
+        expect(img!.getAttribute('src')).toBe('assets/icons/ragdoll_workshop.webp');
+        // The emoji placeholder is gone — one icon, not two.
+        expect(iconEl.textContent).toBe('');
+
+        // A falsy icon is a no-op (keeps the existing one).
+        WindowFactory.setTitleIcon(id, '');
+        expect(document.querySelector('#img-icon-win .window-icon img')).not.toBeNull();
+    });
 });

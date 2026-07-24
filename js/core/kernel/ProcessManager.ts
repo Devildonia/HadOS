@@ -89,6 +89,15 @@ export class ProcessManager {
             if (process.windowId) {
                 const wm: any = Services.get('WindowManager');
                 if (wm) wm.open(process.windowId);
+
+                // Stamp the window's titlebar with the app's registered icon so it
+                // matches the taskbar button — the registry metadata is the single
+                // source of truth, instead of each app hardcoding a title emoji.
+                const regIcon = appInfo.metadata?.icon;
+                if (regIcon) {
+                    const wf: any = Services.get('WindowFactory');
+                    wf?.setTitleIcon?.(process.windowId, regIcon);
+                }
             }
 
             // Dispatch event for Taskbar & subscribers

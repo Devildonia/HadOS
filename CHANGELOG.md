@@ -45,6 +45,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Regression tests: `test/EventDelegation-explorer.test.ts` pins the single-window
   Games behaviour (desktop double-click and Start-Menu click open FileX once,
   never the legacy `games-folder` app).
+- **Windows showed a generic/old icon in their titlebar instead of the app's
+  own**: the taskbar button already used the app's registered icon (an
+  `assets/icons/*.webp` for most apps), but each window's titlebar hardcoded a
+  separate emoji passed to `WindowFactory.create` — so e.g. Ragdoll Workshop
+  showed 🎭 in the titlebar while its taskbar button showed the real workshop
+  icon. The Kernel now stamps every launched window's titlebar with the app's
+  **registered** icon (the registry metadata is the single source of truth), so
+  the titlebar and taskbar always agree. The icon lives in its own `<i class="window-icon">`
+  element — kept out of the title `<span>` so apps that retitle their window
+  (FileExplorer's path, Notepad's filename) no longer risk clobbering it — and an
+  asset path renders as a 16px `<img>`, an emoji as text, the same rule the
+  taskbar uses.
+- Regression tests: `test/WindowFactory.test.ts` (icon stays out of the title
+  span; `setTitleIcon` renders asset paths as `<img>`) and `test/Kernel.test.ts`
+  (launch stamps the registered icon; no-op when the app registers none).
 
 ## [1.0.9] - 2026-07-23
 

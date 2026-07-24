@@ -56,6 +56,25 @@
     text-overflow: ellipsis;
 }
 
+/* App icon in the titlebar — kept out of the title <span> so retitling apps
+   never clobber it. Emoji render as text; an asset path renders as a 16px img,
+   matching the taskbar button so a window and its taskbar entry agree. */
+.window-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 5px;
+    font-style: normal;
+    line-height: 1;
+}
+
+.window-icon img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: block;
+}
+
 .window-controls {
     display: flex;
     gap: 2px;

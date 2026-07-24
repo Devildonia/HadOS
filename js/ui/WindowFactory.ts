@@ -59,6 +59,8 @@ export interface IWindowFactory {
     getBody(windowId: string): HTMLElement | null;
     /** Modifies the header display title string of a window. */
     setTitle(windowId: string, newTitle: string): void;
+    /** Stamps a window's titlebar icon (emoji/char or asset path); falsy is a no-op. */
+    setTitleIcon(windowId: string, icon: string): void;
     /** Captures the list of created dynamic window identifiers. */
     getCreated(): Set<string>;
     /** Resets the factory counter and purges all created windows from DOM (for tests). */
@@ -115,9 +117,19 @@ export const WindowFactory: IWindowFactory = (function () {
         const header = document.createElement('div');
         header.className = 'window-header';
 
+        // The app's icon lives in its own <i> element (not a <span>), so the
+        // title <span> stays pure text — apps like FileExplorer/Notepad overwrite
+        // `.window-header span` textContent to retitle, and that must not clobber
+        // the icon. Emoji render as text; an asset path renders as an <img>, the
+        // same rule the taskbar uses, so window and taskbar always show one icon.
+        const iconEl = document.createElement('i');
+        iconEl.className = 'window-icon';
+        _renderTitleIcon(iconEl, icon);
+        header.appendChild(iconEl);
+
         const titleSpan = document.createElement('span');
         titleSpan.id = `${id}-title`;
-        titleSpan.textContent = icon ? `${icon} ${title}` : title;
+        titleSpan.textContent = title;
         header.appendChild(titleSpan);
 
         const controls = document.createElement('div');
@@ -277,6 +289,48 @@ export const WindowFactory: IWindowFactory = (function () {
         }
     }
 
+    /**
+     * Renders an app icon into a titlebar icon slot. An asset path (contains a
+     * '/' or '.') becomes an <img>; anything else is treated as an emoji/char.
+     * Mirrors the taskbar's rule so a window and its taskbar button never
+     * disagree about which icon an app owns.
+     */
+    function _renderTitleIcon(target: HTMLElement, icon: string): void {
+        target.textContent = '';
+        target.style.display = icon ? '' : 'none';
+        if (!icon) return;
+        if (icon.includes('/') || icon.includes('.')) {
+            const img = document.createElement('img');
+            img.src = icon;
+            img.alt = '';
+            target.appendChild(img);
+        } else {
+            target.textContent = icon;
+        }
+    }
+
+    /**
+     * Stamps a window's titlebar icon after creation — used by the Kernel to
+     * apply an app's registered icon so the title bar matches the taskbar (the
+     * single source of truth is the app registry metadata).
+     * @param windowId Target window.
+     * @param icon Emoji/char or asset path. Falsy is a no-op (keeps any existing icon).
+     */
+    function setTitleIcon(windowId: string, icon: string): void {
+        if (!icon) return;
+        const win = document.getElementById(windowId);
+        if (!win) return;
+        const header = win.querySelector('.window-header');
+        if (!header) return;
+        let iconEl = header.querySelector('.window-icon') as HTMLElement | null;
+        if (!iconEl) {
+            iconEl = document.createElement('i');
+            iconEl.className = 'window-icon';
+            header.insertBefore(iconEl, header.firstChild);
+        }
+        _renderTitleIcon(iconEl, icon);
+    }
+
     // --- Private helpers ---
     /** Builds a titlebar header control button element. */
     function _createBtn(className: string, text: string, title: string): HTMLButtonElement {
@@ -293,6 +347,7 @@ export const WindowFactory: IWindowFactory = (function () {
         destroy,
         getBody,
         setTitle,
+        setTitleIcon,
         getCreated: () => new Set(createdWindows),
         __reset: () => {
             createdWindows.clear();

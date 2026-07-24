@@ -75,6 +75,34 @@ describe('Kernel', () => {
             expect((globalThis as any).WindowManager.open).toHaveBeenCalledWith('win-auto');
         });
 
+        it('stamps the app\'s registered icon onto its window titlebar', () => {
+            const setTitleIcon = vi.fn();
+            Services.register('WindowFactory', { setTitleIcon } as any);
+
+            class IconApp {
+                windowId = 'win-iconed';
+            }
+            Kernel.registerApp('iconed', IconApp, { name: 'Iconed', icon: 'assets/icons/ragdoll_workshop.webp' });
+            Kernel.launch('iconed');
+
+            // Titlebar icon comes from the registry (single source of truth), so it
+            // matches the taskbar button instead of a hardcoded title emoji.
+            expect(setTitleIcon).toHaveBeenCalledWith('win-iconed', 'assets/icons/ragdoll_workshop.webp');
+        });
+
+        it('does not stamp a titlebar icon when the app registers none', () => {
+            const setTitleIcon = vi.fn();
+            Services.register('WindowFactory', { setTitleIcon } as any);
+
+            class NoIcon {
+                windowId = 'win-noicon';
+            }
+            Kernel.registerApp('noicon', NoIcon, { name: 'NoIcon', icon: '' });
+            Kernel.launch('noicon');
+
+            expect(setTitleIcon).not.toHaveBeenCalled();
+        });
+
         it('should emit kernel:process-started event on EventBus', () => {
             class EvtApp {}
             Kernel.registerApp('evt', EvtApp, { name: 'Evt', icon: '' });
