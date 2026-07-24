@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-rc.1] - 2026-07-24
+
+First **public** release candidate. The project's internal 1.0.x line is
+renumbered to a 1.0.0 public launch; this RC is the polished v1.0.10 tree (the
+v1.0.9 architecture-debt payoff plus the window-chrome and app-identity sweep)
+with the desktop's last Windows traces removed — HadOS wallpapers, the HadOS grid
+shader on the modern theme, and its own icon on every window.
+
 ### Changed
 
 - **Modern-theme wallpaper shader replaced — the last Windows trace is gone**:
@@ -17,9 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rewritten **without `fwidth`** (the context doesn't enable
   `OES_standard_derivatives`, so a derivative call would fail to compile) —
   the per-pixel line width is derived from `iResolution` instead, so lines stay
-  ~1px crisp. Verified: compiles and links clean in a real WebGL1 context and
-  renders the intended palette (base ~rgb(10,13,18), grid highlights, vignetted
-  edges).
+  ~1px crisp. The palette is tuned to read on a desktop rather than vanish into
+  black: deep night-blue base (~rgb(15,23,35) average), bright grid lines
+  (~rgb(100/ch) peaks), a soft central glow and a vignette for depth. Verified by
+  offscreen render (compiles and links clean in a real WebGL1 context).
 - **New desktop wallpaper set**: the eight Windows-nostalgia wallpapers
   (`w95_1..8.webp`, labelled "Windows 95" / "Win 10 Retro" / …) are replaced by
   eight HadOS wallpapers (`Had_01..08.webp`, labelled "HadOS 1..8") in the
