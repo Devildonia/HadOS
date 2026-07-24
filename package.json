@@ -24,7 +24,8 @@
     "copy:litert": "tsx scripts/copy-litert-wasm.ts",
     "copy:genai": "tsx scripts/copy-genai-wasm.ts",
     "copy:ort": "tsx scripts/copy-ort-wasm.ts",
-    "build:ai-worker": "vite build --config vite.ai-worker.config.ts"
+    "build:ai-worker": "vite build --config vite.ai-worker.config.ts",
+    "generate:demo-video": "npx tsx scripts/generate-demo-video.ts"
   },
   "keywords": [
     "windows95",
