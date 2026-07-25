@@ -58,6 +58,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `assets` rather than searching the whole URL for `/assets/` — the old search resolved
   an app deployed at `/assets/app/` to `/`.
 
+- **The modern theme's first sticky note had an unreadable heading.** The theme sets
+  it to the accent, but `#sticky-note p:first-child { color: #cc0000 }` in the base
+  sheet is an ID at (1,1,1) and beat the theme's (0,3,2) class rule — a red chosen for
+  the old light Fluent note, left over a dark emerald one at **3.02:1**, under WCAG
+  AA's 4.5:1. Scoping the theme rule through the same ID takes it to **10.67:1**. Only
+  the first note was affected, since no ID rule targets the second — which is the tell
+  for this whole class of bug, now the third instance of it (see `docs/known-issues.md`).
+- **`docs/screenshots/desktop-modern.png` retaken** — it still showed the Fluent
+  palette and the deleted `winui/` icons.
+- **The CSS baseline now tracks the sticky notes**, which it never did — the reason
+  the contrast bug could ship. Both notes and both headings are pinned, deliberately:
+  the ID rule hits only the first, so a single selector would have missed it. The
+  snapshots now record `rgb(0,230,138)` under modern and `rgb(204,0,0)` under hados
+  (red on the yellow post-it, unchanged), so either theme moving is a failure.
+
 ### Testing
 
 - `test/AssetUrl.test.ts` is new: 15 cases over main-thread and worker resolution,

@@ -9,7 +9,7 @@ Nothing here is speculative: every claim was measured or read out of the running
 > Before touching anything under `css/` or `public/css/themes/`, read
 > [`test/e2e/css-baseline.spec.ts`](../test/e2e/css-baseline.spec.ts). The unit suite never
 > evaluates CSS — jsdom does not load external stylesheets, so `style.css` could be deleted and
-> all 1031 tests would still pass. That spec is the only net.
+> all 1101 tests would still pass. That spec is the only net.
 
 ---
 
@@ -251,9 +251,10 @@ window by inline style. The retake also caught the sticky note advertising **v1.
 v1.0.6 build — the version was hardcoded in all 40 locales; it now interpolates `{version}`
 from `CONFIG` (single source of truth), so a bump can never strand it again.
 
-Still true: the **modern** theme's screenshot shows its Windows-style wallpaper and `winui/`
-icons — the borrowed-identity problem of issue **3**, now visible in the README gallery until
-that theme gets its own assets.
+`desktop-modern.png` was retaken once the theme got its own identity (issue **3**) — it had been
+showing the Fluent palette and the `winui/` icons, which no longer exist. Selective recapture works:
+`npx tsx scripts/capture-screenshots.ts modern` against a running dev server redoes just that shot
+instead of the whole gallery.
 
 ---
 
@@ -301,6 +302,19 @@ that theme gets its own assets.
   classes and `subjectMask` keeps everything that is not background — so a cat on a sofa keeps the
   sofa too (measured: 47.7% sofa + 11.6% cat). Correct by its own definition, surprising as a
   product. Keeping only the largest connected class, or letting the user choose, would need a UI.
+
+- **An ID in a base stylesheet silently outranks any theme rule that only uses classes.**
+  This has now cost three separate bugs, so it is worth stating as a rule rather than a story:
+  `#system-tray .ragdoll-pet-btn` (1,1,1) beat the pet button's mobile padding twice, and
+  `#sticky-note p:first-child { color: #cc0000 }` (1,1,1) beat
+  `body.theme-modern .sticky-note p:first-child` (0,3,2) — so the modern theme's first sticky note
+  kept a red heading the palette never chose. On the reskinned dark note that measured **3.02:1**,
+  under WCAG AA's 4.5:1; scoping the theme rule through the same ID took it to **10.67:1**.
+
+  The tell is that only *part* of a component looks wrong: the second sticky note was correct all
+  along, because no ID rule targets it. When a theme override "does nothing", check for an ID in the
+  base sheet before touching the value — and measure the computed style rather than reading the
+  cascade, which is what the `computed-*.txt` baselines are for.
 
 - **`new Worker(new URL('…', import.meta.url))` must stay one expression — splitting it
   builds clean and fails at runtime.** Vite's worker plugin matches that whole shape. Pull the URL

@@ -229,7 +229,14 @@ body.theme-modern .sticky-note.dragging {
     cursor: grabbing;
 }
 
-body.theme-modern .sticky-note p:first-child {
+/* Scoped through #sticky-note on purpose. The base rule in `desktop/sticky-note.css`
+   is `#sticky-note p:first-child { color: #cc0000 }` at (1,1,1) — an ID — so the
+   class-only version of this rule lost to it and the first note kept a red heading
+   the palette never intended. Measured on the dark note: #cc0000 on
+   rgba(10,28,20,.85) is ~3.0:1, under the 4.5:1 WCAG AA needs. The second note has
+   no ID rule against it, which is why only one of the two was wrong. */
+body.theme-modern .sticky-note p:first-child,
+body.theme-modern #sticky-note p:first-child {
     font-size: 15px;
     color: var(--accent-color);
     text-shadow: 0 0 8px rgba(0, 230, 138, 0.4);

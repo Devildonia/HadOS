@@ -1619,3 +1619,187 @@ body
 
 .paint-toolbar
   <absent>
+
+#sticky-note
+  display: block
+  position: absolute
+  z-index: 50
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 160px
+  height: 151.125px
+  min-height: 140px
+  max-height: none
+  padding: 15px
+  margin: 0px
+  top: 20px
+  left: 1100px
+  right: 20px
+  bottom: 548.875px
+  color: rgb(26, 26, 26)
+  background-color: rgb(255, 255, 136)
+  background-image: none
+  border-width: 1px
+  border-style: solid
+  border-color: rgb(230, 230, 0)
+  border-radius: 0px
+  box-shadow: rgba(0, 0, 0, 0.3) 2px 2px 5px 0px
+  outline: rgb(26, 26, 26) none 3px
+  font-family: "Comic Sans MS", "Bradley Hand", cursive, sans-serif
+  font-size: 14px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 19.6px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: normal
+  flex: 0 1 auto
+  transform: matrix(0.999391, -0.0348995, 0.0348995, 0.999391, 0, 0)
+  transition: transform
+  animation-name: none
+  backdrop-filter: none
+  cursor: move
+
+#sticky-note p:first-child
+  display: block
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 128px
+  height: 36.375px
+  min-height: 0px
+  max-height: none
+  padding: 0px
+  margin: 0px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(204, 0, 0)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: none
+  border-width: 0px
+  border-style: solid
+  border-color: rgb(229, 231, 235)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(204, 0, 0) none 3px
+  font-family: "Comic Sans MS", "Bradley Hand", cursive, sans-serif
+  font-size: 13px
+  font-weight: 700
+  letter-spacing: normal
+  line-height: 18.2px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: normal
+  flex: 0 1 auto
+  transform: none
+  transition: all
+  animation-name: none
+  backdrop-filter: none
+  cursor: move
+
+#sticky-note-2
+  display: block
+  position: absolute
+  z-index: 50
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 160px
+  height: 140px
+  min-height: 140px
+  max-height: none
+  padding: 15px
+  margin: 0px
+  top: 200px
+  left: 1100px
+  right: 20px
+  bottom: 380px
+  color: rgb(26, 26, 26)
+  background-color: rgb(255, 255, 136)
+  background-image: none
+  border-width: 1px
+  border-style: solid
+  border-color: rgb(230, 230, 0)
+  border-radius: 0px
+  box-shadow: rgba(0, 0, 0, 0.3) 2px 2px 5px 0px
+  outline: rgb(26, 26, 26) none 3px
+  font-family: "Comic Sans MS", "Bradley Hand", cursive, sans-serif
+  font-size: 14px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 19.6px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: normal
+  flex: 0 1 auto
+  transform: matrix(0.999391, 0.0348995, -0.0348995, 0.999391, 0, 0)
+  transition: transform
+  animation-name: none
+  backdrop-filter: none
+  cursor: move
+
+#sticky-note-2 p:first-child
+  display: block
+  position: static
+  z-index: auto
+  overflow: visible
+  visibility: visible
+  opacity: 1
+  width: 128px
+  height: 36.375px
+  min-height: 0px
+  max-height: none
+  padding: 0px
+  margin: 0px
+  top: auto
+  left: auto
+  right: auto
+  bottom: auto
+  color: rgb(26, 26, 26)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: none
+  border-width: 0px
+  border-style: solid
+  border-color: rgb(229, 231, 235)
+  border-radius: 0px
+  box-shadow: none
+  outline: rgb(26, 26, 26) none 3px
+  font-family: "Comic Sans MS", "Bradley Hand", cursive, sans-serif
+  font-size: 13px
+  font-weight: 400
+  letter-spacing: normal
+  line-height: 18.2px
+  text-align: start
+  text-transform: none
+  text-shadow: none
+  white-space: normal
+  flex-direction: row
+  justify-content: normal
+  align-items: normal
+  gap: normal
+  flex: 0 1 auto
+  transform: none
+  transition: all
+  animation-name: none
+  backdrop-filter: none
+  cursor: move

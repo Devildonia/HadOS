@@ -37,6 +37,12 @@ const TRACKED_SELECTORS = [
     '#system-tray', '#clock', '#ragdollToggle', '#hdr-toggle', '.ragdoll-text',
     '.window-menu', '.window-menu .window-menu-item',
     '.paint-tool-btn', '.paint-toolbar',
+    // Both notes, and both headings. The pair matters: `#sticky-note p:first-child`
+    // is an ID rule that a theme's class-only override loses to, so the first note
+    // can be wrong while the second is right — which is exactly how the modern
+    // theme shipped a 3.02:1 red heading unnoticed. One selector would have missed it.
+    '#sticky-note', '#sticky-note p:first-child',
+    '#sticky-note-2', '#sticky-note-2 p:first-child',
 ];
 
 /** Freezes everything that moves, so measurements are reproducible. */
