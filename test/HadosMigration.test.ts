@@ -182,3 +182,81 @@ describe('HadOS migration — system directory rename', () => {
         expect(VFS.readFile('C:\\WINDOWS\\SYSTEM\\crash.log')).toBe('old crash');
     });
 });
+
+/**
+ * The desktop shortcuts were renamed in DEFAULT_FS, which only reaches fresh
+ * installs — an existing tree keeps its persisted copy. `migrateDesktopShortcuts`
+ * is the other half, on the same "rename the data, never reset it" principle as
+ * the C:\WINDOWS move above.
+ */
+function treeWithLegacyShortcuts(): string {
+    return JSON.stringify({
+        name: 'C:', type: 'dir', children: {
+            HADOS: { name: 'HADOS', type: 'dir', children: { SYSTEM: { name: 'SYSTEM', type: 'dir', children: {} } } },
+            DOCUMENTS: { name: 'DOCUMENTS', type: 'dir', children: { 'mine.txt': { name: 'mine.txt', type: 'file', content: 'keep me' } } },
+            GAMES: { name: 'GAMES', type: 'dir', children: { Doom: { name: 'Doom', type: 'dir', children: {} } } },
+            DESKTOP: {
+                name: 'DESKTOP', type: 'dir', children: {
+                    'Notepad': { name: 'Notepad', type: 'shortcut', actionType: 'launch', actionTarget: 'notepad' },
+                    'Paint': { name: 'Paint', type: 'shortcut', actionType: 'launch', actionTarget: 'paint' },
+                    'Recycle Bin': { name: 'Recycle Bin', type: 'shortcut', actionType: 'openDialog', actionTarget: 'dialog-recyclebin' },
+                    'My Computer': { name: 'My Computer', type: 'shortcut', actionType: 'explorer', actionTarget: 'This PC' },
+                    'Holiday.txt': { name: 'Holiday.txt', type: 'file', content: 'user file' },
+                }
+            }
+        }
+    });
+}
+
+describe('HadOS migration — desktop shortcut names', () => {
+    beforeEach(freshStorage);
+
+    it('renames the legacy shortcuts in an existing tree', async () => {
+        await idb.put(NEW_DB, 'root', treeWithLegacyShortcuts());
+        await VFS.init();
+
+        expect(VFS.resolve('C:\\DESKTOP\\Notapad')).not.toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\Pinta')).not.toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\Eco Bin')).not.toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\Mi PC')).not.toBeNull();
+
+        expect(VFS.resolve('C:\\DESKTOP\\Notepad')).toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\Paint')).toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\Recycle Bin')).toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\My Computer')).toBeNull();
+    });
+
+    it('carries the node across rather than recreating it', async () => {
+        await idb.put(NEW_DB, 'root', treeWithLegacyShortcuts());
+        await VFS.init();
+
+        const moved = VFS.resolve('C:\\DESKTOP\\Notapad')!;
+        expect(moved.name).toBe('Notapad');          // the node's own name follows
+        expect(moved.actionTarget).toBe('notepad');  // and its behaviour is intact
+    });
+
+    it('leaves everything that is not one of those shortcuts alone', async () => {
+        await idb.put(NEW_DB, 'root', treeWithLegacyShortcuts());
+        await VFS.init();
+
+        expect(VFS.readFile('C:\\DESKTOP\\Holiday.txt')).toBe('user file');
+        expect(VFS.readFile('C:\\DOCUMENTS\\mine.txt')).toBe('keep me');
+    });
+
+    it('does not clobber a new name the user already has', async () => {
+        const tree = JSON.parse(treeWithLegacyShortcuts());
+        tree.children.DESKTOP.children['Notapad'] = { name: 'Notapad', type: 'file', content: 'mine, not a shortcut' };
+        await idb.put(NEW_DB, 'root', JSON.stringify(tree));
+
+        await VFS.init();
+
+        expect(VFS.readFile('C:\\DESKTOP\\Notapad')).toBe('mine, not a shortcut');
+        expect(VFS.resolve('C:\\DESKTOP\\Notepad')).not.toBeNull();   // legacy left in place
+    });
+
+    it('is a no-op on a tree that already uses the new names', async () => {
+        await VFS.init();   // defaults
+        expect(VFS.resolve('C:\\DESKTOP\\Notapad')).not.toBeNull();
+        expect(VFS.resolve('C:\\DESKTOP\\Notepad')).toBeNull();
+    });
+});

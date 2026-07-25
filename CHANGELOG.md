@@ -6,6 +6,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The `modern` theme stopped being a Windows clone** (known-issues #3/#4). Its
+  palette was already re-skinned to a metallic cyber-emerald glass; its **icons**
+  were still Microsoft's product art under `assets/themes/winui/`. Root cause was
+  structural: `ThemeManager.swapIcons` carried *two* full icon maps, so every rename
+  batch landed on `hados` and missed `modern` — which is why, under modern, an icon
+  still read "MS-DOS" while its label already said "Shell Core". There is now **one**
+  map worn by both themes, and every `.webp` under `winui/` is deleted. The `winui`
+  **sound set stays**: only the artwork was borrowed identity, and the sounds are part
+  of what makes a theme feel different.
+- **The VFS default desktop shortcuts were renamed, with a migration** (#4c).
+  `DEFAULT_FS` seeds *Mi PC*, *Eco Bin*, *Notapad*, *Pinta*, *FileX*; that alone only
+  reaches fresh installs, so `VFS.migrateDesktopShortcuts()` renames the legacy nodes
+  in an existing persisted tree on hydrate, skipping any whose new name is taken. Same
+  "rename the data, never reset it" principle as the `C:\WINDOWS → C:\HADOS` move.
+
+### Fixed
+
+- **Drag-a-desktop-icon-to-the-Eco-Bin now works** (#4b's remaining gap). The first
+  cut looked right and could not work: it read the icon's visible `<span>` as the VFS
+  key, but that span carries `data-i18n`, so it matched in whichever locale happened
+  to agree with the tree and failed silently in the other 39 — and it never removed
+  the element, so a trashed file stayed on screen (desktop icons are static markup in
+  `index.html`, not rendered from the VFS). Icons now declare `data-vfs-name`
+  explicitly, the handler removes the element and drops its saved position, and icons
+  without that attribute are ignored — the rest of the desktop is chrome with no file
+  behind it. The dead HTML5 `dragover`/`drop` pair went with it: icon dragging is
+  `mousemove`/`mouseup`, so those listeners could never fire.
+- **Restoring from the bin is extension-aware** — `a (2).txt`, not `a.txt (2)`.
+  Dotfiles and double extensions fall out correctly.
+- **The pet button's mobile padding applies for the first time** (#6), scoped through
+  `#system-tray` to clear theme-hados's `(1,1,1)` ID rule. Both previous attempts —
+  `(0,1,0)` and `(0,2,2)` — lost to it and computed `padding: 0`. The entry's own
+  diagnosis had been wrong too: it blamed a different rule and reported a computed
+  `6px 16px`. Measured at 375px, before and after, via the baseline.
+- `migrateDesktopShortcuts` routes its child lookups through `getChild()` like the
+  rest of the VFS, rather than reintroducing the bare `children[name]` the audit's
+  M-04 removed.
+
+### Testing
+
+- Regression tests for each of the above: four in `DesktopIcons.test.ts` for the
+  drag-to-bin decision (including one that fails the moment the label fallback comes
+  back), five in `HadosMigration.test.ts` for the shortcut migration. Suite: **1086
+  tests / 96 files**.
+- CSS baseline re-blessed for the theme work — 6 text fingerprints moved, and the
+  three **pixel screenshots did not**, which is the evidence the hados theme is
+  untouched by any of it.
+
 ### Fixed
 
 - **Architectural Audit Remediation (commit f0936c7)**: Fixed 35 audit findings across core HadOS architecture (7 HIGH, 16 MEDIUM, 12 LOW):

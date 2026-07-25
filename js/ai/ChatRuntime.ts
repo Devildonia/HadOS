@@ -11,9 +11,10 @@
  */
 
 import { FilesetResolver, LlmInference } from '@mediapipe/tasks-genai';
+import { getAssetUrl } from '../utils/url.js';
 
 /** Copied from node_modules by scripts/copy-genai-wasm.ts. */
-const GENAI_WASM_BASE = '/wasm/genai';
+const GENAI_WASM_BASE = getAssetUrl('/wasm/genai');
 
 /** Cumulative token budget (prompt + reply). Gemma 1B handles 1280 comfortably. */
 const MAX_TOKENS = 1280;

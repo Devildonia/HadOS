@@ -61,15 +61,13 @@
         display: none;
     }
 
-    /* DEAD — measured at 375px, where this would apply: the button computes to
-       `padding: 6px 16px`. A media query adds no specificity, so this (0,1,0)
-       loses to the theme's `button:not(.window-btn):not(#start-button)`, which
-       reaches (1,2,2). Reordering the manifest will not rescue it; only raising
-       the specificity here, or having the theme stop setting padding, would.
-       Left in place rather than deleted: whether these buttons *should* shrink
-       on a phone is a design call, and it should be made on purpose rather than
-       resolved by a refactor. */
-    button.ragdoll-pet-btn:not(.window-btn) {
+    /* The tray toggles shrink on a phone. This has to be scoped through
+       `#system-tray` to land at all: theme-hados rounds the same buttons with
+       `body.theme-hados #system-tray .ragdoll-pet-btn` (1,1,1), and a media query
+       adds no specificity of its own. The previous two attempts — (0,1,0), then
+       (0,2,2) — both lost to that ID and computed `padding: 0`, silently.
+       Measured at 375px: this now applies. */
+    #system-tray button.ragdoll-pet-btn:not(.window-btn) {
         padding: 2px 4px;
     }
 

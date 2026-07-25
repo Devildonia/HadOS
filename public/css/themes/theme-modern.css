@@ -1,79 +1,91 @@
-/* ===== MODERN (FLUENT) THEME ===== */
+/* ==========================================================================
+   MODERN THEME — VERDE METALIZADO CON GLASSMORPHISM (METALLIC CYBER-EMERALD)
+   Vibe: High-End Translucent Glass, Metallic Emerald Chrome, Cyber-Glows
+   ========================================================================== */
 
 body.theme-modern {
-    /* Fonts */
-    --os-font-family: 'Segoe UI', Inter, Roboto, sans-serif;
+    /* --- Typography & Geometry --- */
+    --os-font-family: 'Segoe UI', Inter, Roboto, system-ui, -apple-system, sans-serif;
     --os-font-size: 13px;
     --os-font-weight-bold: 600;
 
-    /* Backgrounds */
-    --os-bg-color: #1a1a1a;
-    --os-text-color: #202020;
-    --os-text-color-inverted: #ffffff;
-    --accent-color: #0078D7;
+    /* --- Primary Theme Palette --- */
+    --os-bg-color: #06120c;
+    --os-text-color: #e6f7f0;
+    --os-text-color-inverted: #03140c;
+    --accent-color: #00e68a;
+    --accent-color-hover: #1aff9c;
+    --accent-color-active: #00b36b;
+    --accent-glow: rgba(0, 230, 138, 0.4);
 
-    /* Global Legacy Overrides to force modern look */
-    --win-gray: #f3f3f3;
-    --border-light: transparent;
-    --border-dark: #e5e5e5;
-    --border-darkest: #d1d1d1;
+    /* --- Global Overrides for HadOS Glass Frame --- */
+    --win-gray: rgba(10, 26, 19, 0.85);
+    --border-light: rgba(0, 230, 138, 0.25);
+    --border-dark: rgba(0, 230, 138, 0.15);
+    --border-darkest: rgba(0, 230, 138, 0.35);
 
-    /* Taskbar */
-    --taskbar-bg: rgba(243, 243, 243, 0.85);
-    /* Acrylic */
+    /* --- Taskbar (Metallic Emerald Glass) --- */
+    --taskbar-bg: rgba(6, 20, 14, 0.78);
     --taskbar-height: 48px;
-    --taskbar-border-top: 1px solid rgba(0, 0, 0, 0.1);
-    --taskbar-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    --taskbar-border-top: 1px solid rgba(0, 230, 138, 0.25);
+    --taskbar-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 230, 138, 0.15);
 
-    /* Start Menu */
-    --start-menu-bg: rgba(243, 243, 243, 0.9);
+    /* --- Start Menu --- */
+    --start-menu-bg: rgba(8, 24, 17, 0.88);
     --start-menu-border: 1px solid;
-    --start-menu-border-color: rgba(0, 0, 0, 0.1);
-    --start-menu-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    --start-sidebar-bg: var(--accent-color);
+    --start-menu-border-color: rgba(0, 230, 138, 0.3);
+    --start-menu-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 230, 138, 0.2);
+    --start-sidebar-bg: linear-gradient(180deg, #00e68a 0%, #03663e 100%);
 
-    /* Windows */
-    --window-bg: #ffffff;
-    --window-content-bg: #ffffff;
+    /* --- Windows & Dialogs --- */
+    --window-bg: rgba(9, 24, 17, 0.82);
+    --window-content-bg: rgba(6, 18, 13, 0.85);
     --window-border: 1px solid;
-    --window-border-color: rgba(0, 0, 0, 0.1);
-    --window-border-radius: 8px;
-    --window-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    --window-border-color: rgba(0, 230, 138, 0.28);
+    --window-border-radius: 10px;
+    --window-shadow: 0 16px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(0, 230, 138, 0.12);
 
-    /* Window Header */
-    --window-header-bg: #ffffff;
-    --window-header-color: #202020;
-    --window-header-height: 32px;
+    /* --- Window Header (Metallic Green Gradient) --- */
+    --window-header-bg: linear-gradient(90deg, rgba(8, 36, 25, 0.95) 0%, rgba(14, 56, 39, 0.9) 100%);
+    --window-header-color: #00e68a;
+    --window-header-height: 34px;
 
-    /* Dialogs */
-    --dialog-bg: #ffffff;
+    /* --- Dialogs --- */
+    --dialog-bg: rgba(10, 28, 20, 0.9);
     --dialog-border: 1px solid;
-    --dialog-border-color: rgba(0, 0, 0, 0.1);
-    --dialog-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    --dialog-border-color: rgba(0, 230, 138, 0.35);
+    --dialog-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 28px rgba(0, 230, 138, 0.2);
 
-    /* Controls (Buttons) */
-    --control-bg: #f9f9f9;
+    /* --- Controls & Buttons --- */
+    --control-bg: rgba(16, 44, 31, 0.7);
     --control-border: 1px solid;
-    --control-border-color: #d1d1d1;
-    --control-shadow: none;
+    --control-border-color: rgba(0, 230, 138, 0.3);
+    --control-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     --control-active-border-color: var(--accent-color);
-    --control-active-shadow: none;
-    /* Fluent's disabled text. It must not come from a border token: --border-dark
-       is #e5e5e5 here, which is invisible on a #f9f9f9 button. */
-    --control-disabled-color: #9a9a9a;
+    --control-active-shadow: 0 0 12px var(--accent-glow);
+    --control-disabled-color: rgba(120, 175, 150, 0.4);
     --control-disabled-text-shadow: none;
 }
 
-/* Specific component overrides that require extra CSS for modern look */
+/* ==========================================================================
+   GLASSMORPHISM & COMPONENT OVERRIDES
+   ========================================================================== */
+
 body.theme-modern .hados-window,
 body.theme-modern .hados-dialog {
     border-radius: var(--window-border-radius);
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(25px) saturate(120%);
-    -webkit-backdrop-filter: blur(25px) saturate(120%);
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1) !important;
+    background: var(--window-bg) !important;
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    border: var(--window-border-color) 1px solid !important;
+    box-shadow: var(--window-shadow) !important;
+    color: var(--os-text-color);
+}
+
+body.theme-modern .window-body {
+    background: var(--window-content-bg);
+    color: var(--os-text-color);
 }
 
 body.theme-modern #start-menu,
@@ -81,105 +93,144 @@ body.theme-modern .submenu {
     border-radius: var(--window-border-radius);
 }
 
-/* Acrylic effect on taskbar and start menu/submenu */
+/* Acrylic Glass effect on Taskbar and Start Menu */
 body.theme-modern #taskbar,
 body.theme-modern #start-menu,
 body.theme-modern .submenu {
-    backdrop-filter: blur(25px) saturate(120%);
-    -webkit-backdrop-filter: blur(25px) saturate(120%);
-    background: rgba(243, 243, 243, 0.75) !important;
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-}
-
-body.theme-modern .submenu {
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    background: var(--taskbar-bg) !important;
+    border: 1px solid rgba(0, 230, 138, 0.25) !important;
     box-shadow: var(--start-menu-shadow);
 }
 
-/* Window Header tweaks */
+/* Metallic Header & Action Buttons */
 body.theme-modern .window-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: var(--window-header-bg) !important;
+    border-bottom: 1px solid rgba(0, 230, 138, 0.2);
+    color: var(--window-header-color);
+    font-weight: 600;
+}
+
+body.theme-modern .window-title {
+    color: #e6f7f0;
+    text-shadow: 0 0 10px rgba(0, 230, 138, 0.4);
 }
 
 body.theme-modern .window-btn {
-    border-radius: 4px;
-    border: none;
-    background: transparent;
-    transition: background 0.2s;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.05);
+    color: #e6f7f0;
+    transition: all 0.2s ease;
 }
 
 body.theme-modern .window-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 230, 138, 0.2);
+    border-color: rgba(0, 230, 138, 0.4);
+    color: #00e68a;
+    box-shadow: 0 0 10px rgba(0, 230, 138, 0.3);
 }
 
 body.theme-modern .window-btn.close-btn:hover {
-    background: #e81123;
-    color: white;
+    background: rgba(232, 17, 35, 0.85);
+    border-color: #ff4d4d;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(232, 17, 35, 0.5);
 }
 
-/* Start Button Modernization */
+/* Start Button Modern Metallic Styling */
 body.theme-modern #start-button {
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    background: linear-gradient(135deg, rgba(0, 230, 138, 0.2) 0%, rgba(3, 102, 62, 0.4) 100%);
+    border: 1px solid rgba(0, 230, 138, 0.35);
+    box-shadow: 0 0 12px rgba(0, 230, 138, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px;
-    height: 100%;
-    transition: background 0.2s, transform 0.1s;
-    border-radius: 4px;
-    margin: 4px;
+    padding: 0 14px;
+    height: 36px;
+    align-self: center;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    margin: 4px 6px;
+    color: #00e68a;
 }
 
 body.theme-modern #start-button:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, rgba(0, 230, 138, 0.35) 0%, rgba(3, 102, 62, 0.6) 100%);
+    border-color: rgba(0, 230, 138, 0.6);
+    box-shadow: 0 0 18px rgba(0, 230, 138, 0.4);
 }
 
 body.theme-modern #start-button:active {
-    background: rgba(0, 0, 0, 0.1);
     transform: scale(0.96);
+    box-shadow: 0 0 8px rgba(0, 230, 138, 0.2);
 }
 
 body.theme-modern #start-button .start-icon rect {
-    /* Make the 4 squares the accent color instead of multi-color for a sleek modern look */
     fill: var(--accent-color);
 }
 
 body.theme-modern #start-button .start-text {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     margin-left: 8px;
-    /* Optional: Hide text for a pure icon look by adding display: none, but keeping it is fine */
+    color: #e6f7f0;
+    text-shadow: 0 0 8px rgba(0, 230, 138, 0.5);
 }
 
-/* Sticky Notes (Modern Post-it) */
+/* Metallic Glass Buttons */
+body.theme-modern .hados-btn,
+body.theme-modern button:not(.window-btn):not(.start-btn) {
+    background: linear-gradient(135deg, rgba(16, 48, 34, 0.8) 0%, rgba(8, 28, 19, 0.9) 100%);
+    border: 1px solid rgba(0, 230, 138, 0.3);
+    color: #e6f7f0;
+    border-radius: 6px;
+    padding: 5px 14px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-modern .hados-btn:hover,
+body.theme-modern button:not(.window-btn):not(.start-btn):hover {
+    background: linear-gradient(135deg, rgba(0, 230, 138, 0.25) 0%, rgba(10, 44, 30, 0.9) 100%);
+    border-color: rgba(0, 230, 138, 0.6);
+    color: #00e68a;
+    box-shadow: 0 0 12px rgba(0, 230, 138, 0.3);
+}
+
+body.theme-modern .hados-btn:active,
+body.theme-modern button:not(.window-btn):not(.start-btn):active {
+    transform: scale(0.98);
+}
+
+/* Sticky Notes (Modern Metallic Post-it) */
 body.theme-modern .sticky-note {
-    background-color: rgba(243, 243, 243, 0.65);
-    /* Acrylic backdrop */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    background: rgba(10, 28, 20, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 230, 138, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 230, 138, 0.15);
     border-radius: var(--window-border-radius);
     transform: none !important;
-    /* Stop rotation */
     font-family: var(--os-font-family);
-    color: var(--os-text-color);
+    color: #e6f7f0;
     padding: 20px;
     transition: box-shadow 0.2s, transform 0.2s;
 }
 
 body.theme-modern .sticky-note:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 230, 138, 0.25);
 }
 
 body.theme-modern .sticky-note.dragging {
     transform: scale(1.02) !important;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 32px rgba(0, 230, 138, 0.35);
     cursor: grabbing;
 }
 
 body.theme-modern .sticky-note p:first-child {
     font-size: 15px;
     color: var(--accent-color);
+    text-shadow: 0 0 8px rgba(0, 230, 138, 0.4);
 }

@@ -1,6 +1,7 @@
 import { EventBus } from './EventBus';
 import { Services } from './ServiceContainer';
 import { i18n } from '../services/i18n';
+import { Utils } from '../utils';
 
 /** The Windows 95 theme HadOS replaced. Anyone still on it is moved to 'hados'. */
 const LEGACY_THEME = 'win95';
@@ -118,86 +119,70 @@ export class ThemeManager {
     }
 
     swapIcons(theme: string): void {
-        // The start button wears the HadOS mark. It replaced an inline SVG of four
-        // coloured squares — Microsoft's logo, in Microsoft's colours.
-        const hadosStartIcon = `<img src="assets/icons/pwa_icon_512.png" alt="" width="24" height="24">`;
+        const hadosStartIcon = `<img src="${Utils.getAssetUrl('assets/icons/pwa_icon_512.png')}" alt="" width="24" height="24">`;
 
-        // Icon definitions for both themes
-        const icons = {
-            hados: {
-                // Desktop Icons
-                'icon-mycomputer': '<img src="assets/icons/mi_pc.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-recyclebin': '<img src="assets/icons/eco_bin_empty.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-notepad': '<img src="assets/icons/notapad.webp" alt="Notapad" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-paint': '<img src="assets/icons/pinta.webp" alt="Pinta" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-explorer': '<img src="assets/icons/filex.webp" alt="FileX" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-games-folder': '<img src="assets/icons/games.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-internet': '<img src="assets/icons/navea.webp" alt="Navea" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-display': '<img src="assets/icons/Display.webp" alt="Display" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-winamp': '<img src="assets/icons/winamp_icon.webp" draggable="false" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-terminal': '<img src="assets/icons/shell_core.webp" alt="Shell Core" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-taskmanager': '<img src="assets/icons/task_pilot.webp" alt="Task Pilot" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-pluginmanager': '<img src="assets/icons/plugin_manager.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-hnscout': '<img src="assets/icons/nova.webp" alt="Nova" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-messenger': '<img src="assets/icons/tavern_chat.webp" alt="Tavern Chat" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-audiostudio': '<img src="assets/icons/voxcribe.webp" alt="Voxcribe" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-docexplorer': '<img src="assets/icons/doc_query.webp" alt="Doc Query" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-mediaplayer': '<img src="assets/icons/mediaplayer.png" alt="Media Player" style="width: 48px; height: 48px; object-fit: contain;">',
-                // Start Menu Items
-                'start-menu-btn-icon': hadosStartIcon,
-                'menu-icon-notepad': '<img src="assets/icons/notapad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
-                'menu-icon-paint': '<img src="assets/icons/pinta.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.paint'),
-                'menu-icon-explorer': '<img src="assets/icons/filex.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.explorer'),
-                'menu-icon-games-folder': '<img src="assets/icons/games.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.games_folder'),
-                'menu-icon-terminal': '<img src="assets/icons/shell_core.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.terminal'),
-                'menu-icon-taskmanager': '<img src="assets/icons/task_pilot.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.taskmanager'),
-                'menu-icon-pluginmanager': '<img src="assets/icons/plugin_manager.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.pluginmanager'),
-                'menu-img-internet': 'assets/icons/navea.webp',
-                'menu-img-display': 'assets/icons/Display.webp'
-            },
-            modern: {
-                // Desktop Icons
-                'icon-mycomputer': '<img src="assets/themes/winui/my_pc.webp" alt="My Computer" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-recyclebin': '<img src="assets/themes/winui/recycle_bin.webp" alt="Recycle Bin" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-notepad': '<img src="assets/themes/winui/notepad.webp" alt="Notepad" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-paint': '<img src="assets/themes/winui/paint.webp" alt="Paint" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-explorer': '<img src="assets/themes/winui/file_explorer.webp" alt="Explorer" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-games-folder': '<img src="assets/themes/winui/games.webp" alt="Games" style="width: 64px; height: 64px; object-fit: contain;">',
-                'icon-internet': '<img src="assets/themes/winui/brave.webp" alt="Internet" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-display': '<img src="assets/themes/winui/display.webp" alt="Display" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-winamp': '<img src="assets/themes/winui/Winamp.webp" draggable="false" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-terminal': '<img src="assets/themes/winui/ms-dos.webp" alt="MS-DOS" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-taskmanager': '<img src="assets/themes/winui/task_manager.webp" alt="Task Manager" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-pluginmanager': '<span style="font-size: 38px; display: block; text-align: center;">🧩</span>',
-                'icon-hnscout': '<img src="assets/icons/nova.webp" alt="Nova" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-messenger': '<img src="assets/icons/tavern_chat.webp" alt="Tavern Chat" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-audiostudio': '<img src="assets/icons/voxcribe.webp" alt="Voxcribe" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-docexplorer': '<img src="assets/icons/doc_query.webp" alt="Doc Query" style="width: 48px; height: 48px; object-fit: contain;">',
-                'icon-mediaplayer': '<img src="assets/icons/mediaplayer.png" alt="Media Player" style="width: 48px; height: 48px; object-fit: contain;">',
-                // Start Menu Items
-                'start-menu-btn-icon': hadosStartIcon,
-                'menu-icon-notepad': '<img src="assets/themes/winui/notepad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
-                'menu-icon-paint': '<img src="assets/themes/winui/paint.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.paint'),
-                'menu-icon-explorer': '<img src="assets/themes/winui/file_explorer.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.explorer'),
-                'menu-icon-games-folder': '<img src="assets/themes/winui/games.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.games_folder'),
-                'menu-icon-terminal': '<img src="assets/themes/winui/ms-dos.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.terminal'),
-                'menu-icon-taskmanager': '<img src="assets/themes/winui/task_manager.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.taskmanager'),
-                'menu-icon-pluginmanager': '🧩 ' + i18n.t('app.pluginmanager'),
-                'menu-img-internet': 'assets/themes/winui/brave.webp',
-                'menu-img-display': 'assets/themes/winui/display.webp'
-            }
-        } as Record<string, Record<string, string>>;
+        // ONE icon set, worn by every theme.
+        //
+        // There used to be a second full copy pointing at `assets/themes/winui/` —
+        // Microsoft's product icons. That is the borrowed identity the Start-button
+        // logo and the Windows wallpaper were already removed for, and keeping two
+        // parallel maps is what let the rename batches land on one and miss the
+        // other: under `modern`, an icon still read "MS-DOS" while its label already
+        // said "Shell Core" (known-issues #3/#4). A theme is a skin — a different
+        // palette, chrome and sound set for the same apps — so the apps keep their
+        // own icons. The `winui` sound set stays; only the artwork was borrowed.
+        const hadosIcons: Record<string, string> = {
+            // Desktop Icons
+            'icon-mycomputer': '<img src="assets/icons/mi_pc.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-recyclebin': '<img src="assets/icons/eco_bin_empty.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-notepad': '<img src="assets/icons/notapad.webp" alt="Notapad" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-paint': '<img src="assets/icons/pinta.webp" alt="Pinta" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-explorer': '<img src="assets/icons/filex.webp" alt="FileX" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-games-folder': '<img src="assets/icons/games.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-internet': '<img src="assets/icons/navea.webp" alt="Navea" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-display': '<img src="assets/icons/Display.webp" alt="Display" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-winamp': '<img src="assets/icons/winamp_icon.webp" draggable="false" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-terminal': '<img src="assets/icons/shell_core.webp" alt="Shell Core" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-taskmanager': '<img src="assets/icons/task_pilot.webp" alt="Task Pilot" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-pluginmanager': '<img src="assets/icons/plugin_manager.webp" alt="" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-hnscout': '<img src="assets/icons/nova.webp" alt="Nova" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-messenger': '<img src="assets/icons/tavern_chat.webp" alt="Tavern Chat" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-audiostudio': '<img src="assets/icons/voxcribe.webp" alt="Voxcribe" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-docexplorer': '<img src="assets/icons/doc_query.webp" alt="Doc Query" style="width: 48px; height: 48px; object-fit: contain;">',
+            'icon-mediaplayer': '<img src="assets/icons/mediaplayer.png" alt="Media Player" style="width: 48px; height: 48px; object-fit: contain;">',
+            // Start Menu Items
+            'start-menu-btn-icon': hadosStartIcon,
+            'menu-icon-notepad': '<img src="assets/icons/notapad.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.notepad'),
+            'menu-icon-paint': '<img src="assets/icons/pinta.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.paint'),
+            'menu-icon-explorer': '<img src="assets/icons/filex.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.explorer'),
+            'menu-icon-games-folder': '<img src="assets/icons/games.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.games_folder'),
+            'menu-icon-terminal': '<img src="assets/icons/shell_core.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.terminal'),
+            'menu-icon-taskmanager': '<img src="assets/icons/task_pilot.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.taskmanager'),
+            'menu-icon-pluginmanager': '<img src="assets/icons/plugin_manager.webp" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ' + i18n.t('app.pluginmanager'),
+            'menu-img-internet': 'assets/icons/navea.webp',
+            'menu-img-display': 'assets/icons/Display.webp'
+        };
+
+        const icons: Record<string, Record<string, string>> = {
+            hados: hadosIcons,
+            modern: hadosIcons,
+        };
 
         const themeIcons = icons[theme] || icons[DEFAULT_THEME] || {};
 
-        for (const [id, content] of Object.entries(themeIcons)) {
+        const resolveHtmlAssetUrls = (htmlStr: string): string => {
+            return htmlStr.replace(/src="(assets\/[^"]+)"/g, (_, p: string) => `src="${Utils.getAssetUrl(p)}"`);
+        };
+
+        for (const [id, rawContent] of Object.entries(themeIcons)) {
+            const content = resolveHtmlAssetUrls(rawContent);
             const iconEl = document.getElementById(id);
             if (iconEl) {
                 if (id === 'start-menu-btn-icon') {
                     iconEl.innerHTML = content;
                 } else if (id.startsWith('menu-img-') && iconEl instanceof HTMLImageElement) {
                     // Update src for <img> elements
-                    iconEl.src = content;
+                    iconEl.src = Utils.getAssetUrl(content);
                 } else if (id.startsWith('menu-icon-')) {
                     // Update innerHTML for start menu items with text/emojis vs images
                     iconEl.innerHTML = content;

@@ -32,9 +32,22 @@ export class VFSTrash {
 
     public uniqueKey(container: IVFSNode, base: string): string {
         if (!getChild(container.children, base)) return base;
+
+        let namePart = base;
+        let extPart = '';
+        const dotIndex = base.lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < base.length - 1) {
+            namePart = base.substring(0, dotIndex);
+            extPart = base.substring(dotIndex);
+        }
+
         let i = 2;
-        while (getChild(container.children, `${base} (${i})`)) i++;
-        return `${base} (${i})`;
+        let candidate = `${namePart} (${i})${extPart}`;
+        while (getChild(container.children, candidate)) {
+            i++;
+            candidate = `${namePart} (${i})${extPart}`;
+        }
+        return candidate;
     }
 
     public trashNode(parentPath: string, name: string): boolean {

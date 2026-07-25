@@ -17,6 +17,7 @@
  */
 
 import { pipeline, env, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+import { getAssetUrl } from '../utils/url.js';
 
 /** Pinned model. Changing it changes what users download — treat like the registry.
  *  The onnx-community export, NOT the older Xenova one: the legacy q8 export trips
@@ -32,9 +33,9 @@ export const ASR_DTYPE = 'q4';
 /** Where onnxruntime's wasm loads from. In dev, Vite serves node_modules and
  *  refuses to module-import public/ files; in the build, copy-ort-wasm.ts stages
  *  them under /wasm/ort/. Never onnxruntime's default CDN. */
-const ORT_WASM_BASE = import.meta.env?.DEV
+const ORT_WASM_BASE = getAssetUrl(import.meta.env?.DEV
     ? '/node_modules/onnxruntime-web/dist/'
-    : '/wasm/ort/';
+    : '/wasm/ort/');
 
 export interface IAsrChunk {
     text: string;

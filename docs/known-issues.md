@@ -40,15 +40,24 @@ forced to hardcode went too.
 hardcoding `#808080` and a `#000080` navy hover. Those only ever showed under theme-modern — a
 Windows 95 menu bar inside a Fluent window — because theme-hados overrode both.
 
-### 3. The `modern` theme is a Windows 11 clone
+### 3. ~~The `modern` theme is a Windows 11 clone~~ — RESKINNED
 
-Its assets live in `assets/themes/winui/` (`my_pc.webp`, `file_explorer.webp`, `brave.webp`,
-`ms-dos.webp`…), its sounds are `*_winui.opus`, and its palette is Fluent's `#0078D7`. This is the
-same borrowed-identity problem as the Microsoft logo removed from the Start button and the Windows
-flag removed from the wallpaper — we just have not gotten to it.
+Its palette was Fluent's `#0078D7` and its icons were Microsoft's product art. Both are gone:
+
+- **The palette is its own.** `theme-modern.css` is now a metallic cyber-emerald glass theme
+  (`--accent-color: #00e68a`) rather than a Fluent tribute. The `--control-disabled-*` tokens that
+  fixed **1b** were carried across and re-tuned for the new palette, so disabled text stays legible.
+- **The icons are ours.** `ThemeManager.swapIcons` used to carry *two* full icon maps, and that
+  duplication was the bug behind **4**: rename batches landed on the `hados` map and missed the
+  `modern` one, so an icon still read "MS-DOS" while its label already said "Shell Core". There is
+  now **one** map, worn by both themes — a theme is a skin (palette, chrome, sounds) for the same
+  apps, so the apps keep their own icons. Every `.webp` under `assets/themes/winui/` was deleted.
+
+**The `winui` sound set stays** (`audio/*.opus`) — deliberately. Only the artwork was borrowed
+identity; the sounds are part of what makes the theme feel different, which is the point of a theme.
 
 **Where:** [`public/css/themes/theme-modern.css`](../public/css/themes/theme-modern.css),
-`public/assets/themes/winui/`, `ThemeManager.swapIcons`.
+`ThemeManager.swapIcons` in [`js/core/ThemeManager.ts`](../js/core/ThemeManager.ts).
 
 ### 4. Desktop icons are Microsoft product icons — mostly replaced
 
@@ -59,20 +68,23 @@ The HadOS theme's icons are now HadOS's own, across two batches: `shell_core` (*
 reach the app registry, window titles (including Notepad's dynamic `updateTitle`), `aria-label`s and
 the Start menu. Every orphaned Microsoft icon in `assets/icons/` was deleted.
 
-Still Microsoft: `Display.webp` and `winamp_icon.webp` in the HadOS set, and the whole `winui/` set
-the **modern** theme uses (which is why, under modern, an icon still reads as MS-DOS while its label
-now says "Shell Core" — part of the deferred modern-theme work).
+The `winui/` set the **modern** theme used is gone — see **3**. With one shared icon map, the
+"an icon reads MS-DOS while its label says Shell Core" divergence cannot come back: there is no
+second map for a rename to miss.
+
+Still Microsoft: `Display.webp` and `winamp_icon.webp` in the HadOS set. Both are used by both
+themes now, so replacing them is a single change rather than two.
 
 **Where:** `ThemeManager.swapIcons` in [`js/core/ThemeManager.ts`](../js/core/ThemeManager.ts).
 
-### 4c. The VFS default desktop shortcuts still carry the old names
+### 4c. ~~The VFS default desktop shortcuts still carry the old names~~ — RENAMED, WITH MIGRATION
 
-`DEFAULT_FS` in [`js/core/vfs/VFSCoreTree.ts`](../js/core/vfs/VFSCoreTree.ts) still seeds `C:\...\DESKTOP` with shortcuts
-named *Notepad*, *Paint*, *Recycle Bin*, *My Computer*, *Games*… and emoji icons — the file-system
-view (browsable in FileX) as opposed to the desktop chrome. Left untouched across every rename batch:
-it is the default *tree*, so changing it only affects fresh installs (existing ones keep their
-persisted tree) and risks the migration tests' shape assertions. Renaming these is really a
-"rename the VFS default shortcuts, with migration" task of its own.
+`DEFAULT_FS` in [`js/core/vfs/VFSCoreTree.ts`](../js/core/vfs/VFSCoreTree.ts) now seeds
+`C:\DESKTOP` with *Mi PC*, *Eco Bin*, *Notapad*, *Pinta* and *FileX*. The reason this was deferred
+was that changing the default tree only reaches fresh installs, so `VFS.migrateDesktopShortcuts()`
+does the other half: on hydrate it renames the five legacy shortcut nodes in an existing persisted
+tree, skipping any whose new name is already taken. It runs beside `migrateSystemDirName()`, on the
+same "rename the data, do not reset it" principle as the `C:\WINDOWS → C:\HADOS` move.
 
 ### 4b. ~~The Recycle Bin has no empty/full state yet~~ — BUILT
 
@@ -86,9 +98,18 @@ an Empty button (alongside the existing deleted sticky notes), and the desktop i
 `eco_bin_empty` and `eco_bin_full` on a `vfs:trash-changed` signal — re-applied after a theme swap,
 since `swapIcons` resets it. Only the HadOS theme flips; the modern theme keeps its single icon.
 
-Not yet done: no drag-a-file-to-the-bin gesture (only Terminal deletes route to trash today, since
-that is the only file-delete UI), and restore appends " (2)" to the whole name rather than before
-the extension.
+Both remaining gaps are now closed. **Drag-to-bin works**: dropping a desktop icon onto the Eco Bin
+trashes its VFS node and removes the icon. Two traps were worth recording, because the first attempt
+hit both — the icon's visible `<span>` carries `data-i18n`, so using it as a VFS key matched in
+whichever locale happened to agree with the tree and failed silently in the other 39 (the icons now
+declare `data-vfs-name` explicitly); and desktop icons are static markup in `index.html`, not
+rendered from the VFS, so nothing removes the element unless the handler does it — otherwise the
+file is both trashed and still on screen. Only icons carrying `data-vfs-name` are eligible: the rest
+of the desktop (Display, Ragdoll Workshop…) is chrome with no file behind it.
+
+**Restore is extension-aware**: `uniqueKey` splits on the last dot, so a collision yields
+`a (2).txt`, not `a.txt (2)`. Dotfiles (`.gitignore`) and double extensions (`archive.tar.gz`)
+fall out correctly — the split only applies when the dot is neither first nor last.
 
 ---
 
@@ -102,15 +123,18 @@ only. One declaration that *looked* dead was kept because the baseline proved ot
 `color: #808080` on `.disabled` was kept for the same reason and has since been removed, once
 **1b** fixed the token it was working around.)
 
-### 6. The pet button's mobile padding has never applied
+### 6. ~~The pet button's mobile padding has never applied~~ — APPLIES NOW
 
-`@media (max-width: 768px) { .ragdoll-pet-btn { padding: 2px 4px } }` is dead. Measured at 375px,
-where it would apply: the button computes to `padding: 6px 16px`. A media query adds no
-specificity, so this (0,1,0) loses to the theme's `button:not(.window-btn):not(.start-btn)` at
-(0,3,2). Reordering the manifest will not rescue it.
+The rule is scoped through `#system-tray`, which is what it takes to land:
+`#system-tray button.ragdoll-pet-btn:not(.window-btn)` at (1,1,2) beats theme-hados's
+`body.theme-hados #system-tray .ragdoll-pet-btn` at (1,1,1). A media query contributes no
+specificity of its own, which is what made both earlier attempts fail — (0,1,0) originally, then
+(0,2,2) — each losing to that ID and computing `padding: 0` with nothing to show for it.
 
-Left in place rather than deleted: whether these buttons *should* shrink on a phone is a design
-call, and it should be made deliberately rather than resolved by a refactor.
+Worth keeping: this entry's own earlier diagnosis was **wrong**. It blamed the theme's generic
+`button:not(.window-btn):not(.start-btn)` and reported a computed `6px 16px`. The real winner was
+the `#system-tray` rule and the real computed value was `0`. The baseline settled it —
+`computed-mobile-*.txt` records that value, so the fix could be checked rather than argued.
 
 **Where:** [`css/system/ragdoll.css`](../css/system/ragdoll.css).
 
@@ -332,10 +356,20 @@ that theme gets its own assets.
   real `Content-Security-Policy` response header, which needs control over the
   hosting (itch.io zip uploads offer none).
 
-- **`base: './'` and root-absolute asset paths disagree.** `vite.config.js` sets `base: './'`,
-  which exists so the app can be served from a subdirectory — but every `public/` asset loaded from
-  code is referenced root-absolute (`/css/themes/theme-base.css`, `/games/ragdoll/assets/audio/*.opus`,
-  `/wasm/litert/`). Deployed under a subpath they would all 404 together. Harmless while HadOS is
-  served from the origin root; the two settings should agree before that ever changes. Fixing it
-  means routing every such path through `import.meta.env.BASE_URL` (and the worker case is awkward:
-  `BASE_URL` is `'./'` in a build, which a worker at `/assets/` resolves wrongly).
+- **`base: './'` and root-absolute asset paths disagree** — mostly closed, one gap left.
+  `vite.config.js` sets `base: './'` so the app can be served from a subdirectory, but assets were
+  referenced root-absolute and would have 404'd together under a subpath.
+
+  Everything loaded **from code** now goes through `Utils.getAssetUrl()`
+  ([`js/utils/url.ts`](../js/utils/url.ts)): the ort/genai/litert wasm directories, the ragdoll
+  audio, `DesktopManager`'s sound preloads and `ThemeManager`'s icon markup. It resolves against
+  `document.baseURI` on the main thread and derives a base from `self.location` inside a worker —
+  the awkward case flagged here originally, since `BASE_URL` is `'./'` in a build, which a worker
+  sitting at `/assets/` resolves wrongly. The worker branch is a heuristic (it looks for `/assets/`
+  in its own URL), so it is the part to distrust first if a subpath deploy ever misbehaves.
+
+  **Still root-absolute: the three `<link href="/css/themes/…">` tags in `index.html`.** They are
+  static markup, not code, so `getAssetUrl` cannot reach them; making them base-relative means
+  either letting Vite process them or injecting them at boot. Untested under a subpath either way —
+  nothing here has actually been deployed to one yet, so treat the whole item as "should now work"
+  rather than "verified".

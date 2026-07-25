@@ -89,12 +89,12 @@ const DesktopManager: IDesktopManager = (() => {
         // Preload Startup Sound and Window Sounds
         const audio = svc('AudioManager');
         if (audio) {
-            void audio.loadSound('startup', 'assets/audio/HadOS_startup.opus');
-            void audio.loadSound('startup_modern', 'assets/themes/winui/audio/start_winui.opus');
-            void audio.loadSound('open_window_modern', 'assets/themes/winui/audio/open_window_winui.opus');
-            void audio.loadSound('close_window_modern', 'assets/themes/winui/audio/close_window_winui.opus');
-            void audio.loadSound('click_modern', 'assets/themes/winui/audio/onclick.opus');
-            void audio.loadSound('menu_modern', 'assets/themes/winui/audio/menu.opus');
+            void audio.loadSound('startup', Utils.getAssetUrl('assets/audio/HadOS_startup.opus'));
+            void audio.loadSound('startup_modern', Utils.getAssetUrl('assets/themes/winui/audio/start_winui.opus'));
+            void audio.loadSound('open_window_modern', Utils.getAssetUrl('assets/themes/winui/audio/open_window_winui.opus'));
+            void audio.loadSound('close_window_modern', Utils.getAssetUrl('assets/themes/winui/audio/close_window_winui.opus'));
+            void audio.loadSound('click_modern', Utils.getAssetUrl('assets/themes/winui/audio/onclick.opus'));
+            void audio.loadSound('menu_modern', Utils.getAssetUrl('assets/themes/winui/audio/menu.opus'));
         }
 
         // Restore state (Only set image wallpaper if user specifically set one)

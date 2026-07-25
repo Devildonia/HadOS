@@ -10,15 +10,15 @@
  */
 
 import { pipeline, env, type FeatureExtractionPipeline } from '@huggingface/transformers';
+import { getAssetUrl } from '../utils/url.js';
 
-/** Pinned model. Changing it changes what users download — treat like the registry. */
 export const EMBED_MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
 export const EMBED_DIM = 384;
 
 /** Same dev/build split as AsrEngine — see the comment there. */
-const ORT_WASM_BASE = import.meta.env?.DEV
+const ORT_WASM_BASE = getAssetUrl(import.meta.env?.DEV
     ? '/node_modules/onnxruntime-web/dist/'
-    : '/wasm/ort/';
+    : '/wasm/ort/');
 
 export interface IEmbedProgress {
     phase: 'download' | 'init' | 'embed';

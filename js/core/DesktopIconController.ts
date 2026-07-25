@@ -1,4 +1,49 @@
 import { Utils } from '../utils';
+import { VFS } from './VFS';
+import { Services } from './ServiceContainer';
+
+/**
+ * Sends an icon dropped onto the Eco Bin to the trash, and takes the icon off the
+ * desktop with it.
+ *
+ * Two things this deliberately does NOT do. It does not fall back to the icon's
+ * visible label: that `<span>` carries `data-i18n`, so i18n rewrites it per locale —
+ * using it as a VFS key worked in whichever language happened to match the tree and
+ * failed silently in the other 39. And it does not leave the element behind: desktop
+ * icons are static markup in index.html, not rendered from the VFS, so nothing else
+ * would ever remove it and the user would see the file both trashed and still there.
+ *
+ * @returns true if the icon was trashed (caller should stop, not save a position).
+ */
+function dropOnRecycleBin(icon: HTMLElement): boolean {
+    if (icon.id === 'icon-recyclebin') return false;
+
+    const bin = document.getElementById('icon-recyclebin');
+    if (!bin) return false;
+
+    const binRect = bin.getBoundingClientRect();
+    const iconRect = icon.getBoundingClientRect();
+    const overlaps = !(
+        iconRect.right < binRect.left ||
+        iconRect.left > binRect.right ||
+        iconRect.bottom < binRect.top ||
+        iconRect.top > binRect.bottom
+    );
+    if (!overlaps) return false;
+
+    // Only an icon that declares its VFS name can be trashed — the rest of the
+    // desktop (Display, Ragdoll Workshop…) is chrome with no file behind it.
+    const vfsName = icon.getAttribute('data-vfs-name');
+    if (!vfsName) return false;
+
+    if (!VFS.trashNode('C:\\DESKTOP', vfsName)) return false;
+
+    icon.remove();
+    localStorage.removeItem(`icon-pos-${icon.id}`);
+    Services.get<{ play: (s: string, opts?: unknown) => void }>('AudioManager')
+        ?.play('release', { volume: 0.8 });
+    return true;
+}
 
 let draggableListenersAttached = false;
 let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
@@ -123,6 +168,12 @@ export function initializeDraggableIcons(): void {
             draggedIcon.style.cursor = 'default';
             draggedIcon.style.zIndex = '';
             draggedIcon.style.transition = '';
+
+            if (dropOnRecycleBin(draggedIcon)) {
+                draggedIcon = null;
+                return;
+            }
+
             const position = { x: parseInt(draggedIcon.style.left || '0'), y: parseInt(draggedIcon.style.top || '0') };
             localStorage.setItem(`icon-pos-${draggedIcon.id}`, JSON.stringify(position));
             if (window.playBlip) window.playBlip(800);

@@ -55,9 +55,9 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
             await this.initPhysicsWorld();
             
             if (this.audioManager) {
-                void this.audioManager.loadSound('scream', '/games/ragdoll/assets/audio/ahh.opus');
-                void this.audioManager.loadSound('wii', '/games/ragdoll/assets/audio/wii.opus');
-                void this.audioManager.loadSound('boing', '/games/ragdoll/assets/audio/boing.opus');
+                void this.audioManager.loadSound('scream', Utils.getAssetUrl('/games/ragdoll/assets/audio/ahh.opus'));
+                void this.audioManager.loadSound('wii', Utils.getAssetUrl('/games/ragdoll/assets/audio/wii.opus'));
+                void this.audioManager.loadSound('boing', Utils.getAssetUrl('/games/ragdoll/assets/audio/boing.opus'));
             }
 
             this.setupThreeJS();

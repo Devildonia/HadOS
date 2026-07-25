@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { initializeDraggableIcons } from '../js/core/DesktopIconController';
+import { initializeDraggableIcons, resetDraggableIconsState } from '../js/core/DesktopIconController';
+import { VFS } from '../js/core/VFS';
 
 /**
  * Desktop icon placement. Regression guard for v1.6.7: Prime Lab's icon had no
@@ -90,5 +91,80 @@ describe('Desktop icon placement', () => {
         mountIcons(['icon-primelab']);
         initializeDraggableIcons();
         expect(posOf('icon-primelab')).toEqual({ left: '120px', top: '420px' });
+    });
+});
+
+/**
+ * Dropping a desktop icon on the Eco Bin. jsdom reports every rect as all-zero,
+ * which the overlap test reads as "always overlapping" — convenient here, since it
+ * means these exercise the decision that follows the hit test rather than the
+ * geometry.
+ */
+describe('Drag an icon onto the Eco Bin', () => {
+    const drag = (id: string) => {
+        const el = document.getElementById(id)!;
+        el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 0, clientY: 0 }));
+        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 5, clientY: 5 }));
+        document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    };
+
+    beforeEach(async () => {
+        localStorage.clear();
+        document.body.innerHTML = '';
+        resetDraggableIconsState();
+        (VFS as unknown as { __reset: () => void }).__reset();
+        await VFS.init();
+    });
+    afterEach(() => { document.body.innerHTML = ''; });
+
+    it('trashes the file and takes the icon off the desktop', () => {
+        mountIcons(['icon-recyclebin', 'icon-notepad']);
+        document.getElementById('icon-notepad')!.setAttribute('data-vfs-name', 'Notapad');
+        initializeDraggableIcons();
+
+        expect(VFS.resolve('C:\\DESKTOP\\Notapad')).not.toBeNull();
+        drag('icon-notepad');
+
+        expect(VFS.resolve('C:\\DESKTOP\\Notapad')).toBeNull();   // in the bin
+        expect(VFS.trashCount()).toBe(1);
+        expect(document.getElementById('icon-notepad')).toBeNull(); // and off the desktop
+    });
+
+    it('ignores chrome icons that have no file behind them', () => {
+        mountIcons(['icon-recyclebin', 'icon-display']);   // no data-vfs-name
+        initializeDraggableIcons();
+
+        drag('icon-display');
+
+        expect(VFS.trashCount()).toBe(0);
+        expect(document.getElementById('icon-display')).not.toBeNull();
+    });
+
+    it('never falls back to the visible label as a VFS key', () => {
+        // The label is a `<span data-i18n>` that i18n rewrites per locale. Reading it
+        // as a VFS key deleted the user's file in whichever language happened to
+        // match the tree and did nothing in the other 39 — so the key must come from
+        // `data-vfs-name` or not at all. This icon deliberately has no such
+        // attribute, and a label that DOES name a real node.
+        mountIcons(['icon-recyclebin', 'icon-notepad']);
+        document.getElementById('icon-notepad')!.innerHTML =
+            '<span data-i18n="app.notepad">Notapad</span>';
+        initializeDraggableIcons();
+
+        drag('icon-notepad');
+
+        expect(VFS.resolve('C:\\DESKTOP\\Notapad')).not.toBeNull();   // untouched
+        expect(VFS.trashCount()).toBe(0);
+        expect(document.getElementById('icon-notepad')).not.toBeNull();
+    });
+
+    it('leaves the bin itself alone', () => {
+        mountIcons(['icon-recyclebin']);
+        document.getElementById('icon-recyclebin')!.setAttribute('data-vfs-name', 'Eco Bin');
+        initializeDraggableIcons();
+
+        drag('icon-recyclebin');
+        expect(VFS.trashCount()).toBe(0);
+        expect(document.getElementById('icon-recyclebin')).not.toBeNull();
     });
 });

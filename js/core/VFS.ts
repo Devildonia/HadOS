@@ -2,7 +2,7 @@ import { Utils } from '../utils.js';
 import { Services } from './ServiceContainer.js';
 import { VFSStore } from './VFSStore.js';
 import { VFSBlobStore } from './VFSBlobStore.js';
-import { VFSCoreTree } from './vfs/VFSCoreTree.js';
+import { VFSCoreTree, getChild } from './vfs/VFSCoreTree.js';
 import { VFSOperations } from './vfs/VFSOperations.js';
 import { VFSTrash } from './vfs/VFSTrash.js';
 import type { IVFS, IVFSNode, ITrashEntry } from './vfs/VFSTypes.js';
@@ -64,6 +64,37 @@ export const VFS: IVFS = (() => {
         onMutationSave();
     }
 
+    function migrateDesktopShortcuts(): void {
+        const root = tree.getRoot();
+        if (!root?.children) return;
+        const desktop = root.children['DESKTOP'];
+        if (!desktop?.children) return;
+
+        const renames: Array<[string, string]> = [
+            ['Notepad', 'Notapad'],
+            ['Paint', 'Pinta'],
+            ['Recycle Bin', 'Eco Bin'],
+            ['Explorer', 'FileX'],
+            ['My Computer', 'Mi PC']
+        ];
+
+        let migrated = false;
+        for (const [oldName, newName] of renames) {
+            const oldNode = getChild(desktop.children, oldName);
+            if (oldNode && oldNode.type === 'shortcut' && !getChild(desktop.children, newName)) {
+                oldNode.name = newName;
+                desktop.children[newName] = oldNode;
+                delete desktop.children[oldName];
+                migrated = true;
+            }
+        }
+
+        if (migrated) {
+            Utils.Logger.log('VFS: migrated legacy desktop shortcuts to HadOS names');
+            onMutationSave();
+        }
+    }
+
     const DEFAULT_GAMES: Array<{ name: string; target: string; readme?: string }> = [
         { name: 'Virtual Life Restart Simulator', target: 'win-vlrs-folder' },
         { name: 'Flappy Neon', target: 'win-flappy-folder' },
@@ -107,6 +138,7 @@ export const VFS: IVFS = (() => {
                 tree.setRoot(parsed);
 
                 migrateSystemDirName();
+                migrateDesktopShortcuts();
 
                 const root = tree.getRoot();
                 if (root && root.children) {

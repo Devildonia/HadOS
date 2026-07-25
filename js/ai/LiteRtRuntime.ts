@@ -27,7 +27,9 @@ import type { Backend, IInferenceRuntime, IInferOutput, IModelInfo } from './Inf
  * This is why cross-origin isolation (COOP/COEP) is not a prerequisite: without it,
  * the detection simply lands on the non-threaded build.
  */
-const WASM_DIR = new URL('/wasm/litert/', self.location.origin).href;
+import { getAssetUrl } from '../utils/url.js';
+
+const WASM_DIR = getAssetUrl('/wasm/litert/');
 
 interface Entry {
     model: CompiledModel;

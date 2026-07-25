@@ -1149,17 +1149,17 @@ body
   cursor: nwse-resize
 
 .hados-btn
-  display: block
+  display: inline-block
   position: static
   z-index: auto
   overflow: visible
   visibility: visible
-  opacity: 0.5
+  opacity: 0.6
   width: auto
   height: auto
   min-height: 24px
   max-height: none
-  padding: 2px 8px
+  padding: 6px 16px
   margin: 0px
   top: auto
   left: auto
@@ -1175,10 +1175,10 @@ body
   box-shadow: none
   outline: rgb(230, 237, 247) none 3px
   font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Inter, sans-serif
-  font-size: 11px
+  font-size: 13px
   font-weight: 500
   letter-spacing: normal
-  line-height: 16.5px
+  line-height: 19.5px
   text-align: center
   text-transform: none
   text-shadow: none

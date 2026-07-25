@@ -24,7 +24,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -70,7 +70,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -108,15 +108,15 @@ body
   right: 0px
   bottom: 0px
   color: rgb(0, 0, 0)
-  background-color: rgba(243, 243, 243, 0.75)
+  background-color: rgba(6, 20, 14, 0.78)
   background-image: none
   border-width: 1px
   border-style: solid
-  border-color: rgba(255, 255, 255, 0.25)
+  border-color: rgba(0, 230, 138, 0.25)
   border-radius: 0px
-  box-shadow: rgb(229, 229, 229) 0px -1px 0px 0px inset
+  box-shadow: rgba(0, 0, 0, 0.7) 0px 16px 48px 0px, rgba(0, 230, 138, 0.2) 0px 0px 24px 0px
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -133,7 +133,7 @@ body
   transform: none
   transition: all
   animation-name: none
-  backdrop-filter: blur(25px) saturate(1.2)
+  backdrop-filter: blur(28px) saturate(1.5)
   cursor: grab
 
 #taskbar-apps
@@ -162,7 +162,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -189,26 +189,26 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 95.2344px
-  height: 24px
+  width: 99.0781px
+  height: 36px
   min-height: 24px
   max-height: none
-  padding: 0px 12px
-  margin: 4px
+  padding: 0px 14px
+  margin: 4px 6px
   top: auto
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
-  background-color: rgba(0, 0, 0, 0.05)
-  background-image: none
-  border-width: 0px
-  border-style: none
-  border-color: rgb(0, 0, 0)
-  border-radius: 4px
-  box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  color: rgb(0, 230, 138)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: linear-gradient(135deg, rgba(0, 230, 138, 0.35) 0%, rgba(3, 102, 62, 0.6) 100%)
+  border-width: 1px
+  border-style: solid
+  border-color: rgba(0, 230, 138, 0.6)
+  border-radius: 6px
+  box-shadow: rgba(0, 230, 138, 0.4) 0px 0px 18px 0px
+  outline: rgb(0, 230, 138) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 700
   letter-spacing: normal
@@ -223,7 +223,7 @@ body
   gap: 5px
   flex: 0 1 auto
   transform: none
-  transition: background, transform
+  transition: all
   animation-name: none
   backdrop-filter: none
   cursor: pointer
@@ -235,8 +235,8 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 30.2344px
-  height: 14px
+  width: 28.0781px
+  height: 13px
   min-height: auto
   max-height: none
   padding: 0px
@@ -245,7 +245,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
+  color: rgb(230, 247, 240)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px
@@ -253,15 +253,15 @@ body
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
-  font-size: 14px
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
+  font-size: 13px
   font-weight: 600
   letter-spacing: normal
-  line-height: 14px
+  line-height: 13px
   text-align: center
   text-transform: none
-  text-shadow: none
+  text-shadow: rgba(0, 230, 138, 0.5) 0px 0px 8px
   white-space: normal
   flex-direction: row
   justify-content: normal
@@ -291,7 +291,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
+  color: rgb(0, 230, 138)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px
@@ -299,8 +299,8 @@ body
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(0, 230, 138) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 700
   letter-spacing: normal
@@ -337,7 +337,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
+  color: rgb(0, 230, 138)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px
@@ -345,8 +345,8 @@ body
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(0, 230, 138) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 700
   letter-spacing: normal
@@ -384,15 +384,15 @@ body
   right: 419px
   bottom: 48px
   color: rgb(0, 0, 0)
-  background-color: rgba(243, 243, 243, 0.75)
+  background-color: rgba(6, 20, 14, 0.78)
   background-image: none
   border-width: 1px
   border-style: solid
-  border-color: rgba(255, 255, 255, 0.25)
-  border-radius: 8px
-  box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 32px 0px
+  border-color: rgba(0, 230, 138, 0.25)
+  border-radius: 10px
+  box-shadow: rgba(0, 0, 0, 0.7) 0px 16px 48px 0px, rgba(0, 230, 138, 0.2) 0px 0px 24px 0px
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -409,7 +409,7 @@ body
   transform: matrix(1, 0, 0, 1, -110, 0)
   transition: all
   animation-name: none
-  backdrop-filter: blur(25px) saturate(1.2)
+  backdrop-filter: blur(28px) saturate(1.5)
   cursor: grab
 
 .start-sidebar
@@ -430,15 +430,15 @@ body
   right: auto
   bottom: auto
   color: rgb(255, 255, 255)
-  background-color: rgb(0, 120, 215)
-  background-image: none
+  background-color: rgba(0, 0, 0, 0)
+  background-image: linear-gradient(rgb(0, 230, 138) 0%, rgb(3, 102, 62) 100%)
   border-width: 0px
   border-style: solid
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
   outline: rgb(255, 255, 255) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 20px
   font-weight: 700
   letter-spacing: 2px
@@ -484,7 +484,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -530,7 +530,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 400
   letter-spacing: normal
@@ -572,11 +572,11 @@ body
   background-image: none
   border-width: 1px 0px
   border-style: solid none
-  border-color: rgb(229, 229, 229) rgb(0, 0, 0) rgba(0, 0, 0, 0)
+  border-color: rgba(0, 230, 138, 0.15) rgb(0, 0, 0) rgba(0, 230, 138, 0.25)
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 400
   letter-spacing: normal
@@ -614,15 +614,15 @@ body
   right: auto
   bottom: -3px
   color: rgb(0, 0, 0)
-  background-color: rgba(243, 243, 243, 0.75)
+  background-color: rgba(6, 20, 14, 0.78)
   background-image: none
   border-width: 1px
   border-style: solid
-  border-color: rgba(255, 255, 255, 0.25)
-  border-radius: 8px
-  box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 32px 0px
+  border-color: rgba(0, 230, 138, 0.25)
+  border-radius: 10px
+  box-shadow: rgba(0, 0, 0, 0.7) 0px 16px 48px 0px, rgba(0, 230, 138, 0.2) 0px 0px 24px 0px
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 400
   letter-spacing: normal
@@ -639,7 +639,7 @@ body
   transform: none
   transition: all
   animation-name: none
-  backdrop-filter: blur(25px) saturate(1.2)
+  backdrop-filter: blur(28px) saturate(1.5)
   cursor: pointer
 
 #system-icons
@@ -668,7 +668,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -714,7 +714,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(255, 255, 255) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 400
   letter-spacing: normal
@@ -760,7 +760,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(255, 255, 255) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 48px
   font-weight: 400
   letter-spacing: normal
@@ -806,7 +806,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(255, 255, 255) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 400
   letter-spacing: normal
@@ -843,16 +843,16 @@ body
   left: 50%
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
-  background-color: rgba(255, 255, 255, 0.7)
+  color: rgb(230, 247, 240)
+  background-color: rgba(9, 24, 17, 0.82)
   background-image: none
   border-width: 1px
   border-style: solid
-  border-color: rgba(255, 255, 255, 0.3)
-  border-radius: 8px
-  box-shadow: rgba(31, 38, 135, 0.1) 0px 8px 32px 0px
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  border-color: rgba(0, 230, 138, 0.28)
+  border-radius: 10px
+  box-shadow: rgba(0, 0, 0, 0.65) 0px 16px 48px 0px, rgba(0, 230, 138, 0.12) 0px 0px 24px 0px
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -869,7 +869,7 @@ body
   transform: none
   transition: all
   animation-name: none
-  backdrop-filter: blur(25px) saturate(1.2)
+  backdrop-filter: blur(28px) saturate(1.5)
   cursor: auto
 
 .window-header
@@ -880,7 +880,7 @@ body
   visibility: visible
   opacity: 1
   width: auto
-  height: 32px
+  height: 34px
   min-height: 0px
   max-height: none
   padding: 3px 5px
@@ -889,18 +889,18 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(32, 32, 32)
-  background-color: rgb(255, 255, 255)
-  background-image: none
+  color: rgb(0, 230, 138)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: linear-gradient(90deg, rgba(8, 36, 25, 0.95) 0%, rgba(14, 56, 39, 0.9) 100%)
   border-width: 0px 0px 1px
   border-style: solid
-  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgba(0, 0, 0, 0.05)
+  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgba(0, 230, 138, 0.2)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(32, 32, 32) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(0, 230, 138) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
-  font-weight: 700
+  font-weight: 600
   letter-spacing: normal
   line-height: 19.5px
   text-align: start
@@ -935,7 +935,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(32, 32, 32)
+  color: rgb(0, 230, 138)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px
@@ -943,10 +943,10 @@ body
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(32, 32, 32) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(0, 230, 138) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
-  font-weight: 700
+  font-weight: 600
   letter-spacing: normal
   line-height: 19.5px
   text-align: start
@@ -981,7 +981,7 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(32, 32, 32)
+  color: rgb(0, 230, 138)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px
@@ -989,10 +989,10 @@ body
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(32, 32, 32) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(0, 230, 138) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
-  font-weight: 700
+  font-weight: 600
   letter-spacing: normal
   line-height: 19.5px
   text-align: start
@@ -1027,16 +1027,16 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
-  background-color: rgba(0, 0, 0, 0)
+  color: rgb(230, 247, 240)
+  background-color: rgba(255, 255, 255, 0.05)
   background-image: none
-  border-width: 0px
-  border-style: none
-  border-color: rgb(0, 0, 0)
-  border-radius: 4px
+  border-width: 1px
+  border-style: solid
+  border-color: rgba(0, 0, 0, 0)
+  border-radius: 6px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 700
   letter-spacing: normal
@@ -1051,7 +1051,7 @@ body
   gap: normal
   flex: 0 1 auto
   transform: none
-  transition: background
+  transition: all
   animation-name: none
   backdrop-filter: none
   cursor: pointer
@@ -1073,16 +1073,16 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
-  background-color: rgb(255, 255, 255)
+  color: rgb(230, 247, 240)
+  background-color: rgba(6, 18, 13, 0.85)
   background-image: none
   border-width: 0px
   border-style: solid
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1119,16 +1119,16 @@ body
   left: auto
   right: 0px
   bottom: 0px
-  color: rgb(0, 0, 0)
+  color: rgb(230, 247, 240)
   background-color: rgba(0, 0, 0, 0)
-  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 45%, rgb(229, 229, 229) 45%, rgb(229, 229, 229) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 55%, rgb(229, 229, 229) 55%, rgb(229, 229, 229) 60%, rgba(0, 0, 0, 0) 60%)
+  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 45%, rgba(0, 230, 138, 0.15) 45%, rgba(0, 230, 138, 0.15) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 230, 138, 0.15) 55%, rgba(0, 230, 138, 0.15) 60%, rgba(0, 0, 0, 0) 60%)
   border-width: 0px
   border-style: solid
   border-color: rgb(229, 231, 235)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1149,36 +1149,36 @@ body
   cursor: nwse-resize
 
 .hados-btn
-  display: block
+  display: inline-block
   position: static
   z-index: auto
   overflow: visible
   visibility: visible
-  opacity: 0.5
+  opacity: 1
   width: auto
   height: auto
   min-height: 24px
   max-height: none
-  padding: 2px 8px
+  padding: 5px 14px
   margin: 0px
   top: auto
   left: auto
   right: auto
   bottom: auto
-  color: rgb(154, 154, 154)
-  background-color: rgb(249, 249, 249)
-  background-image: none
+  color: rgb(230, 247, 240)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: linear-gradient(135deg, rgba(16, 48, 34, 0.8) 0%, rgba(8, 28, 19, 0.9) 100%)
   border-width: 1px
   border-style: solid
-  border-color: rgb(209, 209, 209)
-  border-radius: 0px
-  box-shadow: none
-  outline: rgb(154, 154, 154) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
-  font-size: 11px
+  border-color: rgba(0, 230, 138, 0.3)
+  border-radius: 6px
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 6px 0px
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
+  font-size: 13px
   font-weight: 400
   letter-spacing: normal
-  line-height: 16.5px
+  line-height: 19.5px
   text-align: center
   text-transform: none
   text-shadow: none
@@ -1220,7 +1220,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1312,7 +1312,7 @@ body
   border-radius: 999px
   box-shadow: rgba(0, 0, 0, 0.8) 0px 1px 3px 0px inset
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1358,7 +1358,7 @@ body
   border-radius: 999px
   box-shadow: rgba(59, 155, 240, 0.9) 0px 0px 10px 0px, rgba(59, 155, 240, 0.4) 0px 0px 26px 0px
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1385,7 +1385,7 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 290.656px
+  width: 286.656px
   height: 26px
   min-height: auto
   max-height: none
@@ -1400,11 +1400,11 @@ body
   background-image: none
   border-width: 2px
   border-style: solid
-  border-color: rgb(229, 229, 229) rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgb(229, 229, 229)
+  border-color: rgba(0, 230, 138, 0.15) rgba(0, 230, 138, 0.25) rgba(0, 230, 138, 0.25) rgba(0, 230, 138, 0.15)
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1434,26 +1434,26 @@ body
   overflow: visible
   visibility: visible
   opacity: 1
-  width: 123.172px
+  width: 121.172px
   height: 24px
   min-height: 24px
   max-height: none
-  padding: 5px 15px
+  padding: 5px 14px
   margin: 2px
   top: auto
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
-  background-color: rgb(249, 249, 249)
-  background-image: none
+  color: rgb(230, 247, 240)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: linear-gradient(135deg, rgba(16, 48, 34, 0.8) 0%, rgba(8, 28, 19, 0.9) 100%)
   border-width: 1px
   border-style: solid
-  border-color: rgb(209, 209, 209)
-  border-radius: 0px
-  box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  border-color: rgba(0, 230, 138, 0.3)
+  border-radius: 6px
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 6px 0px
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1468,7 +1468,7 @@ body
   gap: 6px
   flex: 0 1 auto
   transform: none
-  transition: none
+  transition: all
   animation-name: none
   backdrop-filter: none
   cursor: pointer
@@ -1480,26 +1480,26 @@ body
   overflow: visible
   visibility: visible
   opacity: 0.6
-  width: 105.375px
+  width: 103.375px
   height: 24px
   min-height: 24px
   max-height: none
-  padding: 5px 15px
+  padding: 5px 14px
   margin: 2px
   top: auto
   left: auto
   right: auto
   bottom: auto
-  color: rgb(154, 154, 154)
-  background-color: rgb(249, 249, 249)
-  background-image: none
+  color: rgb(230, 247, 240)
+  background-color: rgba(0, 0, 0, 0)
+  background-image: linear-gradient(135deg, rgba(16, 48, 34, 0.8) 0%, rgba(8, 28, 19, 0.9) 100%)
   border-width: 1px
   border-style: solid
-  border-color: rgb(209, 209, 209)
-  border-radius: 0px
-  box-shadow: none
-  outline: rgb(154, 154, 154) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  border-color: rgba(0, 230, 138, 0.3)
+  border-radius: 6px
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 6px 0px
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal
@@ -1514,7 +1514,7 @@ body
   gap: 6px
   flex: 0 1 auto
   transform: none
-  transition: none
+  transition: all
   animation-name: none
   backdrop-filter: none
   cursor: pointer
@@ -1545,7 +1545,7 @@ body
   border-radius: 0px
   box-shadow: none
   outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 11px
   font-weight: 400
   letter-spacing: normal
@@ -1582,16 +1582,16 @@ body
   left: auto
   right: auto
   bottom: auto
-  color: rgb(0, 0, 0)
+  color: rgb(230, 247, 240)
   background-color: rgba(0, 0, 0, 0)
   background-image: none
   border-width: 0px 0px 1px
   border-style: solid
-  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgb(229, 229, 229)
+  border-color: rgb(229, 231, 235) rgb(229, 231, 235) rgba(0, 230, 138, 0.15)
   border-radius: 0px
   box-shadow: none
-  outline: rgb(0, 0, 0) none 3px
-  font-family: "Segoe UI", Inter, Roboto, sans-serif
+  outline: rgb(230, 247, 240) none 3px
+  font-family: "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif
   font-size: 13px
   font-weight: 400
   letter-spacing: normal

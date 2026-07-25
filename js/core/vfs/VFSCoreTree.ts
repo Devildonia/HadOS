@@ -58,12 +58,12 @@ export const DEFAULT_FS: IVFSNode = {
             type: 'dir',
             i18nKey: 'fs.desktop',
             children: {
-                'My Computer': { name: 'My Computer', type: 'shortcut', icon: '💻', i18nKey: 'app.mycomputer', actionType: 'explorer', actionTarget: 'This PC' },
-                'Recycle Bin': { name: 'Recycle Bin', type: 'shortcut', icon: '🗑️', i18nKey: 'app.recyclebin', actionType: 'openDialog', actionTarget: 'dialog-recyclebin' },
+                'Mi PC': { name: 'Mi PC', type: 'shortcut', icon: '💻', i18nKey: 'app.mycomputer', actionType: 'explorer', actionTarget: 'This PC' },
+                'Eco Bin': { name: 'Eco Bin', type: 'shortcut', icon: '🗑️', i18nKey: 'app.recyclebin', actionType: 'openDialog', actionTarget: 'dialog-recyclebin' },
                 'Games': { name: 'Games', type: 'shortcut', icon: '📂', i18nKey: 'app.games_folder', actionType: 'explorer', actionTarget: 'C:\\GAMES' },
-                'Notepad': { name: 'Notepad', type: 'shortcut', icon: '📝', i18nKey: 'app.notepad', actionType: 'launch', actionTarget: 'notepad' },
-                'Paint': { name: 'Paint', type: 'shortcut', icon: '🎨', i18nKey: 'app.paint', actionType: 'launch', actionTarget: 'paint' },
-                'Explorer': { name: 'Explorer', type: 'shortcut', icon: '🗂️', i18nKey: 'app.explorer', actionType: 'launch', actionTarget: 'explorer' }
+                'Notapad': { name: 'Notapad', type: 'shortcut', icon: '📝', i18nKey: 'app.notepad', actionType: 'launch', actionTarget: 'notepad' },
+                'Pinta': { name: 'Pinta', type: 'shortcut', icon: '🎨', i18nKey: 'app.paint', actionType: 'launch', actionTarget: 'paint' },
+                'FileX': { name: 'FileX', type: 'shortcut', icon: '🗂️', i18nKey: 'app.explorer', actionType: 'launch', actionTarget: 'explorer' }
             }
         }
     }

@@ -63,7 +63,7 @@ describe('VFS recycle bin', () => {
         VFS.restoreFromTrash(VFS.listTrash()[0]!.id);
 
         expect(VFS.readFile('C:\\DOCUMENTS\\a.txt')).toBe('second');       // untouched
-        expect(VFS.readFile('C:\\DOCUMENTS\\a.txt (2)')).toBe('first');    // restored copy
+        expect(VFS.readFile('C:\\DOCUMENTS\\a (2).txt')).toBe('first');    // restored copy with extension-aware collision name
     });
 
     it('refuses to restore when the origin folder is gone', () => {
