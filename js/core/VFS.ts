@@ -1,6 +1,7 @@
 import { Utils } from '../utils.js';
 import { Services } from './ServiceContainer.js';
 import { VFSStore } from './VFSStore.js';
+import { VFSBlobStore } from './VFSBlobStore.js';
 import { VFSCoreTree } from './vfs/VFSCoreTree.js';
 import { VFSOperations } from './vfs/VFSOperations.js';
 import { VFSTrash } from './vfs/VFSTrash.js';
@@ -29,6 +30,19 @@ export const VFS: IVFS = (() => {
     const ops = new VFSOperations(tree, onMutationSave);
     const trash = new VFSTrash(tree, ops, onMutationSave);
 
+    // When neither OPFS nor IndexedDB is available, blobs live in a bounded RAM map
+    // that evicts its least-recently-used entry to make room. The store knows only
+    // about ids, so it tells us which one it dropped and we take the node with it —
+    // otherwise the tree keeps a blobRef resolving to nothing, and the user gets a
+    // file that lists fine and opens empty (audit v1.0.0-rc.1, M-13).
+    VFSBlobStore.onEvict((blobRef) => {
+        const name = ops.dropNodeByBlobRef(blobRef);
+        if (!name) return;
+        Utils.Logger.warn(`VFS: dropped "${name}" — no durable storage and the memory budget is full`);
+        const notify = Services.get<{ warn: (msg: string) => void }>('Notify');
+        notify?.warn(`Storage full: "${name}" was removed to make room.`);
+    });
+
     function init(): Promise<void> {
         if (!initPromise) initPromise = hydrate();
         return initPromise;
@@ -50,6 +64,34 @@ export const VFS: IVFS = (() => {
         onMutationSave();
     }
 
+    const DEFAULT_GAMES: Array<{ name: string; target: string; readme?: string }> = [
+        { name: 'Virtual Life Restart Simulator', target: 'win-vlrs-folder' },
+        { name: 'Flappy Neon', target: 'win-flappy-folder' },
+        { name: 'Football Rush', target: 'win-football-folder', readme: 'FOOTBALL RUSH\n\nA high-speed football game for Windows 95.\nUse ARROW KEYS to move and SPACE to kick.\n\nGood luck!' },
+        { name: 'Ultimate DOOM', target: 'win-doom-folder' },
+        { name: 'Tetris Tryhard', target: 'win-tetris-folder' },
+        { name: 'Chapas Prime', target: 'win-chapas-folder' },
+        { name: 'Nocturna', target: 'win-nocturna-folder' },
+        { name: 'H.I.P. Game Boy', target: 'win-gameboy-folder' },
+    ];
+
+    function seedDefaultGames(gamesNode: IVFSNode): void {
+        if (!gamesNode.children) gamesNode.children = {};
+        DEFAULT_GAMES.forEach(g => {
+            if (!gamesNode.children![g.name]) {
+                gamesNode.children![g.name] = {
+                    name: g.name,
+                    type: 'dir',
+                    children: g.readme ? {
+                        'README.TXT': { name: 'README.TXT', type: 'file', content: g.readme }
+                    } : {},
+                    actionType: 'openWindow',
+                    actionTarget: g.target
+                };
+            }
+        });
+    }
+
     async function hydrate(): Promise<void> {
         const saved = await VFSStore.load();
         let needsReset = false;
@@ -67,52 +109,31 @@ export const VFS: IVFS = (() => {
                 migrateSystemDirName();
 
                 const root = tree.getRoot();
-                const gamesFolder = root?.children ? root.children['GAMES'] : null;
-                const desktopFolder = root?.children ? root.children['DESKTOP'] : null;
+                if (root && root.children) {
+                    const gamesFolder = root.children['GAMES'];
+                    const desktopFolder = root.children['DESKTOP'];
 
-                if (!gamesFolder || !gamesFolder.children || Object.keys(gamesFolder.children).length === 0) {
-                    Utils.Logger.log('VFS: GAMES folder empty, resetting...');
-                    needsReset = true;
-                }
+                    if (!gamesFolder || !gamesFolder.children || Object.keys(gamesFolder.children).length === 0) {
+                        Utils.Logger.log('VFS: GAMES folder empty, performing targeted reset...');
+                        const defaultFS = tree.cloneDefaultFS();
+                        if (root.children['GAMES']) ops.releaseSubtreeBlobs(root.children['GAMES']);
+                        if (defaultFS.children?.['GAMES']) root.children['GAMES'] = defaultFS.children['GAMES'];
+                    }
 
-                if (!desktopFolder || !desktopFolder.children || Object.keys(desktopFolder.children).length === 0) {
-                    Utils.Logger.log('VFS: DESKTOP folder empty, resetting...');
-                    needsReset = true;
-                }
+                    if (!desktopFolder || !desktopFolder.children || Object.keys(desktopFolder.children).length === 0) {
+                        Utils.Logger.log('VFS: DESKTOP folder empty, performing targeted reset...');
+                        const defaultFS = tree.cloneDefaultFS();
+                        if (root.children['DESKTOP']) ops.releaseSubtreeBlobs(root.children['DESKTOP']);
+                        if (defaultFS.children?.['DESKTOP']) root.children['DESKTOP'] = defaultFS.children['DESKTOP'];
+                    }
 
-                if (root && root.children && !needsReset) {
                     const docs = root.children['DOCUMENTS'];
-                    if (docs && docs.children && docs.children['README.txt']) {
-                        docs.children['README.txt'].content = 'Welcome to HadOS.';
+                    if (docs && docs.children && !docs.children['README.txt']) {
+                        docs.children['README.txt'] = { name: 'README.txt', type: 'file', content: 'Welcome to HadOS.' };
                     }
 
                     const games = root.children['GAMES'];
-                    if (games && games.children) {
-                        const expectedGames = ['Virtual Life Restart Simulator', 'Flappy Neon', 'Football Rush', 'Ultimate DOOM', 'Tetris Tryhard', 'Chapas Prime', 'Nocturna', 'H.I.P. Game Boy'];
-                        expectedGames.forEach(gName => {
-                            if (!games.children![gName]) {
-                                let actionTarget = '';
-                                if (gName === 'Virtual Life Restart Simulator') actionTarget = 'win-vlrs-folder';
-                                else if (gName === 'Flappy Neon') actionTarget = 'win-flappy-folder';
-                                else if (gName === 'Football Rush') actionTarget = 'win-football-folder';
-                                else if (gName === 'Ultimate DOOM') actionTarget = 'win-doom-folder';
-                                else if (gName === 'Tetris Tryhard') actionTarget = 'win-tetris-folder';
-                                else if (gName === 'Chapas Prime') actionTarget = 'win-chapas-folder';
-                                else if (gName === 'Nocturna') actionTarget = 'win-nocturna-folder';
-                                else if (gName === 'H.I.P. Game Boy') actionTarget = 'win-gameboy-folder';
-
-                                games.children![gName] = {
-                                    name: gName,
-                                    type: 'dir',
-                                    children: gName === 'Football Rush' ? {
-                                        'README.TXT': { name: 'README.TXT', type: 'file', content: 'FOOTBALL RUSH\n\nA high-speed football game for Windows 95.\nUse ARROW KEYS to move and SPACE to kick.\n\nGood luck!' }
-                                    } : {},
-                                    actionType: 'openWindow',
-                                    actionTarget
-                                };
-                            }
-                        });
-                    }
+                    if (games) seedDefaultGames(games);
 
                     let windows = root.children['HADOS'];
                     if (!windows) {
@@ -131,38 +152,13 @@ export const VFS: IVFS = (() => {
                                 winDesktop.children['GAMES'] = { name: 'GAMES', type: 'dir', children: {} };
                                 winGames = winDesktop.children['GAMES'];
                             }
-                            if (winGames && winGames.children) {
-                                const expectedGames = ['Virtual Life Restart Simulator', 'Flappy Neon', 'Football Rush', 'Ultimate DOOM', 'Tetris Tryhard', 'Chapas Prime', 'Nocturna', 'H.I.P. Game Boy'];
-                                expectedGames.forEach(gName => {
-                                    if (!winGames.children![gName]) {
-                                        let actionTarget = '';
-                                        if (gName === 'Virtual Life Restart Simulator') actionTarget = 'win-vlrs-folder';
-                                        else if (gName === 'Flappy Neon') actionTarget = 'win-flappy-folder';
-                                        else if (gName === 'Football Rush') actionTarget = 'win-football-folder';
-                                        else if (gName === 'Ultimate DOOM') actionTarget = 'win-doom-folder';
-                                        else if (gName === 'Tetris Tryhard') actionTarget = 'win-tetris-folder';
-                                        else if (gName === 'Chapas Prime') actionTarget = 'win-chapas-folder';
-                                        else if (gName === 'Nocturna') actionTarget = 'win-nocturna-folder';
-                                        else if (gName === 'H.I.P. Game Boy') actionTarget = 'win-gameboy-folder';
-
-                                        winGames.children![gName] = {
-                                            name: gName,
-                                            type: 'dir',
-                                            children: gName === 'Football Rush' ? {
-                                                'README.TXT': { name: 'README.TXT', type: 'file', content: 'FOOTBALL RUSH\n\nA high-speed football game for Windows 95.\nUse ARROW KEYS to move and SPACE to kick.\n\nGood luck!' }
-                                            } : {},
-                                            actionType: 'openWindow',
-                                            actionTarget
-                                        };
-                                    }
-                                });
-                            }
+                            if (winGames) seedDefaultGames(winGames);
                         }
                     }
                     onMutationSave();
                 }
             } catch (e) {
-                Utils.Logger.error('VFS: Corrupted storage, resetting...');
+                Utils.Logger.error('VFS: Corrupted storage, resetting...', e);
                 needsReset = true;
             }
         } else {
@@ -170,6 +166,8 @@ export const VFS: IVFS = (() => {
         }
 
         if (needsReset) {
+            const oldRoot = tree.getRoot();
+            if (oldRoot) ops.releaseSubtreeBlobs(oldRoot);
             tree.setRoot(tree.cloneDefaultFS());
             onMutationSave();
         }
@@ -184,7 +182,7 @@ export const VFS: IVFS = (() => {
             await VFSStore.save(JSON.stringify(root));
         } catch (err) {
             Utils.Logger.error('VFS: Failed to persist tree', err);
-            const notify: any = Services.get('Notify');
+            const notify = Services.get<{ error: (msg: string) => void }>('Notify');
             if (notify) {
                 notify.error('VFS write failed: storage quota exceeded!');
             }
@@ -199,7 +197,11 @@ export const VFS: IVFS = (() => {
         return persist();
     }
 
-    function flushSync(): void {
+    function flushBestEffort(): void {
+        const root = tree.getRoot();
+        if (root) {
+            VFSStore.saveSync(JSON.stringify(root));
+        }
         void flush();
     }
 
@@ -220,7 +222,7 @@ export const VFS: IVFS = (() => {
         restoreFromTrash: (id: string) => trash.restoreFromTrash(id),
         emptyTrash: () => trash.emptyTrash(),
         flush,
-        flushSync,
+        flushBestEffort,
         getRoot: () => tree.getRoot(),
         __reset: () => {
             if (saveTimer) {
@@ -235,8 +237,8 @@ export const VFS: IVFS = (() => {
 
 if (typeof window !== 'undefined') {
     Services.register('VFS', VFS);
-    window.addEventListener('beforeunload', () => { VFS.flushSync(); });
+    window.addEventListener('beforeunload', () => { VFS.flushBestEffort(); });
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') VFS.flushSync();
+        if (document.visibilityState === 'hidden') VFS.flushBestEffort();
     });
 }

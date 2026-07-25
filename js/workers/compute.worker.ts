@@ -36,13 +36,13 @@ async function firstNPrimes(n: number): Promise<number[]> {
 
 createWorkerRuntime()
     .on('compute:primes', async (payload) => {
-        const count = Math.max(1, Math.min(100_000, Number((payload as any)?.count) || 1000));
+        const count = Math.max(1, Math.min(100_000, Number((payload as Record<string, unknown> | null)?.count) || 1000));
         const primes = await firstNPrimes(count);
         return { count: primes.length, last: primes[primes.length - 1] };
     })
     .on('compute:hang', () => {
         // Intentional infinite loop: never returns, never pongs → watchdog kills it.
-        // eslint-disable-next-line no-constant-condition
+         
         while (true) { /* block forever */ }
     })
     .start();

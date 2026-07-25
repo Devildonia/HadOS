@@ -32,7 +32,7 @@ function onDocumentDblClick(e: MouseEvent): void {
     const appId = el.dataset.launch;
     if (!appId) return;
 
-    const kernel: any = Services.get('Kernel');
+    const kernel = Services.get<{ launch: (id: string) => void }>('Kernel');
     if (kernel) {
         kernel.launch(appId);
     } else {
@@ -56,7 +56,7 @@ function onDocumentClick(e: MouseEvent): void {
     const launchEl = target.closest('[data-launch]') as HTMLElement;
     if (launchEl && launchEl.closest('#start-menu')) {
         const appId = launchEl.dataset.launch;
-        const kernel: any = Services.get('Kernel');
+        const kernel = Services.get<{ launch: (id: string) => void }>('Kernel');
         if (kernel && appId) kernel.launch(appId);
         // Close start menu after launch
         const menu = document.getElementById('start-menu');
@@ -68,7 +68,7 @@ function onDocumentClick(e: MouseEvent): void {
     const wpEl = target.closest('[data-wallpaper]') as HTMLElement;
     if (wpEl) {
         const url = wpEl.dataset.wallpaper;
-        const dm: any = Services.get('DesktopManager');
+        const dm = Services.get<{ setWallpaper: (u: string) => void }>('DesktopManager');
         if (dm && url !== undefined) dm.setWallpaper(url);
         return;
     }
@@ -77,7 +77,7 @@ function onDocumentClick(e: MouseEvent): void {
     const tcEl = target.closest('[data-taskbar-color]') as HTMLElement;
     if (tcEl) {
         const color = tcEl.dataset.taskbarColor;
-        const dm: any = Services.get('DesktopManager');
+        const dm = Services.get<{ setTaskbarColor: (c: string) => void }>('DesktopManager');
         if (dm && color !== undefined) dm.setTaskbarColor(color);
         return;
     }
@@ -87,7 +87,7 @@ function onDocumentClick(e: MouseEvent): void {
     if (cwEl) {
         const winId = cwEl.dataset.closeWindow;
         _playBlip();
-        const wm: any = Services.get('WindowManager');
+        const wm = Services.get<{ close: (id: string) => void }>('WindowManager');
         if (wm && winId) wm.close(winId);
         return;
     }
@@ -110,7 +110,7 @@ function onDocumentClick(e: MouseEvent): void {
         const action = actionEl.dataset.action;
         if (action === 'taskbar-color-reset') {
             _playBlip();
-            const dm: any = Services.get('DesktopManager');
+            const dm = Services.get<{ clearTaskbarColor?: () => void }>('DesktopManager');
             if (dm && dm.clearTaskbarColor) dm.clearTaskbarColor();
             return;
         }
@@ -122,12 +122,12 @@ function onDocumentClick(e: MouseEvent): void {
 }
 
 function onWallpaperUploadChange(): void {
-    const dm: any = Services.get('DesktopManager');
+    const dm = Services.get<{ handleWallpaperUpload: (el: HTMLInputElement) => void }>('DesktopManager');
     if (dm && boundWallpaperUpload) dm.handleWallpaperUpload(boundWallpaperUpload);
 }
 
 function onColorPickerChange(): void {
-    const dm: any = Services.get('DesktopManager');
+    const dm = Services.get<{ setTaskbarColor: (c: string) => void }>('DesktopManager');
     if (dm && boundColorPicker) dm.setTaskbarColor(boundColorPicker.value);
 }
 
@@ -139,11 +139,11 @@ function onIeAddressKeypress(e: KeyboardEvent): void {
 
 /** Play UI blip sound via AudioManager service */
 function _playBlip(freq: number = 800): void {
-    const tm: any = Services.get('ThemeManager');
+    const tm = Services.get<{ currentTheme: string }>('ThemeManager');
     const isModern = tm?.currentTheme === 'modern';
     if (isModern) return;
 
-    const am: any = Services.get('AudioManager');
+    const am = Services.get<{ play: (s: string, opts?: unknown) => void }>('AudioManager');
     if (am) {
         am.play('blip', { frequency: freq });
     }
@@ -151,7 +151,7 @@ function _playBlip(freq: number = 800): void {
 
 /** Navigate Internet Explorer iframe */
 function _navigateIE(url: string): void {
-    const ie: any = Services.get('InternetExplorerApp');
+    const ie = Services.get<{ navigate: (u: string) => void }>('InternetExplorerApp');
     if (ie?.navigate) {
         ie.navigate(url);
     }

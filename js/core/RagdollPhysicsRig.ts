@@ -11,13 +11,13 @@ import RAPIER from '@dimforge/rapier3d-compat';
 // ============================================
 
 export interface IRagdollPhysicsRigDeps {
-    getWorld: () => any;
+    getWorld: () => RAPIER.World;
     getScene: () => THREE.Scene;
     getMixer: () => THREE.AnimationMixer | undefined;
     getShowDebug: () => boolean;
     getRagdollMode: () => boolean;
     setRagdollMode: (value: boolean) => void;
-    getRigidBodies: () => Map<string, any>;
+    getRigidBodies: () => Map<string, RAPIER.RigidBody>;
     getBoneRigidBodyMap: () => Map<string, THREE.Bone>;
     getDebugMeshMap: () => Map<string, THREE.Mesh>;
 }

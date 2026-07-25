@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { VFS } from '../js/core/VFS';
+import { VFSStore } from '../js/core/VFSStore';
 import { VFSBlobStore } from '../js/core/VFSBlobStore';
 import { Services } from '../js/core/ServiceContainer';
 import { WorkerProcess, messagePortTransport } from '../js/core/WorkerProcess';
@@ -37,6 +38,7 @@ describe('Error paths — storage quota', () => {
 
         VFS.writeFile('C:\\DOCUMENTS', 'a.txt', 'data');
         localStorage.setItem = quotaError as any;           // storage is now full
+        vi.spyOn(VFSStore, 'save').mockRejectedValue(new Error('QuotaExceededError'));
 
         await expect(VFS.flush()).resolves.toBeUndefined();  // must not throw
         expect(errors.some(m => /quota/i.test(m))).toBe(true);
@@ -46,6 +48,7 @@ describe('Error paths — storage quota', () => {
         Services.unregister('Notify');
         VFS.writeFile('C:\\DOCUMENTS', 'b.txt', 'data');
         localStorage.setItem = quotaError as any;
+        vi.spyOn(VFSStore, 'save').mockRejectedValue(new Error('QuotaExceededError'));
         await expect(VFS.flush()).resolves.toBeUndefined();
     });
 

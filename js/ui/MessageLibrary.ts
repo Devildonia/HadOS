@@ -246,7 +246,7 @@ class MessageLibrary implements IMessageLibrary {
 
         // Translate the key if it belongs to the ragdoll set and i18n is available
         if (messageKey && messageKey.startsWith('ragdoll.')) {
-            const i18nService = Services.get('i18n') as any;
+            const i18nService = Services.get<{ t: (k: string) => string }>('i18n');
             if (i18nService) {
                 return i18nService.t(messageKey);
             }

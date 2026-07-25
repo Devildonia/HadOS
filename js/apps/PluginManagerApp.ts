@@ -103,21 +103,22 @@ export class PluginManagerApp implements IWindowsApp {
 
         try {
             // Check if it looks like JSON structure for testing, otherwise it's URL
-            let pluginData: any;
+            let pluginData: Record<string, unknown>;
             if (val.startsWith('{')) {
-                pluginData = JSON.parse(val);
+                pluginData = JSON.parse(val) as Record<string, unknown>;
             } else {
                 this.setMessage(`Installing from URL: ${val}`, 'success');
                 // Real URL import can be simulated or handled. For now mock manifest evaluation
                 return;
             }
 
-            Kernel.installPlugin(pluginData);
-            this.setMessage(`Successfully installed plugin: ${pluginData.id}`, 'success');
+            Kernel.installPlugin(pluginData as unknown as Parameters<typeof Kernel.installPlugin>[0]);
+            this.setMessage(`Successfully installed plugin: ${String(pluginData.id)}`, 'success');
             inputEl.value = '';
             this.refreshUI();
-        } catch (e: any) {
-            this.setMessage(`Error: ${e.message || e}`, 'error');
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.setMessage(`Error: ${msg}`, 'error');
         }
     }
 
@@ -149,7 +150,8 @@ export class PluginManagerApp implements IWindowsApp {
             const entry = apps[id];
             if (!entry) return;
 
-            const isPlugin = (entry.metadata as any).isPlugin === true;
+            const meta = entry.metadata as unknown as Record<string, unknown>;
+            const isPlugin = meta.isPlugin === true;
             const icon = entry.metadata.icon || '⚙️';
             const name = entry.metadata.name;
             const desc = entry.metadata.description || 'No description provided.';

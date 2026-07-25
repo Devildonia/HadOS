@@ -8,6 +8,7 @@ import { eventManager } from './utils/events';
 import { getStorage, setStorage, removeStorage } from './utils/storage';
 import { announce } from './utils/a11y';
 import { validateObject } from './utils/validation';
+import { getAssetUrl } from './utils/url';
 
 export const Utils = {
     announce,
@@ -34,10 +35,11 @@ export const Utils = {
     validateObject,
     getStorage,
     setStorage,
-    removeStorage
+    removeStorage,
+    getAssetUrl
 };
 
 // Legacy global (for HTML onclick handlers and modules not yet migrated)
 if (typeof window !== 'undefined') {
-    (window as any).Utils = Utils;
+    (window as unknown as Record<string, unknown>).Utils = Utils;
 }

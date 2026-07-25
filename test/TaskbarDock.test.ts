@@ -4,6 +4,7 @@ import { TaskbarDock, nearestEdge, type TaskbarEdge } from '../js/ui/TaskbarDock
 
 /** Re-create the taskbar element the module binds to. */
 function mountTaskbar(): HTMLElement {
+    (TaskbarDock as any).__resetForTesting?.();
     document.body.innerHTML = '<div id="taskbar" data-edge="bottom"></div>';
     return document.getElementById('taskbar')!;
 }

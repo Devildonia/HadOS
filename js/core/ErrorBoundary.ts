@@ -36,7 +36,7 @@ function _buildBSODContent(message: string, source: string, line: number | strin
     const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
 
     // Sanitize values to avoid XSS in error messages
-    const safe = (s: any) => String(s ?? '')
+    const safe = (s: unknown) => String(s ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
@@ -107,7 +107,7 @@ function showBSOD(message: string = 'Unknown error', source: string = '', line: 
         const divider = '----------------------------------------';
         const newEntry = `[${timestamp}] ${message}\nSource: ${source}:${line}\nStack: ${stack || 'N/A'}\n${divider}\n`;
         
-        let currentLog = VFS.readFile(crashLogPath) || '';
+        const currentLog = VFS.readFile(crashLogPath) || '';
         let fullLog = currentLog + newEntry;
 
         // Truncate if exceeds 50KB (51,200 bytes)
@@ -129,9 +129,9 @@ function showBSOD(message: string = 'Unknown error', source: string = '', line: 
 
     // Stop the shader / audio to free resources
     try {
-        const sw: any = Services.get('ShaderWallpaper');
+        const sw = Services.get<{ pause?: () => void }>('ShaderWallpaper');
         if (sw?.pause) sw.pause();
-    } catch (_) { /* non-critical */ }
+    } catch { /* non-critical */ }
 
     // Auto-reload after 10 seconds
     const reloadTimer = setTimeout(() => location.reload(), 10_000);

@@ -26,7 +26,7 @@ export type EventHandler<T extends unknown[] = unknown[]> = (...args: T) => void
 /** Maps standard event payload names. */
 type KnownEventName = keyof IEventPayloadMap;
 /** Extracts standard arguments structure for a given event name. */
-type KnownEventArgs<K extends KnownEventName> = IEventPayloadMap[K] extends any[] ? IEventPayloadMap[K] : [IEventPayloadMap[K]];
+type KnownEventArgs<K extends KnownEventName> = IEventPayloadMap[K] extends unknown[] ? IEventPayloadMap[K] : [IEventPayloadMap[K]];
 
 /**
  * Interface detailing event publish-subscribe operations.
@@ -182,7 +182,7 @@ const Store: IStore = (() => {
     'use strict';
 
     /** Map containing internal state values. */
-    const _state: Record<string, any> = {};
+    const _state: Record<string, unknown> = {};
 
     /** Storage keys configured to auto-save to browser local storage. */
     const PERSISTED_KEYS = new Set<string>([
@@ -299,7 +299,7 @@ const Store: IStore = (() => {
 /**
  * Creates a backward compatibility state proxy mapping old window.state mutations to Store operations.
  */
-function createStateBridge(): Record<string, any> {
+function createStateBridge(): Record<string, unknown> {
     // Initialize Store with the same defaults as old window.state
     Store.init({
         lang: 'en',
@@ -310,7 +310,7 @@ function createStateBridge(): Record<string, any> {
     });
 
     // Create a Proxy so old code doing window.state.X = Y triggers Store.set
-    const stateProxy = new Proxy({} as Record<string, any>, {
+    const stateProxy = new Proxy({} as Record<string, unknown>, {
         get(target, prop) {
             if (typeof prop !== 'string') return undefined;
             return Store.get(prop);

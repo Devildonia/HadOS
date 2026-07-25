@@ -19,7 +19,8 @@ import { Services } from '../core/ServiceContainer.js';
 import { WindowApp } from '../core/WindowApp.js';
 
 export interface IIEParams {
-    [key: string]: any;
+    url?: string;
+    [key: string]: unknown;
 }
 
 const IE_BODY_HTML = `
@@ -117,11 +118,11 @@ class InternetExplorerApp extends WindowApp {
         const unsubs = [
             EventBus.on('action:ie-back', () => {
                 const frame = document.getElementById(this.frameId) as HTMLIFrameElement;
-                try { frame?.contentWindow?.history.back(); } catch (_) { }
+                try { frame?.contentWindow?.history.back(); } catch { /* cross-origin frame: no history access */ }
             }),
             EventBus.on('action:ie-forward', () => {
                 const frame = document.getElementById(this.frameId) as HTMLIFrameElement;
-                try { frame?.contentWindow?.history.forward(); } catch (_) { }
+                try { frame?.contentWindow?.history.forward(); } catch { /* cross-origin frame: no history access */ }
             }),
             EventBus.on('action:ie-stop', () => {
                 const frame = document.getElementById(this.frameId) as HTMLIFrameElement;
@@ -130,7 +131,7 @@ class InternetExplorerApp extends WindowApp {
             }),
             EventBus.on('action:ie-refresh', () => {
                 const frame = document.getElementById(this.frameId) as HTMLIFrameElement;
-                try { frame?.contentWindow?.location.reload(); } catch (_) { }
+                try { frame?.contentWindow?.location.reload(); } catch { /* cross-origin frame: cannot reload */ }
             }),
             EventBus.on('action:ie-home', () => {
                 this.navigate('https://www.google.com/webhp?igu=1');
@@ -190,7 +191,7 @@ class InternetExplorerApp extends WindowApp {
 
         try {
             frame.src = safeUrl;
-        } catch (e) {
+        } catch {
             if (status) status.textContent = 'Error loading page';
         }
 

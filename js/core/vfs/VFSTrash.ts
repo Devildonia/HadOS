@@ -1,6 +1,6 @@
 import { EventBus } from '../EventBus.js';
 import type { ITrashEntry, IVFSNode } from './VFSTypes.js';
-import { VFSCoreTree } from './VFSCoreTree.js';
+import { VFSCoreTree, getChild } from './VFSCoreTree.js';
 import { VFSOperations } from './VFSOperations.js';
 
 export class VFSTrash {
@@ -31,9 +31,9 @@ export class VFSTrash {
     }
 
     public uniqueKey(container: IVFSNode, base: string): string {
-        if (!container.children || !container.children[base]) return base;
+        if (!getChild(container.children, base)) return base;
         let i = 2;
-        while (container.children[`${base} (${i})`]) i++;
+        while (getChild(container.children, `${base} (${i})`)) i++;
         return `${base} (${i})`;
     }
 
@@ -46,11 +46,12 @@ export class VFSTrash {
         if (fullPathUpper === systemPathUpper || fullPathUpper.startsWith(systemPathUpper + '\\')) return false;
 
         const parent = this.tree.resolve(parentPath);
-        if (!(parent && parent.type === 'dir' && parent.children && parent.children[name])) return false;
+        if (!parent || parent.type !== 'dir' || !parent.children) return false;
+        const node = getChild(parent.children, name);
+        if (!node) return false;
         const bin = this.ensureRecycleBin();
         if (!bin || !bin.children) return false;
 
-        const node = parent.children[name];
         const key = this.uniqueKey(bin, node.name);
         node.trashOrigin = parentPath;
         node.trashedAt = Date.now();
@@ -82,8 +83,9 @@ export class VFSTrash {
 
     public restoreFromTrash(id: string): boolean {
         const bin = this.tree.resolve(this.RECYCLE_PATH);
-        if (!bin || bin.type !== 'dir' || !bin.children || !bin.children[id]) return false;
-        const node = bin.children[id];
+        if (!bin || bin.type !== 'dir' || !bin.children) return false;
+        const node = getChild(bin.children, id);
+        if (!node) return false;
         const origin = node.trashOrigin;
         if (!origin) return false;
         const dest = this.tree.resolve(origin);

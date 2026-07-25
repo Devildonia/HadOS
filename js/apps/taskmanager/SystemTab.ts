@@ -1,32 +1,26 @@
+import { detectGPU } from '../../core/HardwareProbe';
+
 export class SystemTab {
     private container: HTMLElement;
+    private cachedGpuName: string | null = null;
 
     constructor(container: HTMLElement) {
         this.container = container;
     }
 
     private getGPUName(): string {
-        try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-            if (gl) {
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info') as any;
-                if (debugInfo) {
-                    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_RENDERER_ID);
-                    if (renderer) return renderer;
-                }
-            }
-        } catch {
-            // Fallback on security/context errors
+        if (!this.cachedGpuName) {
+            this.cachedGpuName = detectGPU();
         }
-        return 'Standard WebGL Renderer';
+        return this.cachedGpuName;
     }
 
     public renderHardwareSpecs(): void {
         const specsContainer = this.container.querySelector('#tm-system-specs');
         if (specsContainer) {
-            const cpuCores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : 'Unknown Cores';
-            const ramGB = (navigator as any).deviceMemory ? `${(navigator as any).deviceMemory} GB` : 'Standard';
+            const nav = navigator as unknown as { hardwareConcurrency?: number; deviceMemory?: number };
+            const cpuCores = nav.hardwareConcurrency ? `${nav.hardwareConcurrency} Cores` : 'Unknown Cores';
+            const ramGB = nav.deviceMemory ? `${nav.deviceMemory} GB` : 'Standard';
             const gpuName = this.getGPUName();
 
             specsContainer.innerHTML = `
@@ -39,7 +33,7 @@ export class SystemTab {
         }
     }
 
-    public renderRealtimeUsage(processesCount: number, stats: any): void {
+    public renderRealtimeUsage(processesCount: number, stats: Record<string, number>): void {
         const webglCount = stats.webgl || 0;
         const timerCount = stats.timer || 0;
         const tick = Math.floor(Date.now() / 1000);
@@ -50,7 +44,7 @@ export class SystemTab {
         const baseCpu = 5 + (processesCount * 3) + (webglCount * 8) + (timerCount * 0.5);
         const cpuUsage = Math.max(1, Math.min(99, Math.round(baseCpu + timeFluctuation1)));
 
-        const perf = (window.performance as any);
+        const perf = window.performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
         let ramUsage: number;
         if (perf && perf.memory && typeof perf.memory.usedJSHeapSize === 'number') {
             ramUsage = Math.max(1, Math.min(99, Math.round((perf.memory.usedJSHeapSize / perf.memory.jsHeapSizeLimit) * 100)));

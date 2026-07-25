@@ -37,7 +37,7 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
 
         const ragdollPet = Services.get('RagdollPet');
         if (ragdollPet) {
-            RagdollUI.init(ragdollPet as any);
+            RagdollUI.init(ragdollPet as Parameters<typeof RagdollUI.init>[0]);
         }
     }
 
@@ -55,9 +55,9 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
             await this.initPhysicsWorld();
             
             if (this.audioManager) {
-                this.audioManager.loadSound('scream', '/games/ragdoll/assets/audio/ahh.opus');
-                this.audioManager.loadSound('wii', '/games/ragdoll/assets/audio/wii.opus');
-                this.audioManager.loadSound('boing', '/games/ragdoll/assets/audio/boing.opus');
+                void this.audioManager.loadSound('scream', '/games/ragdoll/assets/audio/ahh.opus');
+                void this.audioManager.loadSound('wii', '/games/ragdoll/assets/audio/wii.opus');
+                void this.audioManager.loadSound('boing', '/games/ragdoll/assets/audio/boing.opus');
             }
 
             this.setupThreeJS();
@@ -132,7 +132,7 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
         }
 
         const groundColliderDesc = RAPIER.ColliderDesc.cuboid(50.0, 0.1, 50.0);
-        this.world.createCollider(groundColliderDesc);
+        this.world?.createCollider(groundColliderDesc);
 
         this.setupInteractionListeners();
     }
@@ -150,7 +150,8 @@ export class Ragdoll3DViewer extends Ragdoll3DCore {
         this.updateStatus(`Motion: ${displayName}`);
         
         const buttons = document.querySelectorAll('#animation-list .hados-btn');
-        buttons.forEach((btn: any) => {
+        buttons.forEach((node) => {
+            const btn = node as HTMLElement;
             if (btn.textContent.trim() === displayName) {
                 btn.style.backgroundColor = '#000080';
                 btn.style.color = '#fff';

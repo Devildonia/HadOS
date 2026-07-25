@@ -78,7 +78,7 @@ export function initializeDraggableIcons(): void {
                 icon.style.left = pos.x + 'px';
                 icon.style.top = pos.y + 'px';
                 placed = true;
-            } catch (_) { /* corrupt entry — fall through to a default/free slot */ }
+            } catch { /* corrupt entry — fall through to a default/free slot */ }
         }
         if (!placed) {
             const pos = defaultPositions[icon.id] ?? nextFreeSlot(occupied);

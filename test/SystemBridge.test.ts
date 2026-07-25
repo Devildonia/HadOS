@@ -35,9 +35,10 @@ describe('SystemBridge', () => {
         it('should create window.state with reactive bridge', () => {
             initSystemState();
             expect(window.state).toBeDefined();
-            expect(window.state.lang).toBe('en');
-            expect(window.state.screen).toBe('desktop');
-            expect(window.state.bootComplete).toBe(false);
+            const state = window.state as Record<string, unknown>;
+            expect(state.lang).toBe('en');
+            expect(state.screen).toBe('desktop');
+            expect(state.bootComplete).toBe(false);
         });
 
     });

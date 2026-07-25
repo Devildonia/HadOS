@@ -18,9 +18,9 @@ export class Ragdoll3DDesktop extends Ragdoll3DCore implements IRagdoll3DControl
         
         this.audioManager = Services.get('AudioManager') || null;
         if (this.audioManager) {
-            this.audioManager.loadSound('scream', '/games/ragdoll/assets/audio/ahh.opus');
-            this.audioManager.loadSound('wii', '/games/ragdoll/assets/audio/wii.opus');
-            this.audioManager.loadSound('boing', '/games/ragdoll/assets/audio/boing.opus');
+            void this.audioManager.loadSound('scream', '/games/ragdoll/assets/audio/ahh.opus');
+            void this.audioManager.loadSound('wii', '/games/ragdoll/assets/audio/wii.opus');
+            void this.audioManager.loadSound('boing', '/games/ragdoll/assets/audio/boing.opus');
         }
         
         const BubbleAnimatorCtor = Services.get('BubbleAnimator');
@@ -128,7 +128,7 @@ export class Ragdoll3DDesktop extends Ragdoll3DCore implements IRagdoll3DControl
         // usando setTranslation(0, -0.1, 0) → centro en -0.1, top en 0.
         const groundColliderDesc = RAPIER.ColliderDesc.cuboid(50.0, 0.1, 50.0)
             .setTranslation(0, -0.1, 0);
-        this.world.createCollider(groundColliderDesc);
+        this.world?.createCollider(groundColliderDesc);
 
         this.setupInteractionListeners();
     }
@@ -152,7 +152,7 @@ export class Ragdoll3DDesktop extends Ragdoll3DCore implements IRagdoll3DControl
         }
     }
 
-    protected override onActionChanged(exactKey: string): void {
+    protected override onActionChanged(_exactKey: string): void {
         // Additional Desktop hooks if needed
     }
 

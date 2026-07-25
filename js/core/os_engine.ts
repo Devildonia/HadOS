@@ -57,7 +57,7 @@ window.initOS = function (): void {
     Utils.Logger.log("[INIT] OS v3.0 — Starting initialization...");
     Utils.Logger.log("[INIT] ========================================");
 
-    const errors: Array<{ step: string, error: Error }> = [];
+    const errors: Array<{ step: string, error: unknown }> = [];
 
     /**
      * Executes a single boot step inside a try-catch block, recording errors without crashing boot.
@@ -68,7 +68,7 @@ window.initOS = function (): void {
         try {
             fn();
             Utils.Logger.log(`[INIT] ✓ ${name}`);
-        } catch (err: any) {
+        } catch (err: unknown) {
             errors.push({ step: name, error: err });
             console.error(`[INIT] ✗ ${name} FAILED:`, err);
         }
@@ -78,8 +78,8 @@ window.initOS = function (): void {
     bootStep('Audio System', () => {
         if (AudioManager) {
             AudioManager.getInstance().init();
-            AudioManager.getInstance().loadSound('shutdown', 'assets/audio/HadOS_shutdown.opus');
-            AudioManager.getInstance().loadSound('shutdown_modern', 'assets/themes/winui/audio/logoff_winui.opus');
+            void AudioManager.getInstance().loadSound('shutdown', 'assets/audio/HadOS_shutdown.opus');
+            void AudioManager.getInstance().loadSound('shutdown_modern', 'assets/themes/winui/audio/logoff_winui.opus');
         }
     });
 
@@ -112,7 +112,7 @@ window.initOS = function (): void {
 
     // 5. Event listeners (legacy icon handlers, start menu, sticky notes)
     bootStep('Event Listeners', () => {
-        if (window.setupEventListeners) window.setupEventListeners();
+        if (typeof window.setupEventListeners === 'function') (window.setupEventListeners as () => void)();
     });
 
     // 6. Event Delegation (data-* attributes — replaces inline handlers)
@@ -125,7 +125,7 @@ window.initOS = function (): void {
         if (WindowManager?.initializeControls) {
             WindowManager.initializeControls();
         }
-        if (window.initializeWindowControls) window.initializeWindowControls();
+        if (typeof window.initializeWindowControls === 'function') (window.initializeWindowControls as () => void)();
     });
 
     // 8. Clock
@@ -144,9 +144,10 @@ window.initOS = function (): void {
 
         visibilityHandler = () => {
             if (ShaderWallpaper) {
+                const stateObj = window.state as Record<string, unknown> | undefined;
                 if (document.hidden) {
                     ShaderWallpaper.stop();
-                } else if (!window.state.wallpaper) {
+                } else if (!stateObj?.wallpaper) {
                     ShaderWallpaper.start();
                 }
             }
@@ -162,7 +163,7 @@ window.initOS = function (): void {
         }
 
         themeSyncTimer = setTimeout(() => {
-            const tm: any = Services.get('ThemeManager');
+            const tm = Services.get<{ currentTheme: string, applyTheme: (t: string) => void }>('ThemeManager');
             if (tm) {
                 tm.applyTheme(tm.currentTheme);
             }
@@ -177,7 +178,8 @@ window.initOS = function (): void {
     } else {
         Utils.Logger.warn(`[INIT] Boot complete WITH ${errors.length} ERROR(S):`);
         errors.forEach(({ step, error }) => {
-            Utils.Logger.warn(`  → ${step}: ${error.message}`);
+            const msg = error instanceof Error ? error.message : String(error);
+            Utils.Logger.warn(`  → ${step}: ${msg}`);
         });
     }
     Utils.Logger.log("[INIT] ========================================");

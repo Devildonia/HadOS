@@ -1,6 +1,5 @@
 import type { IAppPlugin } from './Types.js';
 import { Kernel } from './Kernel.js';
-import { Utils } from '../utils.js';
 
 export const PluginManager = {
     validatePlugin(plugin: IAppPlugin): { ok: boolean; error?: string } {
@@ -30,11 +29,12 @@ export const PluginManager = {
         }
 
         if (typeof plugin.component !== 'function' && plugin.windowDef && typeof plugin.windowDef.src === 'string') {
+            const winDefNode = plugin.windowDef as Record<string, unknown>;
             if (!plugin.windowDef.id) {
-                (plugin.windowDef as any).id = `win-plugin-${plugin.id}`;
+                winDefNode.id = `win-plugin-${plugin.id}`;
             }
             const winId = plugin.windowDef.id || `win-plugin-${plugin.id}`;
-            (plugin as any).component = class DefaultIframeApp {
+            (plugin as unknown as Record<string, unknown>).component = class DefaultIframeApp {
                 public windowId: string = winId;
             };
         }

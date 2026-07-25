@@ -6,7 +6,7 @@ export function setupDisplayProperties(): void {
     if (themeBtn) {
         themeBtn.onclick = (): void => {
             if (window.playBlip) window.playBlip(600);
-            const tm: any = Services.get('ThemeManager');
+            const tm = Services.get<{ currentTheme: string, applyTheme: (t: string) => void }>('ThemeManager');
             if (tm) {
                 const nextTheme = tm.currentTheme === 'modern' ? 'hados' : 'modern';
                 tm.applyTheme(nextTheme);

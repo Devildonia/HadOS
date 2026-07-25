@@ -1,7 +1,6 @@
 import { i18n } from '../../services/i18n.js';
 import { Paint } from '../Paint.js';
 import { getPixelColor, floodFill } from './PaintTools.js';
-import { Utils } from '../../utils.js';
 
 export class PaintUI {
     private owner: Paint;
@@ -114,7 +113,7 @@ export class PaintUI {
                 btn.id = `${this.owner.windowId}-cutout-btn`;
                 btn.onclick = () => this.owner.executeMenuAction('cutout');
             } else {
-                btn.onclick = () => this.owner.selectTool(tool.id as any);
+                btn.onclick = () => this.owner.selectTool(tool.id as Parameters<typeof this.owner.selectTool>[0]);
             }
 
             toolbar.appendChild(btn);
@@ -154,22 +153,31 @@ export class PaintUI {
         };
     }
 
+    private boundMouseDown = (e: MouseEvent) => this.handleMouseDown(e);
+    private boundMouseMove = (e: MouseEvent) => this.handleMouseMove(e);
+    private boundDragOver = (e: DragEvent) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    };
+    private boundDrop = (e: DragEvent) => {
+        e.preventDefault();
+        const file = e.dataTransfer?.files?.[0];
+        if (file) void this.owner.loadImageFile(file);
+    };
+
     private setupCanvasEvents(): void {
         const canvas = this.owner.canvas;
         if (!canvas) return;
 
-        canvas.addEventListener('mousedown', (e: MouseEvent) => this.handleMouseDown(e));
-        canvas.addEventListener('mousemove', (e: MouseEvent) => this.handleMouseMove(e));
+        canvas.removeEventListener('mousedown', this.boundMouseDown);
+        canvas.removeEventListener('mousemove', this.boundMouseMove);
+        canvas.removeEventListener('dragover', this.boundDragOver);
+        canvas.removeEventListener('drop', this.boundDrop);
 
-        canvas.addEventListener('dragover', (e: DragEvent) => {
-            e.preventDefault();
-            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        });
-        canvas.addEventListener('drop', (e: DragEvent) => {
-            e.preventDefault();
-            const file = e.dataTransfer?.files?.[0];
-            if (file) void this.owner.loadImageFile(file);
-        });
+        canvas.addEventListener('mousedown', this.boundMouseDown);
+        canvas.addEventListener('mousemove', this.boundMouseMove);
+        canvas.addEventListener('dragover', this.boundDragOver);
+        canvas.addEventListener('drop', this.boundDrop);
     }
 
     private handleMouseDown(e: MouseEvent): void {

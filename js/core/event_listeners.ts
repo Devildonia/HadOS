@@ -39,7 +39,7 @@ export function setupEventListeners(): void {
         openLegacyWindow(showId);
     };
 
-    const launchKernelApp = (appId: string, params?: Record<string, any>): void => {
+    const launchKernelApp = (appId: string, params?: Record<string, unknown>): void => {
         if (params) Kernel.launch(appId, params);
         else Kernel.launch(appId);
     };

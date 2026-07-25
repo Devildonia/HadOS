@@ -17,7 +17,7 @@ import { PaintMenus } from './paint/PaintMenus.js';
 import { invertColors, convertToGrayscale } from './paint/PaintTools.js';
 
 export interface IPaintParams {
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export type PaintTool = 'pencil' | 'brush' | 'eraser' | 'rect' | 'line' | 'bucket' | 'picker' | 'text' | 'clear' | 'undo' | 'redo' | 'save' | 'open' | 'cutout';
@@ -56,7 +56,7 @@ class Paint {
     private onKeyDown = (e: KeyboardEvent): void => this.handleKeyDown(e);
     private onMouseUp = (): void => this.stopDrawing();
 
-    constructor(params: IPaintParams = {}) {
+    constructor(_params: IPaintParams = {}) {
         this.init();
     }
 
@@ -330,7 +330,7 @@ class Paint {
                 void this.saveAsPng();
                 break;
             case 'exit':
-                const wm = Services.get('WindowManager') as any;
+                const wm = Services.get<{ close: (id: string) => void }>('WindowManager');
                 wm?.close(this.windowId);
                 break;
             case 'undo':

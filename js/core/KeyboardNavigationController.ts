@@ -9,7 +9,7 @@ export function setupKeyboardNavigation(): void {
             // Alt+Tab window switcher
             if (e.altKey && e.key === 'Tab') {
                 e.preventDefault();
-                const wm: any = Services.get('WindowManager');
+                const wm = Services.get<{ getActive: () => string[], bringToFront: (el: HTMLElement) => void }>('WindowManager');
                 if (wm) {
                     const activeIds = (wm.getActive() as string[]).map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[];
                     if (activeIds.length > 0) {
@@ -62,8 +62,8 @@ export function setupKeyboardNavigation(): void {
             if (target.tabIndex === 0 && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 // Trigger dblclick or click action
-                if (target.ondblclick) target.ondblclick(new MouseEvent('dblclick') as any);
-                else if (target.onclick) target.onclick(new MouseEvent('click') as any);
+                if (target.ondblclick) (target.ondblclick as (e: MouseEvent) => void)(new MouseEvent('dblclick'));
+                else if (target.onclick) (target.onclick as (e: MouseEvent) => void)(new MouseEvent('click'));
                 else {
                     const event = new MouseEvent('dblclick', {
                         bubbles: true,

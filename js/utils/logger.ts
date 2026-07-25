@@ -3,25 +3,25 @@ import { CONFIG } from '../config';
 export const Logger = {
     enabled: CONFIG.DEBUG.ENABLED,
 
-    log(...args: any[]) {
+    log(...args: unknown[]) {
         if (this.enabled) {
             console.log('[Win95]', ...args);
         }
     },
 
-    info(...args: any[]) {
+    info(...args: unknown[]) {
         if (this.enabled) {
             console.info('[Win95]', ...args);
         }
     },
 
-    warn(...args: any[]) {
+    warn(...args: unknown[]) {
         if (this.enabled) {
             console.warn('[Win95]', ...args);
         }
     },
 
-    error(...args: any[]) {
+    error(...args: unknown[]) {
         // Always show errors, even in production
         console.error('[Win95 ERROR]', ...args);
     },
@@ -39,31 +39,31 @@ export const Logger = {
     },
 
     // Specific loggers
-    init(...args: any[]) {
+    init(...args: unknown[]) {
         if (this.enabled) {
             console.log('[Win95:INIT]', ...args);
         }
     },
 
-    game(...args: any[]) {
+    game(...args: unknown[]) {
         if (this.enabled && CONFIG.DEBUG.LOG_EVENTS) {
             console.log('[Win95:GAME]', ...args);
         }
     },
 
-    ragdoll(...args: any[]) {
+    ragdoll(...args: unknown[]) {
         if (this.enabled && CONFIG.DEBUG.LOG_RAGDOLL) {
             console.log('[Win95:RAGDOLL]', ...args);
         }
     },
 
-    audio(...args: any[]) {
+    audio(...args: unknown[]) {
         if (this.enabled && CONFIG.DEBUG.LOG_AUDIO) {
             console.log('[Win95:AUDIO]', ...args);
         }
     },
 
-    window(...args: any[]) {
+    window(...args: unknown[]) {
         if (this.enabled) {
             console.log('[Win95:WINDOW]', ...args);
         }

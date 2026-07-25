@@ -94,7 +94,7 @@ class AudioManager implements IAudioManager {
                             if (this.masterGain) {
                                 try {
                                     this.masterGain.disconnect();
-                                } catch (_) {}
+                                } catch { /* the context was already closed */ }
                             }
                             if (this.context && this.context.state !== 'closed') {
                                 this.context.close().catch(() => {});
@@ -137,7 +137,7 @@ class AudioManager implements IAudioManager {
         }
 
         if (this.context && this.context.state === 'suspended') {
-            this.context.resume();
+            void this.context.resume();
         }
 
         if (this.audioBuffers.has(name)) {
@@ -200,7 +200,7 @@ class AudioManager implements IAudioManager {
             resManager.disposeOwner('audio-manager');
         } else {
             if (this.context && this.context.state !== 'closed') {
-                this.context.close();
+                void this.context.close();
             }
         }
         this.initialized = false;
@@ -212,7 +212,7 @@ class AudioManager implements IAudioManager {
         AudioManager.instance = null;
     }
 
-    public __injectContext(mockCtx: any): void {
+    public __injectContext(mockCtx: AudioContext): void {
         this.context = mockCtx;
         this.masterGain = mockCtx.createGain();
         if (this.masterGain) {

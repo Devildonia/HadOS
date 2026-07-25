@@ -60,7 +60,7 @@ export class ProcessManager {
             if (existingProcess) {
                 Utils.Logger.log(`Kernel: App ${appId} is already running (singleton). Focusing window ${existingProcess.windowId}`);
                 if (existingProcess.windowId) {
-                    const wm: any = Services.get('WindowManager');
+                    const wm = Services.get<{ open: (id: string) => void, bringToFront: (el: HTMLElement) => void }>('WindowManager');
                     if (wm) {
                         wm.open(existingProcess.windowId);
                         const win = Utils.getElement(existingProcess.windowId) as HTMLElement | null;
@@ -87,7 +87,7 @@ export class ProcessManager {
 
             // Auto-open window (Fixed: ensuring foreground launch)
             if (process.windowId) {
-                const wm: any = Services.get('WindowManager');
+                const wm = Services.get<{ open: (id: string) => void }>('WindowManager');
                 if (wm) wm.open(process.windowId);
 
                 // Stamp the window's titlebar with the app's registered icon so it
@@ -95,7 +95,7 @@ export class ProcessManager {
                 // source of truth, instead of each app hardcoding a title emoji.
                 const regIcon = appInfo.metadata?.icon;
                 if (regIcon) {
-                    const wf: any = Services.get('WindowFactory');
+                    const wf = Services.get<{ setTitleIcon?: (id: string, icon: string) => void }>('WindowFactory');
                     wf?.setTitleIcon?.(process.windowId, regIcon);
                 }
             }
@@ -117,28 +117,34 @@ export class ProcessManager {
         if (!process) return false;
 
         process.status = 'terminated';
-        if (process.instance && typeof process.instance.terminate === 'function') {
-            process.instance.terminate();
-        }
-
-        EventBus.emit('kernel:process-stopped', process);
-        EventBus.emit('process-stopped', process);
-
-        const resManager = Services.get('ResourceManager');
-        if (resManager) {
-            if (process.windowId) {
-                resManager.disposeOwner(process.windowId);
+        try {
+            if (process.instance && typeof process.instance.terminate === 'function') {
+                process.instance.terminate();
             }
-            resManager.disposeOwner(process.appId);
+        } finally {
+            EventBus.emit('kernel:process-stopped', process);
+            EventBus.emit('process-stopped', process);
+
+            // Per-INSTANCE owners only. Disposing by `appId` would tear down the
+            // resources of every other live window of the same app — closing one of
+            // two Notepads killed both (audit v1.0.0-rc.1, M-02). Apps register
+            // under their windowId; kernel-spawned processes under `pid:`.
+            const resManager = Services.get('ResourceManager');
+            if (resManager) {
+                if (process.windowId) {
+                    resManager.disposeOwner(process.windowId);
+                }
+                resManager.disposeOwner(`pid:${pid}`);
+            }
+
+            // Tear down the isolated worker handle, if this was a worker process.
+            this.workers.delete(pid);
+            if (this.workers.size === 0) this.watchdog.stop();
+
+            // Remove from Map — no lingering references
+            this.registry.processes.delete(pid);
+            Utils.Logger.log(`Kernel: PID ${pid} killed (${this.registry.processes.size} active processes)`);
         }
-
-        // Tear down the isolated worker handle, if this was a worker process.
-        this.workers.delete(pid);
-        if (this.workers.size === 0) this.watchdog.stop();
-
-        // Remove from Map — no lingering references
-        this.registry.processes.delete(pid);
-        Utils.Logger.log(`Kernel: PID ${pid} killed (${this.registry.processes.size} active processes)`);
         return true;
     }
 

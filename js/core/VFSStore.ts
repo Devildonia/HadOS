@@ -134,6 +134,9 @@ function idbDelete(db: IDBDatabase, key: string): Promise<void> {
     });
 }
 
+const LEGACY_MIGRATED_KEY = 'hados_vfs_legacy_migrated';
+const LS_DIRTY_KEY = 'hados_vfs_ls_dirty';
+
 /**
  * Interface defining VFS Storage backend loader operations.
  */
@@ -142,6 +145,8 @@ export interface IVFSStore {
     load(): Promise<string | null>;
     /** Persists the serialized tree durably. */
     save(data: string): Promise<void>;
+    /** Synchronous fallback save for page unload events. */
+    saveSync(data: string): void;
     /** Removes the stored tree (reset). */
     clear(): Promise<void>;
     /** Closes the cached connection (tests: an open handle blocks deleteDatabase). */
@@ -164,34 +169,54 @@ export const VFSStore: IVFSStore = (() => {
         return dbPromise;
     }
 
+    function saveSync(data: string): void {
+        try {
+            localStorage.setItem(LEGACY_KEY, data);
+            localStorage.setItem(LS_DIRTY_KEY, String(Date.now()));
+        } catch { /* quota */ }
+    }
+
     /**
      * Asynchronously loads the VFS tree, migrating data from legacy formats if present.
      */
     async function load(): Promise<string | null> {
+        const isLsDirty = localStorage.getItem(LS_DIRTY_KEY) !== null;
         if (!useIDB) {
             return localStorage.getItem(LEGACY_KEY);
         }
         try {
             const db = await getDB();
+
+            if (isLsDirty) {
+                const lsData = localStorage.getItem(LEGACY_KEY);
+                if (lsData !== null) {
+                    await idbPut(db, ROOT_KEY, lsData);
+                    localStorage.removeItem(LS_DIRTY_KEY);
+                    return lsData;
+                }
+            }
+
             const existing = await idbGet(db, ROOT_KEY);
             if (existing !== null) return existing;
 
-            // Nothing under the HadOS name yet — adopt an older store, newest first,
-            // so an install from before the rename keeps its files. Adopted data is
-            // written under the new name and the old source is cleared, so this runs
-            // exactly once.
-            const legacyDb = await readLegacyDB();
-            if (legacyDb !== null) {
-                await idbPut(db, ROOT_KEY, legacyDb);
-                await deleteDatabase(LEGACY_DB_NAME);
-                return legacyDb;
-            }
+            const isMigrated = localStorage.getItem(LEGACY_MIGRATED_KEY) === 'true';
+            if (!isMigrated) {
+                const legacyDb = await readLegacyDB();
+                if (legacyDb !== null) {
+                    await idbPut(db, ROOT_KEY, legacyDb);
+                    await deleteDatabase(LEGACY_DB_NAME);
+                    localStorage.setItem(LEGACY_MIGRATED_KEY, 'true');
+                    return legacyDb;
+                }
 
-            const legacyLocal = localStorage.getItem(LEGACY_KEY);
-            if (legacyLocal !== null) {
-                await idbPut(db, ROOT_KEY, legacyLocal);
-                localStorage.removeItem(LEGACY_KEY);
-                return legacyLocal;
+                const legacyLocal = localStorage.getItem(LEGACY_KEY);
+                if (legacyLocal !== null) {
+                    await idbPut(db, ROOT_KEY, legacyLocal);
+                    localStorage.removeItem(LEGACY_KEY);
+                    localStorage.setItem(LEGACY_MIGRATED_KEY, 'true');
+                    return legacyLocal;
+                }
+                localStorage.setItem(LEGACY_MIGRATED_KEY, 'true');
             }
             return null;
         } catch {
@@ -206,15 +231,18 @@ export const VFSStore: IVFSStore = (() => {
      */
     async function save(data: string): Promise<void> {
         if (!useIDB) {
-            localStorage.setItem(LEGACY_KEY, data);
+            saveSync(data);
             return;
         }
         try {
             const db = await getDB();
             await idbPut(db, ROOT_KEY, data);
+            if (localStorage.getItem(LS_DIRTY_KEY)) {
+                localStorage.removeItem(LS_DIRTY_KEY);
+            }
         } catch {
             // Best-effort fallback keeps data somewhere durable.
-            try { localStorage.setItem(LEGACY_KEY, data); } catch { /* quota */ }
+            saveSync(data);
         }
     }
 
@@ -223,6 +251,8 @@ export const VFSStore: IVFSStore = (() => {
      */
     async function clear(): Promise<void> {
         localStorage.removeItem(LEGACY_KEY);
+        localStorage.removeItem(LS_DIRTY_KEY);
+        localStorage.removeItem(LEGACY_MIGRATED_KEY);
         if (!useIDB) return;
         try {
             const db = await getDB();
@@ -240,5 +270,5 @@ export const VFSStore: IVFSStore = (() => {
         dbPromise = null;
     }
 
-    return { load, save, clear, usingIndexedDB: () => useIDB, __closeForTesting };
+    return { load, save, saveSync, clear, usingIndexedDB: () => useIDB, __closeForTesting };
 })();

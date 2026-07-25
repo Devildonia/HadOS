@@ -9,7 +9,7 @@ import { EventBus } from './EventBus';
 import { Utils } from '../utils';
 
 export class RagdollSystem {
-    private pet: any = null;
+    private pet: InstanceType<typeof RagdollPet> | null = null;
     private initialized: boolean = false;
     private canvasId: string = 'ragdoll-canvas';
 
@@ -63,7 +63,7 @@ export class RagdollSystem {
         });
 
         // Handle specific actions (System Bridge / App Workshops)
-        EventBus.on('ragdoll:action', (action: string, arg?: any) => {
+        EventBus.on('ragdoll:action', (action: string, arg?: unknown) => {
             if (!this.pet || !this.pet.stickman) return;
             
             Utils.Logger.log(`[RAGDOLL SYSTEM] Action triggered: ${action}`, arg);
@@ -76,14 +76,16 @@ export class RagdollSystem {
                     this.pet.stickman.setSkin(false);
                     break;
                 case 'emotion':
-                    this.pet.stickman.emotion = arg;
+                    this.pet.stickman.emotion = String(arg || '');
                     break;
-                default:
+                default: {
                     // Arbitrary animation methods based on standard convention
-                    if (typeof this.pet.stickman[action] === 'function') {
-                        this.pet.stickman[action]();
+                    const stickmanObj = this.pet.stickman as unknown as Record<string, unknown>;
+                    if (typeof stickmanObj[action] === 'function') {
+                        (stickmanObj[action] as () => void)();
                     }
                     break;
+                }
             }
         });
     }

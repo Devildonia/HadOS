@@ -280,6 +280,46 @@ that theme gets its own assets.
 
 ## Latent
 
+- **~~`no-explicit-any` is enabled as a warning~~ — PROMOTED TO ERROR.** The 215
+  annotations are gone; the rule is `error` alongside `no-floating-promises` and
+  `no-misused-promises`. `js/` and `main.ts` now lint at **zero errors, zero
+  warnings**, so any output at all is a regression rather than background noise.
+
+  Two things fell out of that sweep and were rolled back, because they were rewrites
+  wearing a retyping's clothes: `NotificationManager` had its markup, CSS class names
+  and per-type `DURATION_MS` durations replaced (which also silently dropped the
+  dismissal timer from `destroy()`'s cleanup), and `TouchManager.makeDraggable` was
+  widened to `HTMLElement | string` against the `windowId: string` that all four of
+  its call sites actually pass, losing the `destroyDraggable()` de-dupe on the way.
+  Both files were reverted and only the genuine typing re-applied. The lesson worth
+  keeping: **a type-only sweep should not change a single runtime value.** If a diff
+  in one touches markup, selectors or constants, it is a different change and needs
+  its own verification — `css-baseline.spec.ts` in particular.
+
+- **~~The consent dialog's focus trap assumes the dialog stays in the DOM~~ — FIXED.**
+  A `MutationObserver` on `document.body` now watches for the overlay disappearing by
+  any route that is not `finish()`, and denies rather than leaving the promise
+  pending. Together with `Escape`, the backdrop click and the `Tab` cycle, every exit
+  from the dialog now settles the capability check. The observer is disconnected in
+  `finish()`, so it does not outlive the prompt.
+
+- **~~`VFSBlobStore`'s memory fallback refuses rather than evicts~~ — IT EVICTS, AND
+  SAYS SO.** The blocker recorded here was that eviction needs a policy for which blob
+  is safe to drop. The answer turned out not to be a smarter policy but an honest one:
+  least-recently-used (`get` re-inserts on read, so `Map` order is real recency), and
+  **every eviction is announced**. `VFSBlobStore.onEvict()` hands the dropped id to the
+  VFS, which removes the node that pointed at it and warns the user by name.
+
+  That announcement is the whole point. Evicting silently would have left the tree
+  holding a `blobRef` resolving to nothing — a file that lists normally and opens
+  empty, which is M-13's dishonesty moved from the write to the read rather than
+  fixed. A blob larger than the entire budget is still refused outright (evicting
+  everything else could not make it fit), and that refusal happens *before* the map is
+  touched, so a failed overwrite leaves the previous content intact.
+
+  Still true, and inherent: this backend is RAM. Nothing stored here survives a
+  reload, which is why the first fall-through now logs a warning saying exactly that.
+
 - **The CSP does not apply to workers — at all.** HadOS ships its CSP as a `<meta>`
   tag, and per spec a `<meta>` CSP governs only the document: workers spawned from a
   URL get their policy from their own HTTP response headers, of which the static

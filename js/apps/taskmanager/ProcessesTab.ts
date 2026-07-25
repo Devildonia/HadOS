@@ -1,4 +1,5 @@
 import { Kernel } from '../../core/Kernel.js';
+import type { IProcess } from '../../core/Types.js';
 import { Utils } from '../../utils.js';
 import { i18n } from '../../services/i18n.js';
 
@@ -31,7 +32,7 @@ export class ProcessesTab {
         });
     }
 
-    public render(processes: any[], apps: any): void {
+    public render(processes: IProcess[], apps: Record<string, { metadata: { icon?: string; name?: string } }>): void {
         const tbody = this.container.querySelector('#tm-process-list') as HTMLElement | null;
         if (!tbody) return;
 
@@ -57,7 +58,7 @@ export class ProcessesTab {
 
             tr.innerHTML = `
                 <td>${proc.pid}</td>
-                <td><span style="margin-right: 4px;">${icon}</span>${Utils.escapeHTML(appName)}</td>
+                <td><span style="margin-right: 4px;">${icon}</span>${Utils.escapeHTML(appName || 'Unknown')}</td>
                 <td>${Utils.escapeHTML(proc.windowId || '—')}</td>
                 <td class="${statusClass}">${proc.status}</td>
                 <td>

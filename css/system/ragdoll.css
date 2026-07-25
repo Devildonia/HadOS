@@ -69,7 +69,7 @@
        Left in place rather than deleted: whether these buttons *should* shrink
        on a phone is a design call, and it should be made on purpose rather than
        resolved by a refactor. */
-    .ragdoll-pet-btn {
+    button.ragdoll-pet-btn:not(.window-btn) {
         padding: 2px 4px;
     }
 

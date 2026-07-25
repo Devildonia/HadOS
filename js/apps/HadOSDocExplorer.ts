@@ -1,5 +1,4 @@
 import { Kernel } from '../core/Kernel.js';
-import { Services } from '../core/ServiceContainer.js';
 import { Utils } from '../utils.js';
 import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
@@ -166,7 +165,7 @@ export class HadOSDocExplorer implements IWindowsApp {
             rootFiles.forEach(file => {
                 select.innerHTML += `<option value="C:\\${file}">C:\\${file}</option>`;
             });
-        } catch {}
+        } catch { /* the dir may not exist yet — an empty picker is the right answer */ }
 
         // List documents in C:\DOCUMENTS — where Notapad actually saves. This was
         // missing: the OS's own save location was invisible to its document reader.
@@ -175,7 +174,7 @@ export class HadOSDocExplorer implements IWindowsApp {
             docs.forEach(file => {
                 select.innerHTML += `<option value="C:\\DOCUMENTS\\${file}">C:\\DOCUMENTS\\${file}</option>`;
             });
-        } catch {}
+        } catch { /* the dir may not exist yet — an empty picker is the right answer */ }
 
         // List notes in C:\HADOS\NOTES
         try {
@@ -183,7 +182,7 @@ export class HadOSDocExplorer implements IWindowsApp {
             notes.forEach(file => {
                 select.innerHTML += `<option value="C:\\HADOS\\NOTES\\${file}">C:\\HADOS\\NOTES\\${file}</option>`;
             });
-        } catch {}
+        } catch { /* the dir may not exist yet — an empty picker is the right answer */ }
 
         // List podcasts in C:\HADOS\PODCASTS
         try {
@@ -191,7 +190,7 @@ export class HadOSDocExplorer implements IWindowsApp {
             podcasts.forEach(file => {
                 select.innerHTML += `<option value="C:\\HADOS\\PODCASTS\\${file}">C:\\HADOS\\PODCASTS\\${file}</option>`;
             });
-        } catch {}
+        } catch { /* the dir may not exist yet — an empty picker is the right answer */ }
     }
 
     private async handleOpenFile(): Promise<void> {

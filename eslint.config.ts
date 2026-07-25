@@ -18,6 +18,9 @@ export default [
         files: ["js/**/*.{js,ts}", "main.ts", "ragdoll.ts"],
         languageOptions: {
             parser: tseslint.parser,
+            parserOptions: {
+                project: "./tsconfig.json"
+            },
             ecmaVersion: 2022,
             sourceType: "module",
             globals: {
@@ -73,6 +76,9 @@ export default [
                 "argsIgnorePattern": "^_",
                 "varsIgnorePattern": "^_"
             }],
+            "@typescript-eslint/no-floating-promises": "error",
+            "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
+            "@typescript-eslint/no-explicit-any": "error",
             "no-duplicate-imports": "error",
             "no-self-assign": "error",
             "no-self-compare": "error",

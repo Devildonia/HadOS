@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Services } from './ServiceContainer.js';
+import type { AudioManager } from '../audio/AudioManager';
 
 // ============================================
 // RAGDOLL INTERACTION CONTROLLER
@@ -16,13 +17,13 @@ export interface IRagdollInteractionDeps {
     getRenderer: () => THREE.WebGLRenderer | undefined;
     getCamera: () => THREE.PerspectiveCamera | undefined;
     getModel: () => THREE.Group | undefined;
-    getWorld: () => any;
-    getRigidBodies: () => Map<string, any>;
+    getWorld: () => RAPIER.World;
+    getRigidBodies: () => Map<string, RAPIER.RigidBody>;
     getDebugMeshMap: () => Map<string, THREE.Mesh>;
     getShowDebug: () => boolean;
-    getAudioManager: () => any;
-    getGrabbedBody: () => any;
-    setGrabbedBody: (value: any) => void;
+    getAudioManager: () => AudioManager | null;
+    getGrabbedBody: () => RAPIER.RigidBody | null;
+    setGrabbedBody: (value: RAPIER.RigidBody | null) => void;
     getMouseAnchorBody: () => RAPIER.RigidBody | null;
     setMouseAnchorBody: (value: RAPIER.RigidBody | null) => void;
     getMouseJoint: () => RAPIER.ImpulseJoint | null;
@@ -93,7 +94,7 @@ export class RagdollInteractionController {
 
         if (targetBoneName) {
             const grabbed = this.deps.getRigidBodies().get(targetBoneName);
-            this.deps.setGrabbedBody(grabbed);
+            this.deps.setGrabbedBody(grabbed || null);
             if (grabbed) {
                 this.deps.setRagdollMode(true);
 

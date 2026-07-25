@@ -92,7 +92,7 @@ async function opfsDir(): Promise<FileSystemDirectoryHandle> {
 async function opfsPut(id: string, data: ArrayBuffer): Promise<void> {
     const dir = await opfsDir();
     const handle = await dir.getFileHandle(id, { create: true });
-    const writable = await (handle as any).createWritable();
+    const writable = await (handle as unknown as { createWritable: () => Promise<{ write: (data: ArrayBuffer) => Promise<void>; close: () => Promise<void> }> }).createWritable();
     await writable.write(data);
     await writable.close();
 }
@@ -117,9 +117,9 @@ async function opfsDelete(id: string): Promise<void> {
 
 async function opfsList(): Promise<string[]> {
     try {
-        const dir = await opfsDir() as any;
+        const dir = await opfsDir() as unknown as { keys: () => AsyncIterable<string> };
         const names: string[] = [];
-        for await (const key of dir.keys()) names.push(key as string);
+        for await (const key of dir.keys()) names.push(key);
         return names;
     } catch {
         return [];

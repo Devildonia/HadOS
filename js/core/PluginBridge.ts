@@ -79,7 +79,7 @@ export const PluginBridge = {
                     case 'plugin:vfs-write':
                         if (payload && typeof payload.path === 'string' && typeof payload.name === 'string' && typeof payload.content === 'string') {
                             VFS.writeFile(payload.path, payload.name, payload.content);
-                            VFS.flushSync();
+                            VFS.flushBestEffort();
                         }
                         break;
                     case 'plugin:log':

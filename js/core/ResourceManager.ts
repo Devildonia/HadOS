@@ -85,9 +85,8 @@ class ResourceManager implements IResourceManager {
 
         Utils.Logger.log(`[ResourceManager] Disposing owner: ${owner} (LIFO order, count: ${ownerResources.length})`);
 
-        // LIFO: last in, first out
-        for (let i = ownerResources.length - 1; i >= 0; i--) {
-            const entry = ownerResources[i];
+        while (ownerResources.length > 0) {
+            const entry = ownerResources.pop();
             if (entry) {
                 try {
                     entry.resource.dispose();

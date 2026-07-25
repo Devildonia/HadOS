@@ -2,6 +2,20 @@ import type { IVFSNode } from './VFSTypes.js';
 
 export const MAX_DEPTH = 32;
 
+/**
+ * Looks a child up by name without ever reaching Object.prototype.
+ *
+ * `children` is a plain object literal, so a bare `children[name]` answers truthy
+ * for 'constructor', 'toString', '__proto__'… — which made `resolve()` hand back a
+ * function instead of a node, and made `mkdir`/`rename`/`uniqueKey` refuse those
+ * perfectly legal file names (audit v1.0.0-rc.1, M-04). Every child access that
+ * decides existence must go through here.
+ */
+export function getChild(children: Record<string, IVFSNode> | undefined, name: string): IVFSNode | undefined {
+    if (!children || !Object.hasOwn(children, name)) return undefined;
+    return children[name];
+}
+
 export const DEFAULT_FS: IVFSNode = {
     name: 'C:',
     type: 'dir',
@@ -96,11 +110,9 @@ export class VFSCoreTree {
         let current = this.root;
 
         for (const part of parts) {
-            if (current && current.children && current.children[part]) {
-                current = current.children[part];
-            } else {
-                return null;
-            }
+            const next = current ? getChild(current.children, part) : undefined;
+            if (!next) return null;
+            current = next;
         }
         return current;
     }

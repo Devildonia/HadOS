@@ -24,15 +24,15 @@ export class PerformanceTab {
         `;
     }
 
-    public renderResourceMetrics(stats: any): void {
+    public renderResourceMetrics(stats: Record<string, number>): void {
         const metricsContainer = this.container.querySelector('#tm-performance-metrics');
         if (metricsContainer) {
             metricsContainer.innerHTML = `
-                ${this.renderMeterRow('Tracked WebGL Contexts', stats.webgl, this.scaleLimit)}
-                ${this.renderMeterRow('Tracked Audio Contexts', stats.audio, this.scaleLimit)}
-                ${this.renderMeterRow('Tracked Event Listeners', stats.listener, this.scaleLimit)}
-                ${this.renderMeterRow('Tracked Timers/Intervals', stats.timer, this.scaleLimit)}
-                ${this.renderMeterRow('Total Active Disposables', stats.total, this.scaleLimit)}
+                ${this.renderMeterRow('Tracked WebGL Contexts', stats.webgl || 0, this.scaleLimit)}
+                ${this.renderMeterRow('Tracked Audio Contexts', stats.audio || 0, this.scaleLimit)}
+                ${this.renderMeterRow('Tracked Event Listeners', stats.listener || 0, this.scaleLimit)}
+                ${this.renderMeterRow('Tracked Timers/Intervals', stats.timer || 0, this.scaleLimit)}
+                ${this.renderMeterRow('Total Active Disposables', stats.total || 0, this.scaleLimit)}
             `;
         }
     }
@@ -46,7 +46,7 @@ export class PerformanceTab {
 
         const perfHeap = this.container.querySelector('#tm-perf-heap');
         const fillHeap = this.container.querySelector('#tm-fill-heap') as HTMLElement | null;
-        const perf = (window.performance as any);
+        const perf = window.performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
         if (perf && perf.memory && typeof perf.memory.usedJSHeapSize === 'number') {
             const usedMB = (perf.memory.usedJSHeapSize / (1024 * 1024)).toFixed(2);
             const heapPercent = Math.min(100, Math.round((perf.memory.usedJSHeapSize / perf.memory.jsHeapSizeLimit) * 100));

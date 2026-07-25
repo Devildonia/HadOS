@@ -228,7 +228,7 @@ class RagdollMemory implements IRagdollMemory {
         }
     }
 
-    private saveTimeout: any = null;
+    private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
     public save(): void {
         // If in test environment, save synchronously to prevent breaking test assertions

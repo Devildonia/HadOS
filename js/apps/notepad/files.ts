@@ -4,21 +4,22 @@ import { Utils } from '../../utils';
 import { WindowManager, type IWindowManager } from '../../ui/WindowManager';
 import type { INotify } from '../../ui/NotificationManager';
 
-export function writeToVFS(instance: any, dir: string, name: string): void {
-    if (!instance.textarea) return;
+export function writeToVFS(instance: unknown, dir: string, name: string): void {
+    const inst = instance as unknown as { textarea?: HTMLTextAreaElement; currentFile: string; currentPath: string; isModified: boolean; updateTitle: () => void };
+    if (!inst.textarea) return;
 
     // Ensure the name ends in .txt
     const safeName = name.endsWith('.txt') ? name : name + '.txt';
-    const content = instance.textarea.value;
+    const content = inst.textarea.value;
 
     const ok = VFS.writeFile(dir, safeName, content);
     const notify = Services.get('Notify') as INotify | undefined;
 
     if (ok) {
-        instance.currentFile = safeName;
-        instance.currentPath = dir;
-        instance.isModified = false;
-        instance.updateTitle();
+        inst.currentFile = safeName;
+        inst.currentPath = dir;
+        inst.isModified = false;
+        inst.updateTitle();
         if (notify) notify.success(`Saved: ${dir}\\${safeName}`);
         Utils.Logger.log(`[Notepad] Saved to VFS: ${dir}\\${safeName}`);
     } else {
@@ -27,8 +28,8 @@ export function writeToVFS(instance: any, dir: string, name: string): void {
     }
 }
 
-export function newWindow(instance: any): void {
-    const wf: any = Services.get('WindowFactory');
+export function newWindow(instance: unknown): void {
+    const wf = Services.get<{ create: (opts: unknown) => HTMLElement }>('WindowFactory');
     if (!wf) return;
 
     const timestamp = Date.now();
@@ -72,15 +73,16 @@ export function newWindow(instance: any): void {
     });
 
     // Make it visible via WindowManager
-    const wm: any = Services.get('WindowManager');
+    const wm = Services.get<{ open: (id: string) => void }>('WindowManager');
     if (wm) {
         wm.open(newWindowId);
     }
 
     // Instantiate secondary Notepad
     // Import dynamically or get the constructor from Kernel to avoid circular imports at module load time
-    const NotepadClass = instance.constructor;
-    let secondaryInstance: any = null;
+    const instObj = instance as unknown as Record<string, unknown>;
+    const NotepadClass = instObj.constructor as { new(opts: unknown): { terminate: () => void } };
+    let secondaryInstance: { terminate: () => void } | null = null;
     
     const closeCallback = () => {
         if (secondaryInstance) {
@@ -98,18 +100,19 @@ export function newWindow(instance: any): void {
     // Set the onCloseCallback on the window DOM element
     const winEl = document.getElementById(newWindowId);
     if (winEl) {
-        (winEl as any)._onCloseCallback = closeCallback;
+        (winEl as unknown as Record<string, unknown>)._onCloseCallback = closeCallback;
     }
 }
 
-export function exitApp(instance: any): void {
-    if (instance.isModified && !confirm(`Save changes to ${instance.currentFile}?`)) {
+export function exitApp(instance: unknown): void {
+    const inst = instance as unknown as { isModified: boolean; currentFile: string; windowId: string; _saveFile: () => void };
+    if (inst.isModified && !confirm(`Save changes to ${inst.currentFile}?`)) {
         // Discard — fall through to close
-    } else if (instance.isModified) {
-        instance._saveFile();
+    } else if (inst.isModified) {
+        inst._saveFile();
         return; // saveFile may show dialog — close will happen after save
     }
     const wm = Services.get('WindowManager') as IWindowManager | undefined;
-    if (wm) wm.close(instance.windowId);
-    else WindowManager.close(instance.windowId);
+    if (wm) wm.close(inst.windowId);
+    else WindowManager.close(inst.windowId);
 }

@@ -484,7 +484,7 @@ export class Settings implements IWindowsApp {
         const select = this.container.querySelector('#settings-lang-select') as HTMLSelectElement | null;
         if (select) {
             this.addPanelListener(select, 'change', () => {
-                i18n.setLang(select.value);
+                void i18n.setLang(select.value);
                 // setLang dispatches 'languagechanged' -> onLanguageChanged() re-renders.
                 const feedback = this.container?.querySelector('#settings-lang-feedback');
                 if (feedback) feedback.textContent = i18n.t('settings.applied');
@@ -497,7 +497,7 @@ export class Settings implements IWindowsApp {
             if (themeBtn) {
                 this.addPanelListener(themeBtn, 'click', () => {
                     if (window.playBlip) window.playBlip(600);
-                    const tm: any = Services.get('ThemeManager');
+                    const tm = Services.get<{ currentTheme: string, applyTheme: (t: string) => void }>('ThemeManager');
                     if (tm) {
                         const nextTheme = tm.currentTheme === 'modern' ? 'hados' : 'modern';
                         tm.applyTheme(nextTheme);

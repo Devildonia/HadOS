@@ -1,4 +1,3 @@
-import { Services } from '../../core/ServiceContainer.js';
 import { Utils } from '../../utils.js';
 
 export class PaintCore {

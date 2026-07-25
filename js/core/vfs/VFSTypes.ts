@@ -40,7 +40,7 @@ export interface IVFS {
     rename(parentPath: string, oldName: string, newName: string): boolean;
     listDir(path: string): string[] | null;
     flush(): Promise<void>;
-    flushSync(): void;
+    flushBestEffort(): void;
     getRoot(): IVFSNode | null;
     __reset(): void;
 }

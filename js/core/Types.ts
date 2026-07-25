@@ -125,7 +125,7 @@ export interface IEventPayloadMap {
  * Utility type to extract and normalize the payload tuple for a given EventBus event key.
  */
 export type EventPayload<K extends string> = K extends keyof IEventPayloadMap
-    ? IEventPayloadMap[K] extends any[]
+    ? IEventPayloadMap[K] extends unknown[]
         ? IEventPayloadMap[K]
         : [IEventPayloadMap[K]]
     : unknown[];

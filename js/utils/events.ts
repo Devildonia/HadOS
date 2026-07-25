@@ -1,4 +1,4 @@
-import { Logger } from './logger';
+
 
 /**
  * Track details for registered event listeners
@@ -57,23 +57,54 @@ export class EventManager {
      * Removes all tracked event listeners
      */
     removeAll(): void {
-        for (const [key, { element, event, handler, options }] of this.listeners) {
+        for (const [, { element, event, handler, options }] of this.listeners) {
             element.removeEventListener(event, handler, options);
         }
 
         this.listeners.clear();
-        Logger.groupEnd();
+    }
+
+    /**
+     * Creates a scoped handle tied to one window or component lifecycle.
+     *
+     * The global manager holds STRONG references to every element and handler it
+     * tracks, so an `add()` whose `remove()` never comes pins that DOM node for the
+     * life of the page — and anonymous arrow handlers can't be removed at all, since
+     * the caller keeps no reference to pass back (audit v1.0.0-rc.1, M-08). A scope
+     * remembers what it registered, so teardown is one `removeAll()` and inline
+     * arrows stop being a leak.
+     *
+     * Delegates to `add`/`remove` rather than reimplementing them, so scoped
+     * listeners get the same dedupe and appear in the same `count()`.
+     */
+    scope(_owner?: string) {
+        const scoped: TrackedListener[] = [];
+        return {
+            add: (element: Element | Window | Document, event: string, handler: EventListenerOrEventListenerObject, options: boolean | AddEventListenerOptions = {}) => {
+                this.add(element, event, handler, options);
+                scoped.push({ element, event, handler, options });
+            },
+            removeAll: () => {
+                for (const { element, event, handler } of scoped) {
+                    this.remove(element, event, handler);
+                }
+                scoped.length = 0;
+            },
+            count: () => scoped.length,
+        };
     }
 
     /**
      * Generates unique key for listener (collision-safe)
      * @private
      */
-    private _getKey(element: any, event: string, handler: any): string {
+    private _getKey(element: unknown, event: string, handler: unknown): string {
+        const el = element as Record<string, unknown>;
+        const fn = handler as Record<string, unknown>;
         // Assign unique IDs to avoid collisions with same class/anonymous handlers
-        if (!element.__evtId) element.__evtId = ++EventManager._idCounter;
-        if (!handler.__handlerId) handler.__handlerId = ++EventManager._idCounter;
-        return `el${element.__evtId}-${event}-fn${handler.__handlerId}`;
+        if (!el.__evtId) el.__evtId = ++EventManager._idCounter;
+        if (!fn.__handlerId) fn.__handlerId = ++EventManager._idCounter;
+        return `el${el.__evtId}-${event}-fn${fn.__handlerId}`;
     }
 }
 

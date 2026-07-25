@@ -15,13 +15,13 @@ import { CONFIG } from './js/config';
 import { Utils } from './js/utils';
 
 // === Layer 2: Core Services (depends on Utils) ===
-import { EventBus, Store } from './js/core/EventBus';
+import { EventBus } from './js/core/EventBus';
 import { VFS } from './js/core/VFS';
-import { Kernel } from './js/core/Kernel';
+import './js/core/Kernel';
 import { SessionManager } from './js/core/SessionManager';
 import { BootLoader } from './js/core/BootLoader';
-import { HDRManager } from './js/core/HDRManager';
-import { ResourceManager } from './js/core/ResourceManager';
+import './js/core/HDRManager';
+import './js/core/ResourceManager';
 import { HapticService } from './js/services/HapticService';
 
 Services.register('HapticService', new HapticService());
@@ -31,20 +31,20 @@ import { initErrorBoundary } from './js/core/ErrorBoundary';
 initErrorBoundary();
 
 // === Layer 3: UI Modules (depends on Utils, Core) ===
-import { WindowManager } from './js/ui/WindowManager';
-import { WindowFactory } from './js/ui/WindowFactory';
-import { TaskbarManager } from './js/ui/TaskbarManager';
-import { DesktopManager } from './js/ui/DesktopManager';
-import { ShaderWallpaper } from './js/ui/ShaderWallpaper';
-import { TouchManager } from './js/ui/TouchManager';
-import { MessageLibrary } from './js/ui/MessageLibrary';
-import { BubbleAnimator } from './js/ui/BubbleAnimator';
+import './js/ui/WindowManager';
+import './js/ui/WindowFactory';
+import './js/ui/TaskbarManager';
+import './js/ui/DesktopManager';
+import './js/ui/ShaderWallpaper';
+import './js/ui/TouchManager';
+import './js/ui/MessageLibrary';
+import './js/ui/BubbleAnimator';
 
 // === Layer 4: Systems ===
-import { AudioManager } from './js/audio/AudioManager';
-import { RagdollMemory } from './js/RagdollMemory';
-import { i18n } from './js/services/i18n';
-import { Notify } from './js/ui/NotificationManager';
+import './js/audio/AudioManager';
+import './js/RagdollMemory';
+import './js/services/i18n';
+import './js/ui/NotificationManager';
 
 // === Layer 5: Apps (auto-register via Vite glob) ===
 const appModules = import.meta.glob('./js/apps/*.ts', { eager: true });
@@ -101,7 +101,7 @@ async function boot(): Promise<void> {
         } catch (err) {
             console.error('[Kernel] VFS init failed, booting with defaults:', err);
         }
-        if (window.initOS) window.initOS();
+        if (typeof window.initOS === 'function') (window.initOS as () => void)();
 
         // Fase 5: keep the session up to date and resume the previous one (open apps
         // + window layout). No saved session -> restore() is a no-op.
@@ -130,7 +130,7 @@ if (document.readyState === 'loading') {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('[Kernel] SW Registered'))
+            .then(() => console.log('[Kernel] SW Registered'))
             .catch(err => console.error('[Kernel] SW Registration failed', err));
     });
 }

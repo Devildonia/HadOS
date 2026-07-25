@@ -72,8 +72,8 @@ function assertInRoot(path: string, ctx: SyscallContext): void {
     if (Utils.hasTraversal(path)) {
         throw new Error(`fs access denied (path traversal): ${path}`);
     }
-    const norm = Utils.normalizeVfsPath(path);
-    const root = Utils.normalizeVfsPath(ctx.fsRoot);
+    const norm = Utils.normalizeVfsPath(path).toUpperCase();
+    const root = Utils.normalizeVfsPath(ctx.fsRoot).toUpperCase();
     if (norm !== root && !norm.startsWith(root + '\\')) {
         throw new Error(`fs access denied outside ${ctx.fsRoot}: ${path}`);
     }

@@ -84,7 +84,7 @@ describe('StickyNotesController', () => {
             const trashedFile: ITrashEntry = { id: 'file-123', name: 'test.txt', type: 'file', origin: 'C:\\', deletedAt: 0 };
             vi.spyOn(VFS, 'listTrash').mockReturnValue([trashedFile]);
             const restoreSpy = vi.spyOn(VFS, 'restoreFromTrash').mockReturnValue(true);
-            const flushSpy = vi.spyOn(VFS, 'flushSync').mockImplementation(() => {});
+            const flushSpy = vi.spyOn(VFS, 'flushBestEffort').mockImplementation(() => {});
 
             StickyNotesController.updateRecycleBinUI();
 

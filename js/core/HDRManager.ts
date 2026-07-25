@@ -62,7 +62,7 @@ export const HDRManager: IHDRManager = (() => {
         applyState();
         updateUI();
 
-        const am: any = Services.get('AudioManager');
+        const am = Services.get<{ play: (s: string) => void }>('AudioManager');
         if (am) am.play('blip');
     }
 

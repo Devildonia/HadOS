@@ -1,38 +1,38 @@
 interface Window {
     // Project services/singletons
-    CONFIG: any;
-    Services: any;
-    Utils: any;
-    themeManager: any;
-    ragdollPet: any;
+    CONFIG: unknown;
+    Services: unknown;
+    Utils: unknown;
+    themeManager: unknown;
+    ragdollPet: unknown;
 
     // OS global bridging
-    state: any;
-    familyData: any;
-    playBlip: any;
-    openWindow: any;
-    closeWindow: any;
-    openDialog: any;
-    closeDialog: any;
-    navigateIE: any;
-    handleShutdown: any;
-    initOS: any;
-    setupEventListeners: any;
-    initializeWindowControls: any;
-    initializeDraggableIcons: any;
-    setWallpaper: any;
-    setTaskbarColor: any;
-    handleWallpaperUpload: any;
-    _createStateBridge: any;
+    state?: Record<string, unknown>;
+    familyData: unknown;
+    playBlip?: (freq?: number) => void;
+    openWindow?: (id: string) => void;
+    closeWindow?: (id: string) => void;
+    openDialog?: (id: string) => void;
+    closeDialog?: (id: string) => void;
+    navigateIE: unknown;
+    handleShutdown: unknown;
+    initOS: unknown;
+    setupEventListeners: unknown;
+    initializeWindowControls: unknown;
+    initializeDraggableIcons: unknown;
+    setWallpaper: unknown;
+    setTaskbarColor: unknown;
+    handleWallpaperUpload: unknown;
+    _createStateBridge: unknown;
 
     // Third-party
-    Webamp: any;
-    Matter: any;
-    webkitAudioContext: any;
+    Webamp: unknown;
+    Matter: unknown;
+    webkitAudioContext: unknown;
 
     // Legacy ragdoll globals (registered for standalone/game compatibility)
-    BloodParticle: any;
-    ZzzParticle: any;
-    TearParticle: any;
-    RagdollPet: any;
+    BloodParticle: unknown;
+    ZzzParticle: unknown;
+    TearParticle: unknown;
+    RagdollPet: unknown;
 }

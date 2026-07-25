@@ -6,7 +6,7 @@ export interface INotify {
     success(message: string, options?: { duration?: number }): number;
     warn(message: string, options?: { duration?: number }): number;
     error(message: string, options?: { duration?: number }): number;
-    i18n(type: 'info' | 'success' | 'warn' | 'error', i18nKey: string, params?: Record<string, any>): number;
+    i18n(type: 'info' | 'success' | 'warn' | 'error', i18nKey: string, params?: Record<string, unknown>): number;
     clear(): void;
     destroy(): void;
 }
@@ -115,7 +115,7 @@ function createNotification(type: 'info' | 'success' | 'warn' | 'error', message
 
     // Play blip for errors/warnings
     if (type === 'error' || type === 'warn') {
-        const am: any = Services.get('AudioManager');
+        const am = Services.get<{ play: (sound: string, opts?: { frequency?: number }) => void }>('AudioManager');
         if (am) {
             am.play('blip', { frequency: type === 'error' ? 400 : 600 });
         }
@@ -149,7 +149,7 @@ const Notify: INotify = {
      * @param {Object} params - Interpolation params
      */
     i18n(type, i18nKey, params) {
-        const i18nService: any = Services.get('i18n');
+        const i18nService = Services.get<{ t: (key: string, params?: Record<string, unknown>) => string }>('i18n');
         const message = i18nService ? i18nService.t(i18nKey, params) : i18nKey;
         return createNotification(type, message);
     },

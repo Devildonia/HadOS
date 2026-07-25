@@ -14,7 +14,7 @@ export interface IBubbleAnimator {
     /** Executes a high-frequency linear shake translation. */
     shake(id: string, duration?: number, intensity?: number, onUpdate?: (data: { offsetX: number, offsetY: number, progress: number }) => void, onComplete?: () => void): void;
     /** Sequences a complete bubble loop (fadeIn + stay + fadeOut) with optional wobble. */
-    fullBubble(id: string, stayDuration?: number, options?: { fadeInDuration?: number, fadeOutDuration?: number, wobble?: boolean }, onUpdate?: (data: any) => void, onComplete?: () => void): void;
+    fullBubble(id: string, stayDuration?: number, options?: { fadeInDuration?: number, fadeOutDuration?: number, wobble?: boolean }, onUpdate?: (data: Record<string, unknown>) => void, onComplete?: () => void): void;
     /** Aborts a running animation by ID. */
     cancel(id: string): void;
     /** Aborts all in-flight animations. */
@@ -208,8 +208,6 @@ class BubbleAnimator implements IBubbleAnimator {
      */
     shake(id: string, duration: number = 300, intensity: number = 5, onUpdate?: (data: { offsetX: number, offsetY: number, progress: number }) => void, onComplete?: () => void): void {
         const startTime = Date.now();
-        const frequency = 20; // Hz
-
         const animate = () => {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
@@ -249,7 +247,7 @@ class BubbleAnimator implements IBubbleAnimator {
      * @param onUpdate Callback.
      * @param onComplete Final callback.
      */
-    fullBubble(id: string, stayDuration: number = 2000, options: { fadeInDuration?: number, fadeOutDuration?: number, wobble?: boolean } = {}, onUpdate?: (data: any) => void, onComplete?: () => void): void {
+    fullBubble(id: string, stayDuration: number = 2000, options: { fadeInDuration?: number, fadeOutDuration?: number, wobble?: boolean } = {}, onUpdate?: (data: Record<string, unknown>) => void, onComplete?: () => void): void {
         const fadeInDuration = options.fadeInDuration || 200;
         const fadeOutDuration = options.fadeOutDuration || 300;
         const wobble = options.wobble || false;

@@ -33,7 +33,7 @@ describe('Terminal CLI', () => {
         vi.spyOn(VFS, 'deleteNode').mockReturnValue(true);
         vi.spyOn(VFS, 'trashNode').mockReturnValue(true);
         vi.spyOn(VFS, 'rename').mockReturnValue(true);
-        vi.spyOn(VFS, 'flushSync').mockImplementation(() => {});
+        vi.spyOn(VFS, 'flushBestEffort').mockImplementation(() => {});
     });
 
     afterEach(() => {

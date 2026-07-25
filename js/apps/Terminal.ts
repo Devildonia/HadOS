@@ -1,7 +1,6 @@
 import { Kernel } from '../core/Kernel.js';
 import { VFS } from '../core/VFS.js';
 import { Utils } from '../utils.js';
-import { Services } from '../core/ServiceContainer.js';
 import { CONFIG } from '../config.js';
 import type { IWindowsApp } from '../core/Types.js';
 import { WindowFactory } from '../ui/WindowFactory.js';
@@ -209,7 +208,7 @@ export class Terminal implements IWindowsApp {
 
             const success = VFS.writeFile(parentPath, name, content);
             if (success) {
-                VFS.flushSync();
+                VFS.flushBestEffort();
                 this.writeOutput(`File written: ${targetPath}`);
             } else {
                 this.writeOutput(`Error: Failed to write file: ${targetPath}`, true);
@@ -300,7 +299,7 @@ export class Terminal implements IWindowsApp {
 
             const success = VFS.mkdir(parentPath, name);
             if (success) {
-                VFS.flushSync();
+                VFS.flushBestEffort();
                 this.writeOutput(`Directory created: ${targetPath}`);
             } else {
                 this.writeOutput(`Error: Failed to create directory: ${arg}`, true);
@@ -329,7 +328,7 @@ export class Terminal implements IWindowsApp {
                 ? VFS.deleteNode(parentPath, name)
                 : VFS.trashNode(parentPath, name);
             if (success) {
-                VFS.flushSync();
+                VFS.flushBestEffort();
                 this.writeOutput(force ? `Permanently deleted: ${targetPath}` : `Moved to Eco Bin: ${targetPath}`);
             } else {
                 this.writeOutput(`Error: Failed to delete: ${arg}`, true);
@@ -352,7 +351,7 @@ export class Terminal implements IWindowsApp {
 
             const success = VFS.rename(parentPath, oldName, newArg);
             if (success) {
-                VFS.flushSync();
+                VFS.flushBestEffort();
                 this.writeOutput(`Renamed ${oldName} to ${newArg}`);
             } else {
                 this.writeOutput('Error: Failed to rename.', true);

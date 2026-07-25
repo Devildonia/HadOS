@@ -5,7 +5,7 @@
  */
 
 import { Utils } from '../utils';
-import { Services } from '../core/ServiceContainer';
+import { Services, type IServiceRegistry } from '../core/ServiceContainer';
 import { Store } from '../core/EventBus';
 
 /**
@@ -39,7 +39,7 @@ const DesktopManager: IDesktopManager = (() => {
     'use strict';
 
     /** Helper resolving a service instance by key name. */
-    const svc = (name: string): any => Services.get(name);
+    const svc = <K extends keyof IServiceRegistry>(name: K): IServiceRegistry[K] | undefined => Services.get(name);
     /** Guard tracking if the manager has initialized. */
     let initialized = false;
     /** DOM node reference hosting file drop events for custom wallpapers. */
@@ -89,12 +89,12 @@ const DesktopManager: IDesktopManager = (() => {
         // Preload Startup Sound and Window Sounds
         const audio = svc('AudioManager');
         if (audio) {
-            audio.loadSound('startup', 'assets/audio/HadOS_startup.opus');
-            audio.loadSound('startup_modern', 'assets/themes/winui/audio/start_winui.opus');
-            audio.loadSound('open_window_modern', 'assets/themes/winui/audio/open_window_winui.opus');
-            audio.loadSound('close_window_modern', 'assets/themes/winui/audio/close_window_winui.opus');
-            audio.loadSound('click_modern', 'assets/themes/winui/audio/onclick.opus');
-            audio.loadSound('menu_modern', 'assets/themes/winui/audio/menu.opus');
+            void audio.loadSound('startup', 'assets/audio/HadOS_startup.opus');
+            void audio.loadSound('startup_modern', 'assets/themes/winui/audio/start_winui.opus');
+            void audio.loadSound('open_window_modern', 'assets/themes/winui/audio/open_window_winui.opus');
+            void audio.loadSound('close_window_modern', 'assets/themes/winui/audio/close_window_winui.opus');
+            void audio.loadSound('click_modern', 'assets/themes/winui/audio/onclick.opus');
+            void audio.loadSound('menu_modern', 'assets/themes/winui/audio/menu.opus');
         }
 
         // Restore state (Only set image wallpaper if user specifically set one)

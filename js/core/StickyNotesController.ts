@@ -99,7 +99,7 @@ export function updateRecycleBinUI(): void {
     `;
 
     const blip = (sound: string): void => {
-        const audio: any = Services.get('AudioManager');
+        const audio = Services.get<{ play: (s: string, opts?: unknown) => void }>('AudioManager');
         if (audio) audio.play(sound, { volume: 0.8 });
     };
 
@@ -107,7 +107,7 @@ export function updateRecycleBinUI(): void {
         btn.addEventListener('click', (e) => {
             const id = (e.currentTarget as HTMLElement).getAttribute('data-id') || '';
             if (VFS.restoreFromTrash(id)) {
-                VFS.flushSync();
+                VFS.flushBestEffort();
                 blip('spawn');
             } else {
                 (Services.get('Notify') as { warn?: (m: string) => void } | undefined)
@@ -121,7 +121,7 @@ export function updateRecycleBinUI(): void {
     if (emptyBtn) {
         emptyBtn.addEventListener('click', () => {
             VFS.emptyTrash();
-            VFS.flushSync();
+            VFS.flushBestEffort();
             blip('release');
             updateRecycleBinUI();
         });
@@ -244,7 +244,7 @@ export function setupStickyNotes(): void {
 
                 if (overlap) {
                     activeSticky.style.display = 'none';
-                    const audio: any = Services.get('AudioManager');
+                    const audio = Services.get<{ play: (s: string, opts?: unknown) => void }>('AudioManager');
                     if (audio) {
                         audio.play('release', { volume: 0.8 });
                     }

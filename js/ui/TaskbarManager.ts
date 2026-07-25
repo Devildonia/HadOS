@@ -26,10 +26,6 @@ const TaskbarManager: ITaskbarManager = (() => {
     let container: HTMLElement | null = null;
     /** Guard ensuring kernel event listeners are attached once. */
     let listenersAttached = false;
-    /** Kernel process started event listener handle. */
-    let onProcessStarted: ((e: Event) => void) | null = null;
-    /** Kernel process stopped event listener handle. */
-    let onProcessStopped: ((e: Event) => void) | null = null;
 
     /**
      * Initializes the taskbar apps panel, mounting the node and binding kernel listeners.
@@ -85,8 +81,9 @@ const TaskbarManager: ITaskbarManager = (() => {
 
         const appInfo = Kernel.getRegistry().apps[process.appId];
         // v3.1: Support for legacy windows (synthetic processes)
-        let icon = appInfo ? (appInfo.metadata?.icon || '📦') : ((process as any).metadata?.icon || '📦');
-        const name = appInfo ? (appInfo.metadata?.name || process.appId) : ((process as any).metadata?.name || process.appId);
+        const procMeta = (process as unknown as { metadata?: { icon?: string; name?: string } }).metadata;
+        const icon = appInfo ? (appInfo.metadata?.icon || '📦') : (procMeta?.icon || '📦');
+        const name = appInfo ? (appInfo.metadata?.name || process.appId) : (procMeta?.name || process.appId);
 
         const iconSpan = document.createElement('span');
         iconSpan.className = 'task-icon';

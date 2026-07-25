@@ -6,6 +6,9 @@ import { RagdollPhysicsRig } from './RagdollPhysicsRig';
 import { RagdollSpeech } from './RagdollSpeech';
 import { RagdollFallReactions } from './RagdollFallReactions';
 import { RagdollInteractionController } from './RagdollInteractionController';
+import type { AudioManager } from '../audio/AudioManager';
+import type { IBubbleAnimator } from '../ui/BubbleAnimator';
+import type { IMessageLibrary } from '../ui/MessageLibrary';
 
 // ============================================
 // RAGDOLL 3D CORE — coordinador
@@ -31,7 +34,7 @@ export abstract class Ragdoll3DCore {
     protected readonly FIXED_TIMESTEP: number = 1 / 60;
     protected model!: THREE.Group;
 
-    protected grabbedBody: any = null;
+    protected grabbedBody: unknown = null;
     protected isRagdollMode: boolean = false;
     protected mouseVelocity: THREE.Vector3 = new THREE.Vector3();
     protected mouseAnchorBody: RAPIER.RigidBody | null = null;
@@ -44,11 +47,11 @@ export abstract class Ragdoll3DCore {
     protected _modelGroundY: number = 0;
 
     // External Services
-    protected audioManager: any = null;
-    protected bubbleAnimator: any = null;
-    protected messageLibrary: any = null;
+    protected audioManager: AudioManager | null = null;
+    protected bubbleAnimator: IBubbleAnimator | null = null;
+    protected messageLibrary: IMessageLibrary | null = null;
     protected showBubble: boolean = false;
-    protected bubbleTimeout: any = null;
+    protected bubbleTimeout: ReturnType<typeof setTimeout> | null = null;
     protected standUpTimeout: ReturnType<typeof setTimeout> | null = null;
     protected bubbleId: string = 'ragdoll-3d-bubble';
 
@@ -78,8 +81,8 @@ export abstract class Ragdoll3DCore {
     };
 
     // Rapier physics
-    protected world: any;
-    protected rigidBodies: Map<string, any> = new Map();
+    protected world: RAPIER.World | null = null;
+    protected rigidBodies: Map<string, RAPIER.RigidBody> = new Map();
     protected boneRigidBodyMap: Map<string, THREE.Bone> = new Map();
 
     // Debug
@@ -101,7 +104,7 @@ export abstract class Ragdoll3DCore {
 
     constructor() {
         this.physicsRig = new RagdollPhysicsRig({
-            getWorld: () => this.world,
+            getWorld: () => this.world!,
             getScene: () => this.scene,
             getMixer: () => this.mixer,
             getShowDebug: () => this.showDebug,
@@ -145,12 +148,12 @@ export abstract class Ragdoll3DCore {
             getRenderer: () => this.renderer,
             getCamera: () => this.camera,
             getModel: () => this.model,
-            getWorld: () => this.world,
+            getWorld: () => this.world!,
             getRigidBodies: () => this.rigidBodies,
             getDebugMeshMap: () => this.debugMeshMap,
             getShowDebug: () => this.showDebug,
             getAudioManager: () => this.audioManager,
-            getGrabbedBody: () => this.grabbedBody,
+            getGrabbedBody: () => this.grabbedBody as RAPIER.RigidBody | null,
             setGrabbedBody: (v) => { this.grabbedBody = v; },
             getMouseAnchorBody: () => this.mouseAnchorBody,
             setMouseAnchorBody: (v) => { this.mouseAnchorBody = v; },
@@ -205,14 +208,15 @@ export abstract class Ragdoll3DCore {
 
         // Dispose of model resources
         if (this.model) {
-            this.model.traverse((obj: any) => {
-                if (obj.isMesh || obj.isSkinnedMesh) {
-                    obj.geometry?.dispose();
-                    if (obj.material) {
-                        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-                        materials.forEach((m: any) => {
-                            m?.map?.dispose();
-                            m?.dispose();
+            this.model.traverse((obj: THREE.Object3D) => {
+                const mesh = obj as THREE.Mesh;
+                if (mesh.isMesh || (obj as THREE.SkinnedMesh).isSkinnedMesh) {
+                    mesh.geometry?.dispose();
+                    if (mesh.material) {
+                        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+                        materials.forEach((m: THREE.Material) => {
+                            (m as unknown as { map?: THREE.Texture }).map?.dispose();
+                            m.dispose();
                         });
                     }
                 }
@@ -223,7 +227,7 @@ export abstract class Ragdoll3DCore {
         this.debugMeshMap.forEach(mesh => {
             mesh.geometry?.dispose();
             if (Array.isArray(mesh.material)) {
-                mesh.material.forEach((m: any) => m?.dispose());
+                mesh.material.forEach((m: THREE.Material) => m.dispose());
             } else if (mesh.material) {
                 mesh.material.dispose();
             }
@@ -231,7 +235,7 @@ export abstract class Ragdoll3DCore {
         this.debugMeshMap.clear();
 
         if (this.world) {
-            this.world.free();
+            (this.world as { free: () => void }).free();
         }
 
     }
@@ -253,20 +257,21 @@ export abstract class Ragdoll3DCore {
                     // Se usa para restaurar la altura correcta después del drag sin acumular drift.
                     this._modelGroundY = this.model.position.y;
 
-                    this.model.traverse((object: any) => {
+                    this.model.traverse((object: THREE.Object3D) => {
                         // frustumCulled=false en TODOS los nodos del grafo, no solo SkinnedMesh.
                         // Three.js projectObject() descarta toda la subjerarquía si un nodo
                         // padre (Group, Armature, Object3D) queda fuera del frustum estático.
                         object.frustumCulled = false;
 
-                        if (object.isMesh || object.isSkinnedMesh) {
-                            object.castShadow = true;
-                            object.receiveShadow = true;
-                            object.userData.isRagdollPart = true;
+                        const mesh = object as THREE.Mesh;
+                        if (mesh.isMesh || (object as THREE.SkinnedMesh).isSkinnedMesh) {
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+                            mesh.userData.isRagdollPart = true;
                         }
-                        if (object.isSkinnedMesh) {
+                        if ((object as THREE.SkinnedMesh).isSkinnedMesh) {
                             this._skinnedMeshes.push(object as THREE.SkinnedMesh);
-                            const geo = object.geometry as THREE.BufferGeometry;
+                            const geo = mesh.geometry as THREE.BufferGeometry;
                             geo.boundingBox = new THREE.Box3(
                                 new THREE.Vector3(-1000, -1000, -1000),
                                 new THREE.Vector3(1000, 1000, 1000)
@@ -278,10 +283,11 @@ export abstract class Ragdoll3DCore {
                     });
 
                     this.mixer = new THREE.AnimationMixer(this.model);
-                    this.model.traverse((node: any) => {
-                        if (node.isBone) {
-                            this.boneRigidBodyMap.set(node.name, node);
-                            this.createRigidBodyForBone(node);
+                    this.model.traverse((node: THREE.Object3D) => {
+                        if ((node as THREE.Bone).isBone) {
+                            const bone = node as THREE.Bone;
+                            this.boneRigidBodyMap.set(bone.name, bone);
+                            this.createRigidBodyForBone(bone);
                         }
                     });
 
@@ -318,7 +324,7 @@ export abstract class Ragdoll3DCore {
     }
 
     protected abstract onModelLoaded(): void;
-    protected onModelProgress(progress: number): void {}
+    protected onModelProgress(_progress: number): void {}
 
     protected animate = (time: number): void => {
         if (!this.isPlaying) return;
@@ -359,7 +365,7 @@ export abstract class Ragdoll3DCore {
         }
 
         this.onAfterRender();
-    }
+    };
 
     protected onBeforePhysicsStep(): void {}
     protected onAfterRender(): void {}
@@ -383,7 +389,7 @@ export abstract class Ragdoll3DCore {
         this.onActionChanged(exactKey);
     }
 
-    protected onActionChanged(exactKey: string): void {}
+    protected onActionChanged(_exactKey: string): void {}
 
     // ── Delegación hacia colaboradores (superficie protected preservada) ─────
 

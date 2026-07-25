@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import RAPIER from '@dimforge/rapier3d-compat';
 import { Services } from './ServiceContainer.js';
+import type { AudioManager } from '../audio/AudioManager';
 
 // ============================================
 // RAGDOLL FALL REACTIONS
@@ -10,16 +12,16 @@ import { Services } from './ServiceContainer.js';
 // ============================================
 
 export interface IRagdollFallReactionsDeps {
-    getRigidBodies: () => Map<string, any>;
+    getRigidBodies: () => Map<string, RAPIER.RigidBody>;
     getRagdollMode: () => boolean;
-    getGrabbedBody: () => any;
+    getGrabbedBody: () => unknown;
     getIsFalling: () => boolean;
     setIsFalling: (value: boolean) => void;
     getStandUpTimeout: () => ReturnType<typeof setTimeout> | null;
     setStandUpTimeout: (value: ReturnType<typeof setTimeout> | null) => void;
     getModel: () => THREE.Group | undefined;
     getModelGroundY: () => number;
-    getAudioManager: () => any;
+    getAudioManager: () => AudioManager | null;
     setRagdollMode: (value: boolean) => void;
     fadeToAction: (name: string) => void;
     say: (text: string, duration?: number) => void;
@@ -68,7 +70,7 @@ export class RagdollFallReactions {
                 if (hardLanding) {
                     haptics?.heavy();
                     if (audio) audio.play('boing');
-                    const i18nService = Services.get('i18n') as any;
+                    const i18nService = Services.get<{ t: (k: string) => string }>('i18n');
                     this.deps.say(i18nService ? i18nService.t('ragdoll.hurt.ouch') : '¡Ouch!', 2000);
                 } else {
                     haptics?.medium();

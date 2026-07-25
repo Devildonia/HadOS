@@ -18,16 +18,18 @@ type ILegacyProcess = {
     metadata: { icon: string; name: string };
 };
 
+import type { IKernel } from '../core/Kernel.js';
+
 export class LegacyProcessBridge {
     /**
      * Register a synthetic process for windows not launched via Kernel
      */
     public registerLegacyProcess(win: HTMLElement, windowId: string): void {
-        const kernel: any = Services.get('Kernel');
+        const kernel = Services.get<IKernel>('Kernel');
         if (!kernel) return;
 
         const registry = kernel.getRegistry();
-        const existingProcess = registry.processes.find((p: any) => p.windowId === windowId && p.status === 'running');
+        const existingProcess = registry.processes.find((p: IProcess) => p.windowId === windowId && p.status === 'running');
         if (existingProcess) return;
 
         const header = win.querySelector('.window-header span');
@@ -93,10 +95,10 @@ export class LegacyProcessBridge {
      * synthetic stop event for our legacy fake process).
      */
     public notifyKernelProcessKilled(windowId: string): void {
-        const kernel: any = Services.get('Kernel');
+        const kernel = Services.get<IKernel>('Kernel');
         if (kernel) {
             const processes = kernel.getRegistry().processes;
-            const proc = processes.find((p: any) => p.windowId === windowId && p.status === 'running');
+            const proc = processes.find((p: IProcess) => p.windowId === windowId && p.status === 'running');
             if (proc) {
                 kernel.kill(proc.pid);
             } else {

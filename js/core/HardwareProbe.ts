@@ -104,7 +104,7 @@ function tidyRenderer(raw: string): string {
     return name || raw;
 }
 
-function detectGPU(): string {
+export function detectGPU(): string {
     try {
         const canvas = document.createElement('canvas');
         const gl = (canvas.getContext('webgl') ?? canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;

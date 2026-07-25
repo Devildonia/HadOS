@@ -6,7 +6,19 @@
  */
 import { Utils } from '../utils';
 import { Services } from '../core/ServiceContainer';
-import { WindowManager } from './WindowManager';
+
+/**
+ * What a pointer handler actually receives. Touch events are normalised into a
+ * synthetic object so a single handler can serve both mouse and touch — it is NOT
+ * a real `Event`, which is why this is a structural shape rather than one. A real
+ * `MouseEvent` satisfies it, so the mouse path passes straight through.
+ */
+export interface PointerLike {
+    clientX?: number;
+    clientY?: number;
+    target: EventTarget | null;
+    preventDefault: () => void;
+}
 
 /**
  * Interface detailing touch integration and double-tap gestures for mobile/tablet devices.
@@ -19,7 +31,7 @@ export interface ITouchManager {
     /** Releases touch drag listeners on the target window ID. */
     destroyDraggable(windowId: string): void;
     /** Map handler bindings combining mouse and touch pointer triggers. */
-    addPointerEvents(element: HTMLElement, handlers: { onStart?: (e: any) => void, onMove?: (e: any) => void, onEnd?: (e: any) => void }): void;
+    addPointerEvents(element: HTMLElement, handlers: { onStart?: (e: PointerLike) => void, onMove?: (e: PointerLike) => void, onEnd?: (e: PointerLike) => void }): void;
     /** Time gap threshold in milliseconds to classify as a double-tap. */
     DOUBLE_TAP_DELAY: number;
     /** Duration in milliseconds required to trigger a long-press. */
@@ -57,7 +69,7 @@ const TouchManager: ITouchManager = (() => {
     }>();
 
     /** List containing references to attached listeners to avoid memory leaks. */
-    const _registeredListeners: { element: any, event: string, handler: any }[] = [];
+    const _registeredListeners: { element: Element | Window | Document, event: string, handler: EventListener }[] = [];
 
     /**
      * Binds an event listener tracking cleanup records.
@@ -66,7 +78,7 @@ const TouchManager: ITouchManager = (() => {
      * @param handler Listener function callback.
      * @param options Listener configuration settings.
      */
-    function addListener(element: any, event: string, handler: any, options?: any): void {
+    function addListener(element: Element | Window | Document, event: string, handler: EventListener, options?: boolean | AddEventListenerOptions): void {
         Utils.eventManager.add(element, event, handler, options);
         _registeredListeners.push({ element, event, handler });
     }
@@ -120,7 +132,7 @@ const TouchManager: ITouchManager = (() => {
 
         clearRegisteredListeners();
 
-        const wm: any = Services.get('WindowManager');
+        const wm = Services.get<{ makeDraggable: (windowId: string) => void }>('WindowManager');
         if (wm && _originalMakeDraggable) {
             wm.makeDraggable = _originalMakeDraggable;
         }
@@ -148,8 +160,7 @@ const TouchManager: ITouchManager = (() => {
      */
     function patchWindowDragging(): void {
         // Override makeDraggable to add touch support
-        const wm: any = Services.get('ThemeManager'); // Just testing/accessing services safely
-        const wmService: any = Services.get('WindowManager');
+        const wmService = Services.get<{ makeDraggable: (windowId: string) => void }>('WindowManager');
         const originalMakeDraggable = wmService?.makeDraggable;
         if (!originalMakeDraggable) return;
 
@@ -191,7 +202,7 @@ const TouchManager: ITouchManager = (() => {
                 initialY = rect.top;
 
                 // Bring to front
-                const wmRef: any = Services.get('WindowManager');
+                const wmRef = Services.get<{ bringToFront: (el: HTMLElement) => void }>('WindowManager');
                 if (wmRef) {
                     wmRef.bringToFront(win);
                 }
@@ -249,7 +260,6 @@ const TouchManager: ITouchManager = (() => {
         let draggedIcon: HTMLElement | null = null;
         let offsetX = 0, offsetY = 0;
         let startTouchX = 0, startTouchY = 0;
-        let hasMoved = false;
 
         icons.forEach(iconEl => {
             const icon = iconEl as HTMLElement;
@@ -259,7 +269,6 @@ const TouchManager: ITouchManager = (() => {
                 if (!touch) return;
                 startTouchX = touch.clientX;
                 startTouchY = touch.clientY;
-                hasMoved = false;
 
                 _longPressTimer = setTimeout(() => {
                     draggedIcon = icon;
@@ -280,7 +289,6 @@ const TouchManager: ITouchManager = (() => {
                 const dy = touch.clientY - startTouchY;
 
                 if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-                    hasMoved = true;
                     if (_longPressTimer) clearTimeout(_longPressTimer);
 
                     if (!draggedIcon) {
@@ -378,12 +386,12 @@ const TouchManager: ITouchManager = (() => {
      * @param element Target element node.
      * @param handlers Set containing onStart, onMove, and onEnd callbacks.
      */
-    function addPointerEvents(element: HTMLElement, handlers: { onStart?: (e: any) => void, onMove?: (e: any) => void, onEnd?: (e: any) => void }): void {
+    function addPointerEvents(element: HTMLElement, handlers: { onStart?: (e: PointerLike) => void, onMove?: (e: PointerLike) => void, onEnd?: (e: PointerLike) => void }): void {
         const { onStart, onMove, onEnd } = handlers;
 
         // Mouse
         if (onStart) addListener(element, 'mousedown', onStart as EventListener);
-        if (onMove) addListener(document, 'mousemove', onMove);
+        if (onMove) addListener(document, "mousemove", onMove as EventListener);
         if (onEnd) addListener(document, 'mouseup', onEnd as EventListener);
 
         // Touch

@@ -1,5 +1,4 @@
 import { Kernel } from '../core/Kernel.js';
-import { Services } from '../core/ServiceContainer.js';
 import { Utils } from '../utils.js';
 import { i18n } from '../services/i18n.js';
 import type { IWindowsApp } from '../core/Types.js';
@@ -42,7 +41,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
 
     private transcript: TranscriptLine[] = [];
     private activeLineIndex: number = -1;
-    private timeUpdateInterval: any = null;
+    private timeUpdateInterval: ReturnType<typeof setInterval> | null = null;
 
     // Grounded RAG Chat
     private ragLogs: string[] = [];
@@ -85,7 +84,6 @@ export class HadOSMediaPlayer implements IWindowsApp {
 
         const openVfsText = i18n.t('mediaplayer.open_vfs') || 'Abrir Archivo Local';
         const loadYtText = i18n.t('mediaplayer.load_yt') || 'Cargar YouTube';
-        const tabPlayerText = i18n.t('mediaplayer.tab_player') || 'Reproductor';
         const tabTranscriptText = i18n.t('mediaplayer.tab_transcript') || 'Transcripción';
         const tabChatText = i18n.t('mediaplayer.tab_chat') || 'Chat RAG';
 
@@ -171,7 +169,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 const safe = Utils.escapeHTML(f);
                 select.insertAdjacentHTML('beforeend', `<option value="C:\\HADOS\\PODCASTS\\${safe}">[Podcast] ${safe}</option>`);
             });
-        } catch {}
+        } catch { /* no podcasts dir yet — just nothing to list */ }
 
         // List generic assets
         try {
@@ -180,7 +178,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 const safe = Utils.escapeHTML(f);
                 select.insertAdjacentHTML('beforeend', `<option value="C:\\${safe}">C:\\${safe}</option>`);
             });
-        } catch {}
+        } catch { /* VFS not ready — an empty picker is the right answer */ }
     }
 
     /**
@@ -191,14 +189,14 @@ export class HadOSMediaPlayer implements IWindowsApp {
     private handleYtMessage(e: MessageEvent): void {
         if (e.origin !== HadOSMediaPlayer.YT_EMBED_ORIGIN) return;
         if (!this.ytFrame || e.source !== this.ytFrame.contentWindow) return;
-        let data: any = null;
+        let data: Record<string, unknown> | null = null;
         try {
             data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
         } catch {
             return;
         }
-        if (data && data.event === 'infoDelivery' && data.info && typeof data.info.currentTime === 'number') {
-            this.ytCurrentTime = data.info.currentTime;
+        if (data && data.event === 'infoDelivery' && data.info && typeof (data.info as Record<string, unknown>).currentTime === 'number') {
+            this.ytCurrentTime = (data.info as Record<string, unknown>).currentTime as number;
         }
     }
 
@@ -214,8 +212,9 @@ export class HadOSMediaPlayer implements IWindowsApp {
         const picker = document.createElement('input');
         picker.type = 'file';
         picker.accept = 'video/*,audio/*';
-        picker.onchange = (e: any) => {
-            const file = e.target.files?.[0];
+        picker.onchange = (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            const file = target.files?.[0];
             if (file) {
                 this.cleanupPlayback();
                 this.playerType = 'local';
@@ -241,12 +240,10 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 stage.appendChild(this.mediaElement);
 
                 const playPromise = this.mediaElement.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                    playPromise.catch(err => {
+                if (typeof playPromise?.catch === 'function') {
+                    void playPromise.catch(err => {
                         Utils.Logger.info("Local playback started:", err);
                     });
-                } else {
-                    Utils.Logger.info("Local playback started:", file.name);
                 }
 
                 // Reset transcripts; keep the File so Whisper can transcribe it.
@@ -308,7 +305,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
             }
         };
         this.startTimerSync();
-        this.loadVideoTranscript(videoId);
+        void this.loadVideoTranscript(videoId);
     }
 
     private extractYoutubeId(url: string): string | null {
@@ -478,7 +475,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
             try {
                 this.ytPlayer.seekTo(seconds, true);
                 this.logRag(`[YouTube] Seeked to: ${seconds} seconds.`);
-            } catch {}
+            } catch { /* the IFrame API throws once the player is torn down */ }
         } else if (this.playerType === 'local' && this.mediaElement) {
             this.mediaElement.currentTime = seconds;
         }
@@ -491,7 +488,7 @@ export class HadOSMediaPlayer implements IWindowsApp {
             if (this.playerType === 'youtube' && this.ytPlayer) {
                 try {
                     currentTime = this.ytPlayer.getCurrentTime();
-                } catch {}
+                } catch { /* player gone between ticks — keep the last known time */ }
             } else if (this.playerType === 'local' && this.mediaElement) {
                 currentTime = this.mediaElement.currentTime;
             }
@@ -673,11 +670,13 @@ export class HadOSMediaPlayer implements IWindowsApp {
     }
 
     private cleanupPlayback(): void {
+        // Teardown must reach the end whatever any single step does: each handle is
+        // nulled out regardless, so a throw here would only strand the ones after it.
         this.stopTimerSync();
         if (this.ytPlayer) {
             try {
                 this.ytPlayer.destroy();
-            } catch {}
+            } catch { /* already destroyed, or the iframe is gone */ }
             this.ytPlayer = null;
         }
         if (this.mediaElement) {
@@ -685,14 +684,14 @@ export class HadOSMediaPlayer implements IWindowsApp {
                 this.mediaElement.pause();
                 this.mediaElement.src = '';
                 this.mediaElement.load();
-            } catch {}
+            } catch { /* detached element — nothing left to stop */ }
             this.mediaElement = null;
         }
         // Revoke the previous local file's object URL so it doesn't leak (audit A5).
         if (this.localObjectUrl) {
             try {
                 URL.revokeObjectURL(this.localObjectUrl);
-            } catch {}
+            } catch { /* not a live object URL (jsdom stub, or already revoked) */ }
             this.localObjectUrl = null;
         }
         this.localFile = null;

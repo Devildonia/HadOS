@@ -8,15 +8,15 @@ import * as THREE from 'three';
 // ============================================
 
 export interface IRagdollSpeechDeps {
-    getBubbleAnimator: () => any;
+    getBubbleAnimator: () => unknown;
     getBubbleId: () => string;
     getCamera: () => THREE.PerspectiveCamera | undefined;
     getContainer: () => HTMLElement | null;
     getBoneRigidBodyMap: () => Map<string, THREE.Bone>;
     getShowBubble: () => boolean;
     setShowBubble: (value: boolean) => void;
-    getBubbleTimeout: () => any;
-    setBubbleTimeout: (value: any) => void;
+    getBubbleTimeout: () => ReturnType<typeof setTimeout> | null;
+    setBubbleTimeout: (value: ReturnType<typeof setTimeout> | null) => void;
 }
 
 export class RagdollSpeech {
@@ -27,7 +27,7 @@ export class RagdollSpeech {
     public say(text: string, duration: number = 2000): void {
         const calcDuration = duration || Math.min(8000, Math.max(2000, text.length * 80));
 
-        const bubbleAnimator = this.deps.getBubbleAnimator();
+        const bubbleAnimator = this.deps.getBubbleAnimator() as { fullBubble: (id: string, duration: number, opts: unknown, onUpdate: unknown, onComplete: () => void) => void } | null;
         if (!bubbleAnimator) {
             return;
         }
@@ -37,7 +37,7 @@ export class RagdollSpeech {
         if (prevTimeout) clearTimeout(prevTimeout);
 
         bubbleAnimator.fullBubble('b_' + Date.now(), calcDuration, { wobble: true },
-            (_an: any) => { },
+            (_an: unknown) => { },
             () => { this.deps.setShowBubble(false); }
         );
 

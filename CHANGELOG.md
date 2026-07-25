@@ -6,6 +6,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Architectural Audit Remediation (commit f0936c7)**: Fixed 35 audit findings across core HadOS architecture (7 HIGH, 16 MEDIUM, 12 LOW):
+  - **Sprint 1 (Functional & Data)**: Replaced WebGL context leak in `SystemTab` (A-01/A-02) with `HardwareProbe.detectGPU()`; implemented targeted folder recovery for VFS resets without wiping root (A-03); added `VFSStore.saveSync` fallback for unload events (A-04); split `WorkerProcess.pending` maps per channel (A-05); wrapped `ProcessManager.kill()` terminate in `try/finally` (M-01).
+  - **Sprint 2 (Security)**: Re-wrote `escapeHTML` without DOM dependence for Web Worker compatibility (A-06); hardened `sanitizeHTML` with URL scheme whitelist, text node preservation, and removal of `style`/`iframe` (A-07); added dangerous sandbox token filtering in `IframeProcess` (M-10); added system path guard to `deleteNode` (M-06); normalized path uppercase comparison in `SyscallBroker` (M-05); used `Object.hasOwn` in path resolution (M-04); fixed `PermissionBroker.check` grant side-effects (B-05).
+  - **Sprint 3 (Resources & Lifecycle)**: Drained resources with pop loop in `ResourceManager` (M-03); isolated process resources by PID (M-02); added scoped event management `events.scope()` and fixed `groupEnd` call (M-08); enhanced `PermissionBroker` consent dialog with Escape key and backdrop click handlers (M-09); handled `worker.onerror` (M-11); deleted WebGL shaders post-link and lost context on destroy in `ShaderWallpaper` (B-01/B-02); added re-entrancy guard in `TaskbarDock` (B-10); named canvas event listeners in `PaintUI` (B-11).
+  - **Sprint 4 (Persistence & Build)**: Added dirty flags & load prioritization in `VFSStore` (M-12); bounded memory fallback store in `VFSBlobStore` (M-13) and optimized legacy blob checks (M-14); removed `|| npm install` fallback in CI workflows (M-15); added `onnxruntime-node` package override pointing to `onnxruntime-web` (M-16); enabled type-aware ESLint rules and cleared all 60 linter warnings (B-06/B-12); hardened `<meta>` CSP directives (B-08).
+
+- **Audit remediation, second pass** — a re-verification of the sweep above against
+  the source found two CI blockers and six findings that were only partly closed.
+  What actually changed:
+  - **`npm ci` was broken in all three CI jobs.** `package.json` gained the M-16
+    `overrides` block but `package-lock.json` was never regenerated, so the two were
+    out of sync — and with the M-15 `|| npm install` fallback (correctly) gone, there
+    was nothing left to absorb it. Lockfile regenerated and committed; the install
+    drops 14 packages (the `onnxruntime-node` native tree) and no longer needs
+    `--ignore-scripts`.
+  - **`npm run lint` exited 1.** The newly enabled `no-misused-promises` flagged
+    `playPromise &&` in `HadOSMediaPlayer`, which would have failed the blocking
+    Code Quality job.
+  - **M-13 was a warning, not a cap.** `VFSBlobStore.put` logged when the in-memory
+    fallback overflowed and then stored the blob anyway, so `writeFileAsync` still
+    returned `true` for data that would vanish on reload. It now refuses, and the
+    failure reaches the caller.
+  - **M-14 could strand legacy blobs.** The "migration checked" flag was set on any
+    individual cache miss, so one lookup for a deleted blob latched the probe shut
+    and every remaining pre-rename blob became unreachable. The flag is now keyed on
+    the legacy *database* being absent. Its other half is fixed too: on browsers
+    without `indexedDB.databases()` (Firefox) the probe no longer **creates** the
+    empty legacy DB it was checking for.
+  - **M-04 covered only `resolve()`.** `mkdir`, `rename`, `deleteNode`, `writeFile`
+    and `VFSTrash.uniqueKey` still decided existence with a bare `children[name]`, so
+    a file legitimately named `constructor` or `toString` was refused as "already
+    taken". All child lookups now go through one shared `getChild()` helper.
+  - **M-08's scoped API had no callers.** `EventManager.scope()` existed but nothing
+    used it, so the leak it was written to fix was untouched. It now delegates to
+    `add`/`remove` (same dedupe, same `count()`), and `HackerNewsScout` — which
+    registered eight listeners and could only ever remove one — is migrated to it.
+  - **M-11 left the iframe half open.** `ready` had no timeout, so a guest that threw
+    at its top level still hung every `await proc.ready` forever. `ready` now arms a
+    rejecting timeout on first access (lazily, so processes nobody waits on leave no
+    timer), and rejects on terminate and on transport error.
+  - **M-02's dangerous line was still there.** `kill()` had gained per-window and
+    per-PID owners but kept `disposeOwner(process.appId)` alongside them. Removed.
+  - Also: a real focus trap on the consent dialog (M-09 had Escape and backdrop
+    click but `Tab` still walked out behind it); the 16 remaining bare `catch {}`
+    blocks annotated with why the error is discarded (B-07); the README's "three
+    blocking jobs" corrected — E2E is `continue-on-error` (B-09); and the 36
+    outstanding `no-unused-vars` warnings cleared, leaving `no-explicit-any` (warn,
+    by design) as the only lint output.
+  - Regression tests for every one of the above, in `test/AuditPoC.test.ts` and the
+    new `test/VFSBlobLegacyMigration.test.ts`. Each was confirmed to **fail** against
+    the code it pins before being kept. Suite: 1074 tests / 96 files.
+
+- **Known-issues follow-up — the two deferred `Latent` items closed.**
+  - **The consent dialog can no longer be orphaned.** A `MutationObserver` watches for
+    the overlay leaving `document.body` by any route other than `finish()` and denies,
+    so every exit settles the capability check instead of leaving it pending for the
+    session. Disconnected in `finish()`.
+  - **The blob store's memory fallback evicts, and announces it.** Least-recently-used
+    (`get` re-inserts on read, so `Map` order is real recency), with `onEvict()`
+    handing the dropped id to the VFS, which removes the orphaned node and warns the
+    user by name. Silent eviction would have left a `blobRef` resolving to nothing —
+    a file that lists normally and opens empty, which is M-13's dishonesty moved from
+    the write to the read rather than fixed. A blob larger than the whole budget is
+    still refused, now *before* the map is touched so a failed overwrite no longer
+    destroys the previous content. First use of the RAM backend logs that nothing
+    stored there survives a reload.
+  - **`no-explicit-any` promoted from `warn` to `error`**; the 215 annotations are
+    gone. `js/` and `main.ts` lint at zero errors and zero warnings.
+  - **Two files reverted out of that sweep.** `NotificationManager` and `TouchManager`
+    had come back rewritten rather than retyped — respectively swapping markup, CSS
+    class names and the per-type `DURATION_MS` durations (dropping the dismissal timer
+    from `destroy()`'s cleanup with them), and widening `makeDraggable` to
+    `HTMLElement | string` against the `windowId: string` all four call sites pass,
+    which broke the build and lost the `destroyDraggable()` de-dupe. Both restored,
+    with only the genuine typing re-applied (`PointerLike` now names the synthetic
+    object the touch path really passes, instead of `any`). `ServiceContainer`'s v2.0
+    design notes, stripped in the same sweep, are back.
+  - Suite: **1077 tests / 96 files**.
+
 ### CI
 
 - **e2e job moved to `windows-latest`** so it matches the committed `-win32`

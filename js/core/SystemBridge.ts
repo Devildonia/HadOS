@@ -49,8 +49,8 @@ type LegacyWindowFlags = {
     AudioManager?: typeof AudioManager;
 };
 
-const legacyWindow = window as Window & LegacyWindowActions & LegacyWindowFlags;
-const legacyWindowTarget = legacyWindow as Window & LegacyWindowActions & LegacyWindowFlags & Record<string, unknown>;
+const legacyWindow = window as unknown as Window & LegacyWindowActions & LegacyWindowFlags;
+const legacyWindowTarget = legacyWindow as unknown as Window & LegacyWindowActions & LegacyWindowFlags & Record<string, unknown>;
 
 // ============================================
 // 1. GLOBAL OS STATE (reactive via Store proxy)
@@ -74,7 +74,7 @@ export function initSystemState(): void {
     }
 
     // Initialize i18n
-    i18n.init();
+    void i18n.init();
     if (legacyWindow.state) legacyWindow.state.lang = i18n.getLang();
 }
 
@@ -117,29 +117,20 @@ function bindLegacyAction<T extends unknown[]>(name: keyof LegacyWindowActions, 
     (legacyWindowTarget as Record<string, unknown>)[name as string] = (...args: T): void => handler(...args);
 }
 
-/**
- * Sets the display style visibility of a dialog element.
- * @param dialogId ID of the dialog.
- * @param visible Boolean visibility state flag.
- */
-function setDialogVisibility(dialogId: string, visible: boolean): void {
-    const dialog = document.getElementById(dialogId);
-    if (dialog) dialog.style.display = visible ? 'block' : 'none';
-}
-
 // ============================================
 // 3. LEGACY WRAPPERS (decomposed sub-bridges)
 // ============================================
 /** Bridges service container modules (RagdollMemory, AudioManager) to legacy global window properties. */
 function _bridgeServices(): void {
     const ragdollMemory = Services.get('RagdollMemory');
+    const targetWin = legacyWindow as unknown as Record<string, unknown>;
     if (ragdollMemory) {
-        (legacyWindow as any).RagdollMemory = ragdollMemory;
+        targetWin.RagdollMemory = ragdollMemory;
     }
 
     const audioManager = Services.get('AudioManager');
     if (audioManager) {
-        (legacyWindow as any).AudioManager = {
+        targetWin.AudioManager = {
             getInstance: () => audioManager
         };
     }

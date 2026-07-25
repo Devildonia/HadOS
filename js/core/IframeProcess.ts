@@ -36,6 +36,24 @@ export interface IframeTransportResult {
     iframe: HTMLIFrameElement;
 }
 
+const DANGEROUS_SANDBOX_TOKENS = [
+    'allow-same-origin',
+    'allow-top-navigation',
+    'allow-top-navigation-by-user-activation',
+    'allow-modals',
+    'allow-pointer-lock'
+];
+
+export function sanitizeSandboxTokens(rawSandbox?: string): string {
+    if (!rawSandbox) return 'allow-scripts';
+    const tokens = rawSandbox.split(/\s+/).filter(t => t.length > 0);
+    const safeTokens = tokens.filter(t => !DANGEROUS_SANDBOX_TOKENS.includes(t.toLowerCase()));
+    if (!safeTokens.includes('allow-scripts')) {
+        safeTokens.unshift('allow-scripts');
+    }
+    return safeTokens.join(' ');
+}
+
 /**
  * Creates the iframe, waits for it to load, then transfers a fresh MessagePort
  * to it and returns a transport over the host end.
@@ -43,7 +61,7 @@ export interface IframeTransportResult {
 export function createIframeTransport(opts: IframeSpawnOptions): Promise<IframeTransportResult> {
     return new Promise((resolve, reject) => {
         const iframe = document.createElement('iframe');
-        iframe.setAttribute('sandbox', opts.sandbox ? `allow-scripts ${opts.sandbox}` : 'allow-scripts');
+        iframe.setAttribute('sandbox', sanitizeSandboxTokens(opts.sandbox));
         if (!opts.visible) {
             iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
         }

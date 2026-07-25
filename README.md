@@ -249,7 +249,7 @@ npm run typecheck     # tsc --noEmit
 npm run lint          # ESLint
 ```
 
-**CI (GitHub Actions):** runs on every push/PR to `main`, in three blocking jobs — **Code Quality** (`lint` + `typecheck` + `test:coverage`), **E2E** (Playwright), and **Production Build**.
+**CI (GitHub Actions):** runs on every push/PR to `main`, in three jobs. Two of them gate the run — **Code Quality** (`lint` + `typecheck` + `test:coverage`) and **Production Build**. The third, **E2E** (Playwright), still runs and its result is visible, but it is `continue-on-error: true`: the GitHub runners have no GPU, so the WebGL wallpaper and 3D ragdoll fall back to software rendering and the boot specs time out. See [`docs/known-issues.md`](docs/known-issues.md) for the full reasoning and what it would take to make it enforceable.
 
 ---
 

@@ -67,12 +67,15 @@ export class HadOSMessenger implements IWindowsApp {
     }
 
     private ensureVfsDirectory(): void {
+        // mkdir is idempotent and returns false rather than throwing on a name
+        // clash; a throw here means the VFS is not up yet, which the first real
+        // save will surface anyway. Nothing useful to do at this point.
         try {
             VFS.mkdir('C:\\', 'HADOS');
-        } catch {}
+        } catch { /* VFS not ready — the save path reports it */ }
         try {
             VFS.mkdir('C:\\HADOS', 'CHARACTERS');
-        } catch {}
+        } catch { /* VFS not ready — the save path reports it */ }
     }
 
     private loadDefaultContacts(): void {
@@ -399,7 +402,7 @@ export class HadOSMessenger implements IWindowsApp {
         if (stored) {
             try {
                 return JSON.parse(stored) as ChatMessage[];
-            } catch {}
+            } catch { /* corrupt history — fall through to the greeting below */ }
         }
         // Fallback to first message if empty
         const contact = this.contacts.find(c => c.id === contactId);

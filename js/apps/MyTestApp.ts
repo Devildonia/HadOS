@@ -9,7 +9,7 @@ import type { IWindowsApp } from '../core/Types.js';
 class MyTestApp implements IWindowsApp {
     public windowId: string = 'win-my-test-app';
 
-    constructor(params: Record<string, any> = {}) {
+    constructor(_params: Record<string, unknown> = {}) {
         this.init();
     }
 

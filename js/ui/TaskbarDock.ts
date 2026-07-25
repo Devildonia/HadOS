@@ -142,9 +142,12 @@ export const TaskbarDock = (() => {
         applyEdge(nearestEdge(e.clientX, e.clientY));
     }
 
+    let initialized = false;
+
     function init(): void {
         bar = document.getElementById('taskbar');
-        if (!bar) return;
+        if (!bar || initialized) return;
+        initialized = true;
 
         const saved = Utils.getStorage(STORAGE_KEY, 'bottom');
         applyEdge(isEdge(saved) ? saved : 'bottom', false);
@@ -160,6 +163,7 @@ export const TaskbarDock = (() => {
     /** Test/programmatic hook. */
     function setEdge(edge: TaskbarEdge): void { applyEdge(edge); }
     function getEdge(): TaskbarEdge { return isEdge(bar?.dataset.edge) ? bar!.dataset.edge as TaskbarEdge : 'bottom'; }
+    function __resetForTesting(): void { initialized = false; bar = null; }
 
-    return { init, setEdge, getEdge };
+    return { init, setEdge, getEdge, __resetForTesting };
 })();

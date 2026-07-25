@@ -1,5 +1,4 @@
 import { Utils } from '../utils.js';
-import { VFS } from '../core/VFS.js';
 import { Kernel } from '../core/Kernel.js';
 import { EventBus } from '../core/EventBus.js';
 import { Services } from '../core/ServiceContainer.js';
@@ -18,7 +17,7 @@ let liveInstance: FileExplorer | null = null;
 export function openExplorerAt(path: string): void {
     if (liveInstance) {
         liveInstance.navigate(path);
-        const wm = Services.get('WindowManager') as any;
+        const wm = Services.get<{ open: (id: string) => void, bringToFront: (el: HTMLElement) => void }>('WindowManager');
         if (wm) {
             wm.open('win-explorer');
             const win = document.getElementById('win-explorer');
@@ -91,7 +90,7 @@ class FileExplorer extends WindowApp {
 
     private _ensureWindow(): void {
         if (document.getElementById(this.windowId)) return;
-        const wf = Services.get('WindowFactory') as any;
+        const wf = Services.get('WindowFactory');
         if (!wf) return;
         wf.create({
             id: this.windowId,

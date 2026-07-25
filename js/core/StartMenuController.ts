@@ -7,15 +7,19 @@ let ragdollStateUnsubscribe: (() => void) | null = null;
 let ragdoll3dStateUnsubscribe: (() => void) | null = null;
 
 export function setupStartMenu(): void {
+    const playModernSound = (sound: string): boolean => {
+        const tm = Services.get<{ currentTheme: string }>('ThemeManager');
+        if (tm?.currentTheme === 'modern') {
+            const audio = Services.get<{ play: (s: string, opts?: unknown) => void }>('AudioManager');
+            if (audio) { audio.play(sound, { volume: 0.8 }); return true; }
+        }
+        return false;
+    };
+
     const startBtn = document.getElementById('start-button');
     if (startBtn) {
         startBtn.onclick = (): void => {
-            const tm: any = Services.get('ThemeManager');
-            const isModern = tm?.currentTheme === 'modern';
-            if (isModern) {
-                const audio: any = Services.get('AudioManager');
-                if (audio) audio.play('menu_modern', { volume: 0.8 });
-            } else {
+            if (!playModernSound('menu_modern')) {
                 if (window.playBlip) window.playBlip(600);
             }
             const menu = document.getElementById('start-menu');
@@ -30,12 +34,7 @@ export function setupStartMenu(): void {
     const ragdollMenu = document.getElementById('ragdoll-popup-menu');
     if (ragdollToggle && ragdollMenu) {
         ragdollToggle.onclick = (e: MouseEvent): void => {
-            const tm: any = Services.get('ThemeManager');
-            const isModern = tm?.currentTheme === 'modern';
-            if (isModern) {
-                const audio: any = Services.get('AudioManager');
-                if (audio) audio.play('menu_modern', { volume: 0.8 });
-            } else {
+            if (!playModernSound('menu_modern')) {
                 if (window.playBlip) window.playBlip(600);
             }
             ragdollMenu.style.display = ragdollMenu.style.display === 'flex' ? 'none' : 'flex';
@@ -80,13 +79,8 @@ export function setupStartMenu(): void {
             const isButton = target.tagName === 'BUTTON' && !target.classList.contains('close-btn');
 
             if (isButton || isClickableIcon) {
-                Services.get('HapticService')?.light();
-                const tm: any = Services.get('ThemeManager');
-                const isModern = tm?.currentTheme === 'modern';
-                if (isModern) {
-                    const audio: any = Services.get('AudioManager');
-                    if (audio) audio.play('click_modern', { volume: 0.8 });
-                } else {
+                Services.get<{ light: () => void }>('HapticService')?.light();
+                if (!playModernSound('click_modern')) {
                     if (window.playBlip) window.playBlip(800);
                 }
             }

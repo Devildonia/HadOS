@@ -86,7 +86,7 @@ export class WindowInteractions {
         this.unbind(windowId, this._dragRegistry);
 
         // Also clean up touch dragging if touch manager is active
-        const tm: any = Services.get('TouchManager');
+        const tm = Services.get<{ destroyDraggable: (id: string) => void }>('TouchManager');
         if (tm && typeof tm.destroyDraggable === 'function') {
             tm.destroyDraggable(windowId);
         }

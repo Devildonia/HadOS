@@ -74,5 +74,8 @@
     "@mediapipe/tasks-genai": "^0.10.29",
     "@types/three": "^0.183.1",
     "three": "^0.183.2"
+  },
+  "overrides": {
+    "onnxruntime-node": "npm:onnxruntime-web@1.26.0-dev.20260416-b7804b056c"
   }
 }

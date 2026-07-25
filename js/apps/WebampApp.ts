@@ -18,7 +18,7 @@ export interface IWebampTrack {
 }
 
 class WebampApp {
-    private static instance: any = null;
+    private static instance: { renderWhenReady: (el: HTMLElement) => Promise<void>; onClose: (cb: () => void) => void; dispose: () => void } | null = null;
     private static isInitialized: boolean = false;
 
     // --- Radio-Browser API Config ---
@@ -34,20 +34,24 @@ class WebampApp {
             const response = await fetch(url);
             const stations = await response.json();
 
-            if (!stations || stations.length === 0) {
+            if (!stations || !Array.isArray(stations) || stations.length === 0) {
                 Utils.Logger.warn("[WebampApp] No stations found.");
                 return [];
             }
 
-            return stations.map((station: any): IWebampTrack => ({
-                metaData: {
-                    artist: station.name || "Unknown Station",
-                    title: station.countrycode ? `[${station.countrycode}] ${station.name}` : station.name,
-                    album: "Live Radio"
-                },
-                url: station.url_resolved || station.url,
-                duration: 0 // Live stream
-            }));
+            return stations.map((st: unknown): IWebampTrack => {
+                const station = st as Record<string, string>;
+                const name = station.name || 'Unknown Station';
+                return {
+                    metaData: {
+                        artist: name,
+                        title: station.countrycode ? `[${station.countrycode}] ${name}` : name,
+                        album: "Live Radio"
+                    },
+                    url: station.url_resolved || station.url || '',
+                    duration: 0 // Live stream
+                };
+            });
 
         } catch (e) {
             Utils.Logger.error("[WebampApp] Radio API Error:", e);
@@ -65,7 +69,7 @@ class WebampApp {
             return;
         }
 
-        const WebampClass = window.Webamp;
+        const WebampClass = window.Webamp as { new(opts: unknown): { renderWhenReady: (el: HTMLElement) => Promise<void>; onClose: (cb: () => void) => void; dispose: () => void } } | undefined;
         if (!WebampClass) {
             Utils.Logger.error("Webamp library not loaded!");
             return;
@@ -91,29 +95,30 @@ class WebampApp {
             Utils.Logger.log("[WebampApp] Using default demo track (Radio fetch failed).");
         }
 
-        this.instance = new WebampClass({
+        const webampInstance = new WebampClass({
             initialTracks,
             zIndex: 9000,
             enableHotkeys: true,
         });
+        this.instance = webampInstance;
 
         const container = document.getElementById('webamp-container');
         if (container) {
-            await this.instance.renderWhenReady(container);
+            await webampInstance.renderWhenReady(container);
         } else {
-            await this.instance.renderWhenReady(document.body);
+            await webampInstance.renderWhenReady(document.body);
         }
 
         this.isInitialized = true;
 
-        this.instance.onClose(() => {
-            this.instance.dispose();
+        webampInstance.onClose(() => {
+            webampInstance.dispose();
             this.instance = null;
             this.isInitialized = false;
 
-            const fakeProcess = { pid: 999, appId: 'webamp', instance: this as any, windowId: 'webamp-container', status: 'terminated' as const };
-            EventBus.emit('kernel:process-stopped', fakeProcess);
-            EventBus.emit('process-stopped', fakeProcess);
+            const fakeProcess = { pid: 999, appId: 'webamp', instance: this as unknown, windowId: 'webamp-container', status: 'terminated' as const };
+            EventBus.emit('kernel:process-stopped', fakeProcess as unknown as Parameters<typeof EventBus.emit>[1]);
+            EventBus.emit('process-stopped', fakeProcess as unknown as Parameters<typeof EventBus.emit>[1]);
         });
     }
 
@@ -124,7 +129,7 @@ class WebampApp {
 
 // Register with Kernel
 Kernel.registerApp('webamp', class {
-    constructor() { WebampApp.launch(); }
+    constructor() { void WebampApp.launch(); }
     get windowId() { return 'webamp-container'; }
 }, {
     name: 'Winamp',

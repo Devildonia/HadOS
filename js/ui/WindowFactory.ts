@@ -170,8 +170,8 @@ export const WindowFactory: IWindowFactory = (function () {
             body.appendChild(opts.bodyElement);
         } else if (opts.body) {
             // Sanitize HTML content before injection
-            body.innerHTML = typeof (Utils as any).sanitizeHTML === 'function'
-                ? (Utils as any).sanitizeHTML(opts.body)
+            body.innerHTML = typeof Utils.sanitizeHTML === 'function'
+                ? Utils.sanitizeHTML(opts.body)
                 : opts.body;
         }
 
@@ -247,7 +247,7 @@ export const WindowFactory: IWindowFactory = (function () {
             iframes.forEach(iframe => {
                 try {
                     iframe.contentWindow?.stop();
-                } catch (e) { /* cross-origin */ }
+                } catch { /* cross-origin */ }
                 iframe.src = 'about:blank';
             });
 
@@ -255,10 +255,11 @@ export const WindowFactory: IWindowFactory = (function () {
             WindowManager.destroyWindowInteractions(windowId);
 
             // Execute custom onClose callback if registered on the element
-            if ((win as any)._onCloseCallback) {
+            const winNode = win as unknown as Record<string, unknown>;
+            if (typeof winNode._onCloseCallback === 'function') {
                 try {
-                    (win as any)._onCloseCallback();
-                } catch (e) { /* ignore */ }
+                    (winNode._onCloseCallback as () => void)();
+                } catch { /* ignore */ }
             }
 
             win.remove();

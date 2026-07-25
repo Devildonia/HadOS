@@ -103,8 +103,12 @@ export function subjectMask(
     size: number,
     classes: number,
     backgroundClass: number,
+    isolateDominantClass: boolean = true,
 ): Uint8Array {
     const mask = new Uint8Array(size * size);
+    const classCounts = new Int32Array(classes);
+    const bestClasses = new Int32Array(size * size);
+
     for (let p = 0; p < size * size; p++) {
         const base = p * classes;
         let best = 0;
@@ -113,8 +117,31 @@ export function subjectMask(
             const v = logits[base + c] ?? -Infinity;
             if (v > bestScore) { bestScore = v; best = c; }
         }
-        mask[p] = best === backgroundClass ? 0 : 1;
+        bestClasses[p] = best;
+        if (best !== backgroundClass) {
+            classCounts[best] = (classCounts[best] ?? 0) + 1;
+        }
     }
+
+    if (isolateDominantClass) {
+        let dominantClass = -1;
+        let maxCount = 0;
+        for (let c = 0; c < classes; c++) {
+            const count = classCounts[c] ?? 0;
+            if (c !== backgroundClass && count > maxCount) {
+                maxCount = count;
+                dominantClass = c;
+            }
+        }
+        for (let p = 0; p < size * size; p++) {
+            mask[p] = (dominantClass !== -1 && bestClasses[p] === dominantClass) ? 1 : 0;
+        }
+    } else {
+        for (let p = 0; p < size * size; p++) {
+            mask[p] = bestClasses[p] === backgroundClass ? 0 : 1;
+        }
+    }
+
     return mask;
 }
 

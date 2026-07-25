@@ -39,26 +39,83 @@ import { CAP_LABELS } from './capabilities';
  */
 function defaultPrompt(appId: string, capability: string): Promise<Decision> {
     return new Promise((resolve) => {
-        // Escape both interpolations: appId comes from the process (only package
-        // ids are pattern-validated; internal spawns are free-form).
+        // Escape both interpolations: appId comes from the process
         const label = Utils.escapeHTML(CAP_LABELS[capability] ?? capability);
         const safeAppId = Utils.escapeHTML(appId);
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100000;display:flex;align-items:center;justify-content:center;';
         overlay.innerHTML = `
-            <div role="dialog" aria-modal="true" style="background:#c0c0c0;border:2px outset #fff;padding:16px;min-width:280px;font-family:'MS Sans Serif',sans-serif;font-size:12px;box-shadow:2px 2px 8px rgba(0,0,0,.4);">
+            <div role="dialog" aria-modal="true" tabindex="-1" style="background:#c0c0c0;border:2px outset #fff;padding:16px;min-width:280px;font-family:'MS Sans Serif',sans-serif;font-size:12px;box-shadow:2px 2px 8px rgba(0,0,0,.4);">
                 <p style="margin:0 0 12px;">🔐 <strong>${safeAppId}</strong> wants to <strong>${label}</strong>.</p>
                 <div style="display:flex;gap:8px;justify-content:flex-end;">
                     <button class="hados-btn" data-consent="denied">Deny</button>
                     <button class="hados-btn" data-consent="granted">Allow</button>
                 </div>
             </div>`;
-        const finish = (d: Decision) => { overlay.remove(); resolve(d); };
+        
+        let resolved = false;
+        let observer: MutationObserver | null = null;
+
+        const finish = (d: Decision) => {
+            if (resolved) return;
+            resolved = true;
+            if (observer) observer.disconnect();
+            window.removeEventListener('keydown', onKeyDown);
+            if (overlay.parentNode) overlay.remove();
+            resolve(d);
+        };
+
+        if (typeof MutationObserver !== 'undefined') {
+            observer = new MutationObserver(() => {
+                if (!document.body.contains(overlay)) {
+                    finish('denied');
+                }
+            });
+            observer.observe(document.body, { childList: true });
+        }
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                finish('denied');
+                return;
+            }
+            if (e.key !== 'Tab') return;
+
+            // Focus trap. `aria-modal="true"` promises assistive tech that focus
+            // stays inside the dialog; without this, Tab walked straight out into
+            // the desktop behind it (audit v1.0.0-rc.1, M-09).
+            const focusables = Array.from(
+                overlay.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+            );
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (!first || !last) return;
+
+            const active = document.activeElement as HTMLElement | null;
+            const inside = !!active && overlay.contains(active);
+            if (e.shiftKey && (!inside || active === first)) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && (!inside || active === last)) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+
         overlay.addEventListener('click', (e) => {
             const btn = (e.target as HTMLElement).closest('[data-consent]') as HTMLElement | null;
-            if (btn) finish(btn.dataset.consent as Decision);
+            if (btn) {
+                finish(btn.dataset.consent as Decision);
+            } else if (e.target === overlay) {
+                finish('denied');
+            }
         });
+
         document.body.appendChild(overlay);
+        const dialog = overlay.querySelector('[role="dialog"]') as HTMLElement | null;
+        dialog?.focus();
     });
 }
 
@@ -103,8 +160,7 @@ export const PermissionBroker = (() => {
             return false;
         }
 
-        const appGrants = grants[appId] ?? (grants[appId] = {});
-        const existing = appGrants[capability];
+        const existing = grants[appId]?.[capability];
         if (existing) return existing === 'granted';
 
         // Share one prompt across concurrent requests: a process firing several
@@ -120,7 +176,7 @@ export const PermissionBroker = (() => {
                 } catch {
                     decision = 'denied';
                 }
-                appGrants[capability] = decision;
+                (grants[appId] ??= {})[capability] = decision;
                 persist();
                 Utils.Logger.log(`[PermissionBroker] ${appId} ${decision} "${capability}"`);
                 return decision;

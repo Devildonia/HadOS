@@ -39,7 +39,7 @@ export class IframeProcessManager {
      */
     public terminateIframe(iframe: HTMLIFrameElement, context: string): void {
         try {
-            const iframeWindow = iframe.contentWindow as any;
+            const iframeWindow = iframe.contentWindow as (Window & Record<string, unknown>) | null;
             if (iframeWindow) {
                 // Stop all network requests and parsing.
                 iframeWindow.stop();
@@ -51,9 +51,9 @@ export class IframeProcessManager {
 
                 // Close any AudioContext (games may store it under a couple of names).
                 try {
-                    const audioCtx = iframeWindow._audioContext || iframeWindow.audioContext;
+                    const audioCtx = (iframeWindow._audioContext || iframeWindow.audioContext) as AudioContext | undefined;
                     if (audioCtx && audioCtx.state !== 'closed') {
-                        audioCtx.close();
+                        void audioCtx.close();
                     }
                 } catch { /* ignore */ }
 

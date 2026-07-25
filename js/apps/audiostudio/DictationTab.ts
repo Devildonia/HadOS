@@ -20,9 +20,21 @@ import type { IAudioStudioTab } from './IAudioStudioTab.js';
  *     this used to be the ONLY engine, mislabelled as "[LiteRT] Whisper").
  */
 
+interface ISpeechRecognitionInstance {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    onstart: () => void;
+    onresult: (e: { resultIndex: number; results: Array<Array<{ transcript: string }> & { isFinal?: boolean }> }) => void;
+    onerror: (e: unknown) => void;
+    onend: () => void;
+    start: () => void;
+    stop: () => void;
+}
+
 export class DictationTab implements IAudioStudioTab {
     private container: HTMLElement | null = null;
-    private recognition: any = null;
+    private recognition: ISpeechRecognitionInstance | null = null;
     private isRecording: boolean = false;
     private transcribedText: string = '';
 
@@ -51,42 +63,51 @@ export class DictationTab implements IAudioStudioTab {
     }
 
     private ensureVfsDirectory(): void {
+        // mkdir is idempotent and returns false rather than throwing on a name
+        // clash; a throw here means the VFS is not up yet, which the first real
+        // save will surface anyway. Nothing useful to do at this point.
         try {
             VFS.mkdir('C:\\', 'HADOS');
-        } catch {}
+        } catch { /* VFS not ready — the save path reports it */ }
         try {
             VFS.mkdir('C:\\HADOS', 'NOTES');
-        } catch {}
+        } catch { /* VFS not ready — the save path reports it */ }
     }
 
     private setupSpeechRecognition(): void {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const win = window as unknown as Record<string, unknown>;
+        const SpeechRecognition = (win.SpeechRecognition || win.webkitSpeechRecognition) as { new(): ISpeechRecognitionInstance } | undefined;
         if (!SpeechRecognition) {
             Utils.Logger.warn("SpeechRecognition API not supported in this browser.");
             return;
         }
 
         try {
-            this.recognition = new SpeechRecognition();
-            this.recognition.continuous = true;
-            this.recognition.interimResults = true;
-            this.recognition.lang = i18n.getLang();
+            const rec = new SpeechRecognition();
+            this.recognition = rec;
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = i18n.getLang();
 
-            this.recognition.onstart = () => {
+            rec.onstart = () => {
                 this.isRecording = true;
                 this.updateUI();
                 this.logMessage(`[Speech] Listening. Audio is processed by your browser's speech service.`);
             };
 
-            this.recognition.onresult = (e: any) => {
+            rec.onresult = (e: unknown) => {
+                const event = e as { resultIndex: number; results: Array<Array<{ transcript: string }> & { isFinal?: boolean }> };
                 let interim = '';
                 let final = '';
 
-                for (let i = e.resultIndex; i < e.results.length; ++i) {
-                    if (e.results[i].isFinal) {
-                        final += e.results[i][0].transcript;
-                    } else {
-                        interim += e.results[i][0].transcript;
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const res = event.results[i];
+                    if (res && res[0]) {
+                        if (res.isFinal) {
+                            final += res[0].transcript;
+                        } else {
+                            interim += res[0].transcript;
+                        }
                     }
                 }
 
@@ -103,9 +124,10 @@ export class DictationTab implements IAudioStudioTab {
                 }
             };
 
-            this.recognition.onerror = (err: any) => {
+            rec.onerror = (err: unknown) => {
+                const errObj = err as { error?: string };
                 Utils.Logger.error("Speech recognition error:", err);
-                this.logMessage(`[Speech] Error: ${err.error}. Check microphone permissions.`);
+                this.logMessage(`[Speech] Error: ${errObj.error || 'unknown'}. Check microphone permissions.`);
                 this.handleStop();
             };
 
@@ -270,11 +292,13 @@ export class DictationTab implements IAudioStudioTab {
         }
 
         try {
-            this.recognition.lang = i18n.getLang();
-            this.recognition.start();
-        } catch (e) {
+            if (this.recognition) {
+                this.recognition.lang = i18n.getLang();
+                this.recognition.start();
+            }
+        } catch {
             // If already running
-            this.recognition.stop();
+            this.recognition?.stop();
         }
     }
 

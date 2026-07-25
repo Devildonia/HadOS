@@ -78,9 +78,9 @@ const WindowManager: IWindowManager = (function () {
      * @param name Name of the sound key to play.
      */
     function playThemeSound(name: string): void {
-        const tm: any = Services.get('ThemeManager');
+        const tm = Services.get<{ currentTheme: string }>('ThemeManager');
         if (tm?.currentTheme === 'modern') {
-            const audio: any = Services.get('AudioManager');
+            const audio = Services.get<{ play: (sound: string, opts?: unknown) => void }>('AudioManager');
             if (audio) audio.play(name, { volume: 0.7 });
         }
     }
@@ -183,8 +183,9 @@ const WindowManager: IWindowManager = (function () {
                 if (e && e.target !== win) return;
                 win.classList.remove('window-closing');
 
-                const wf: any = Services.get('WindowFactory');
-                if (wf && (win as any)._onCloseCallback) {
+                const wf = Services.get<{ destroy: (id: string) => void, getCreated: () => Set<string> }>('WindowFactory');
+                const winNode = win as unknown as Record<string, unknown>;
+                if (wf && winNode._onCloseCallback) {
                     wf.destroy(windowId);
                 } else {
                     win.style.display = 'none';
@@ -203,7 +204,7 @@ const WindowManager: IWindowManager = (function () {
                 win.addEventListener('animationend', finalizeClose as EventListener);
             }
         } else {
-            const wf: any = Services.get('WindowFactory');
+            const wf = Services.get<{ destroy: (id: string) => void, getCreated: () => Set<string> }>('WindowFactory');
             if (wf && wf.getCreated().has(windowId)) {
                 wf.destroy(windowId);
             } else {

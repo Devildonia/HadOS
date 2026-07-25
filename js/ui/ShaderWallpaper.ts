@@ -102,6 +102,16 @@ const ShaderWallpaper: IShaderWallpaper = (() => {
             gl.attachShader(program, vShader);
             gl.attachShader(program, fShader);
             gl.linkProgram(program);
+            
+            if (typeof gl.detachShader === 'function') {
+                gl.detachShader(program, vShader);
+                gl.detachShader(program, fShader);
+            }
+            if (typeof gl.deleteShader === 'function') {
+                gl.deleteShader(vShader);
+                gl.deleteShader(fShader);
+            }
+
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
                 console.error("[ShaderWallpaper] Link error:", gl.getProgramInfoLog(program));
                 return null;
@@ -264,7 +274,7 @@ const ShaderWallpaper: IShaderWallpaper = (() => {
         passes = [];
         frameCount = 0; // Reset frame count on shader swap
 
-        const tm: any = Services.get('ThemeManager');
+        const tm = Services.get<{ currentTheme: string }>('ThemeManager');
         const currentTheme = forceTheme || (tm ? tm.currentTheme : 'hados');
 
         // Explicit map, not an if/else: the old fallback branch drew the legacy shader
@@ -342,8 +352,13 @@ const ShaderWallpaper: IShaderWallpaper = (() => {
             passes = [];
         }
 
-        if (gl && positionBuffer && typeof gl.deleteBuffer === 'function') {
-            gl.deleteBuffer(positionBuffer);
+        if (gl) {
+            if (positionBuffer && typeof gl.deleteBuffer === 'function') {
+                gl.deleteBuffer(positionBuffer);
+            }
+            try {
+                gl.getExtension('WEBGL_lose_context')?.loseContext();
+            } catch { /* ignore */ }
         }
 
         canvas = null;

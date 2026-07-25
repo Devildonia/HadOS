@@ -20,7 +20,7 @@ export class BloodParticle {
         this.vy = vy;
         this.life = 1.0;
         this.size = Math.random() * 3 + 2;
-        this.gravity = window.CONFIG.RAGDOLL.BLOOD_GRAVITY;
+        this.gravity = (typeof window.CONFIG?.RAGDOLL?.BLOOD_GRAVITY === 'number') ? window.CONFIG.RAGDOLL.BLOOD_GRAVITY : 0.5;
         this.color = `rgb(${Math.floor(Math.random() * 50 + 139)}, 0, 0)`;
     }
 
@@ -29,7 +29,8 @@ export class BloodParticle {
         this.y += this.vy;
         this.vy += this.gravity;
         this.vx *= 0.98;
-        this.life -= window.CONFIG.RAGDOLL.BLOOD_FADE_SPEED;
+        const fadeSpeed = (typeof window.CONFIG?.RAGDOLL?.BLOOD_FADE_SPEED === 'number') ? window.CONFIG.RAGDOLL.BLOOD_FADE_SPEED : 0.02;
+        this.life -= fadeSpeed;
         return this.life > 0;
     }
 

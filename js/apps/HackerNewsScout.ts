@@ -50,6 +50,11 @@ export class HackerNewsScout implements IWindowsApp {
 
     private boundRefreshClick = () => this.fetchTopStories();
 
+    /** Every listener this window adds, released in one call on terminate(). Most
+     *  are inline arrows re-registered on each render, which the global manager
+     *  could never take back (audit v1.0.0-rc.1, M-08). */
+    private readonly events = Utils.eventManager.scope('hnscout');
+
     constructor() {
         this.init();
     }
@@ -70,7 +75,7 @@ export class HackerNewsScout implements IWindowsApp {
 
         this.setupLayout();
         this.setupRadar();
-        this.fetchTopStories();
+        void this.fetchTopStories();
     }
 
     private setupLayout(): void {
@@ -105,18 +110,18 @@ export class HackerNewsScout implements IWindowsApp {
 
         const briefingBtn = this.container.querySelector('#hn-briefing-btn');
         if (briefingBtn) {
-            Utils.eventManager.add(briefingBtn, 'click', () => { void this.runBriefing(); });
+            this.events.add(briefingBtn, 'click', () => { void this.runBriefing(); });
         }
 
         const refreshBtn = this.container.querySelector('#hn-refresh-btn');
         if (refreshBtn) {
-            Utils.eventManager.add(refreshBtn, 'click', this.boundRefreshClick);
+            this.events.add(refreshBtn, 'click', this.boundRefreshClick);
         }
 
         // Delegate "Resumir con IA" click
         const grid = this.container.querySelector('#hn-news-grid');
         if (grid) {
-            Utils.eventManager.add(grid, 'click', (e) => this.handleGridClick(e));
+            this.events.add(grid, 'click', (e) => this.handleGridClick(e));
         }
     }
 
@@ -171,9 +176,9 @@ export class HackerNewsScout implements IWindowsApp {
                 </div>
             </div>`;
         const retry = grid.querySelector('#hn-retry-btn');
-        if (retry) Utils.eventManager.add(retry, 'click', () => { void this.fetchTopStories(); });
+        if (retry) this.events.add(retry, 'click', () => { void this.fetchTopStories(); });
         const demo = grid.querySelector('#hn-demo-btn');
-        if (demo) Utils.eventManager.add(demo, 'click', () => {
+        if (demo) this.events.add(demo, 'click', () => {
             // Demo stories get their titles stamped so they can never pass for news.
             this.newsList = this.getMockStories().map(s => ({ ...s, title: `[DEMO] ${s.title}` }));
             this.renderStories();
@@ -250,7 +255,7 @@ export class HackerNewsScout implements IWindowsApp {
         const input = this.container?.querySelector('#hn-radar-input') as HTMLInputElement | null;
         if (!input) return;
         input.value = this.getRadarTopics().join(', ');
-        Utils.eventManager.add(input, 'change', () => {
+        this.events.add(input, 'change', () => {
             localStorage.setItem('hnscout-radar-topics', input.value);
             this.restartRadar();
         });
@@ -347,7 +352,7 @@ export class HackerNewsScout implements IWindowsApp {
             </div>
         `;
         const closeBtn = panel.querySelector('#hn-close-panel-btn');
-        if (closeBtn) Utils.eventManager.add(closeBtn, 'click', () => {
+        if (closeBtn) this.events.add(closeBtn, 'click', () => {
             panel.style.display = 'none';
             this.activeSummaryId = null;
         });
@@ -408,7 +413,7 @@ export class HackerNewsScout implements IWindowsApp {
 
         const closeBtn = panel.querySelector('#hn-close-panel-btn');
         if (closeBtn) {
-            Utils.eventManager.add(closeBtn, 'click', () => {
+            this.events.add(closeBtn, 'click', () => {
                 panel.style.display = 'none';
                 this.activeSummaryId = null;
                 if (this.streamIntervalId !== null) {
@@ -633,12 +638,10 @@ export class HackerNewsScout implements IWindowsApp {
             this.radarIntervalId = null;
         }
 
-        if (this.container) {
-            const refreshBtn = this.container.querySelector('#hn-refresh-btn');
-            if (refreshBtn) {
-                Utils.eventManager.remove(refreshBtn, 'click', this.boundRefreshClick);
-            }
-        }
+        // One call releases every listener this window registered — including the
+        // inline arrows on the grid, retry and close buttons, which the old
+        // remove-one-by-name teardown could not reach.
+        this.events.removeAll();
 
         WindowFactory.destroy(this.windowId);
     }
