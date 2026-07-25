@@ -13,6 +13,7 @@ import { Kernel } from '../core/Kernel';
 import { PermissionBroker } from '../core/PermissionBroker';
 import { workerTransportFromWorker, type WorkerProcess } from '../core/WorkerProcess';
 import { Utils } from '../utils';
+import { getAssetUrl, withWorkerBase } from '../utils/url';
 import { AI_REQUESTS, AI_EVENTS, type ILoadResult } from './aiRuntimeHandlers';
 import { CHAT_REQUESTS, CHAT_EVENTS, type IChatTokenEvent } from './chatHandlers';
 import { ASR_REQUESTS, ASR_EVENTS } from './asrHandlers';
@@ -103,7 +104,9 @@ function defaultSpawner(): { pid: number; worker: WorkerProcess } {
     // which spawn `new Worker(new URL(...), {type:'module'})`. LiteRT's loader calls
     // importScripts(), which a module worker defines but refuses to run — see
     // vite.ai-worker.config.js for the full reasoning.
-    const worker = new Worker(RUNTIME_URL);
+    // Root-absolute in source, resolved against the app base here: Vite rewrites
+    // paths it can see in index.html, but not one built in code (see utils/url.ts).
+    const worker = new Worker(withWorkerBase(getAssetUrl(RUNTIME_URL)));
     const { pid, worker: proc } = Kernel.spawnWorker(RUNTIME_APP_ID, workerTransportFromWorker(worker));
     return { pid, worker: proc };
 }
@@ -115,6 +118,13 @@ function defaultAsrSpawner(): { pid: number; worker: WorkerProcess } {
     // A NORMAL module worker, unlike ai-runtime: transformers.js/onnxruntime use
     // dynamic import(), which classic workers refuse, and nothing here needs
     // LiteRT's importScripts() path.
+    // `new Worker(new URL('...', import.meta.url))` MUST stay as one expression:
+    // Vite detects the whole shape. Split it — even just to hand the URL through a
+    // helper — and Vite stops seeing a worker, treats the `.ts` as a plain asset and
+    // inlines it as `data:video/mp2t;base64,…` (the extension guessed as MPEG
+    // transport stream). It builds clean and fails at runtime. So this one does NOT
+    // get `withWorkerBase()`; it relies on getAssetUrl's fallback, which resolves a
+    // worker sitting in Vite's `assets/` directory back to the app base.
     const worker = new Worker(new URL('../workers/asr.worker.ts', import.meta.url), { type: 'module' });
     const { pid, worker: proc } = Kernel.spawnWorker(ASR_APP_ID, workerTransportFromWorker(worker));
     return { pid, worker: proc };

@@ -46,15 +46,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rest of the VFS, rather than reintroducing the bare `children[name]` the audit's
   M-04 removed.
 
+- **`base: './'` is genuinely closed now** — the last Latent item. Half of what that
+  entry blamed was wrong: it named the `<link>`/`<script>` tags in `index.html` as
+  offenders, but Vite rewrites everything it can see statically, and a build's
+  `dist/index.html` already carried `./css/…`, `./libs/…`, `./favicon.ico`. The entry
+  had been written from the source rather than the build output. The real gap was
+  paths built in code — including `AiService`'s `'/ai-runtime.js'`, missed entirely by
+  the first pass. **Workers no longer guess** either: the host attaches its base to the
+  worker URL (`withWorkerBase()` → `?__base=`), and the `self.location` derivation is
+  now only a fallback that checks whether the worker's *immediate parent directory* is
+  `assets` rather than searching the whole URL for `/assets/` — the old search resolved
+  an app deployed at `/assets/app/` to `/`.
+
 ### Testing
 
+- `test/AssetUrl.test.ts` is new: 15 cases over main-thread and worker resolution,
+  including the `/assets/app/` regression and the blob-worker case where the pathname
+  is an opaque UUID and there is nothing to derive.
 - Regression tests for each of the above: four in `DesktopIcons.test.ts` for the
   drag-to-bin decision (including one that fails the moment the label fallback comes
-  back), five in `HadosMigration.test.ts` for the shortcut migration. Suite: **1086
-  tests / 96 files**.
+  back), five in `HadosMigration.test.ts` for the shortcut migration. Suite: **1101
+  tests / 97 files**.
 - CSS baseline re-blessed for the theme work — 6 text fingerprints moved, and the
   three **pixel screenshots did not**, which is the evidence the hados theme is
   untouched by any of it.
+- A real `npm run build` was part of the verification, not just the exit code. It
+  caught one: routing the ASR worker's URL through a helper made Vite stop recognising
+  `new Worker(new URL('…', import.meta.url))` and inline the worker as
+  `data:video/mp2t;base64,…`. Typecheck, lint, unit tests and the build all stayed
+  green while the worker would simply never have started in production. Reverted to
+  the inline literal, `dist/assets/asr.worker-*.js` is back, and the trap is written
+  down in `docs/known-issues.md`.
 
 ### Fixed
 

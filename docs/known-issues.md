@@ -302,6 +302,21 @@ that theme gets its own assets.
   sofa too (measured: 47.7% sofa + 11.6% cat). Correct by its own definition, surprising as a
   product. Keeping only the largest connected class, or letting the user choose, would need a UI.
 
+- **`new Worker(new URL('…', import.meta.url))` must stay one expression — splitting it
+  builds clean and fails at runtime.** Vite's worker plugin matches that whole shape. Pull the URL
+  out to a variable, even only to pass it through a helper, and Vite stops seeing a worker: it
+  treats the `.ts` as a plain asset and inlines it as `data:video/mp2t;base64,…` — the extension
+  guessed as MPEG transport stream. Nothing warns. `tsc`, ESLint and the unit suite all stay green,
+  the build succeeds, and the ASR worker simply never starts in production.
+
+  Caught here by checking `dist/` after a real `npm run build` rather than trusting the exit code:
+  `dist/assets/asr.worker-*.js` was absent and the data URL was sitting in `main-*.js`. The comment
+  in `ComputeDemo.ts` had said "keep it together" for years; this is what it costs to find out why.
+
+  Consequence for `getAssetUrl`: the ASR worker cannot be handed a base through its URL, so it uses
+  the `self.location` fallback. Only `ai-runtime.js` — a plain string, no Vite magic — gets the
+  explicit `?__base=`.
+
 ## Latent
 
 - **~~`no-explicit-any` is enabled as a warning~~ — PROMOTED TO ERROR.** The 215
@@ -356,20 +371,32 @@ that theme gets its own assets.
   real `Content-Security-Policy` response header, which needs control over the
   hosting (itch.io zip uploads offer none).
 
-- **`base: './'` and root-absolute asset paths disagree** — mostly closed, one gap left.
-  `vite.config.js` sets `base: './'` so the app can be served from a subdirectory, but assets were
+- **~~`base: './'` and root-absolute asset paths disagree~~ — RESOLVED.**
+  `vite.config.ts` sets `base: './'` so HadOS can be served from a subdirectory, but assets were
   referenced root-absolute and would have 404'd together under a subpath.
 
-  Everything loaded **from code** now goes through `Utils.getAssetUrl()`
-  ([`js/utils/url.ts`](../js/utils/url.ts)): the ort/genai/litert wasm directories, the ragdoll
-  audio, `DesktopManager`'s sound preloads and `ThemeManager`'s icon markup. It resolves against
-  `document.baseURI` on the main thread and derives a base from `self.location` inside a worker —
-  the awkward case flagged here originally, since `BASE_URL` is `'./'` in a build, which a worker
-  sitting at `/assets/` resolves wrongly. The worker branch is a heuristic (it looks for `/assets/`
-  in its own URL), so it is the part to distrust first if a subpath deploy ever misbehaves.
+  Half of the original claim turned out to be **wrong**, and it is worth recording why: the
+  `<link>`/`<script>` tags in `index.html` were named here as offenders, but Vite rewrites every
+  path it can see statically. A build's `dist/index.html` carries `./css/themes/theme-base.css`,
+  `./libs/matter.min.js`, `./favicon.ico` — all correct already. The entry had been written from
+  reading the source rather than the build output.
 
-  **Still root-absolute: the three `<link href="/css/themes/…">` tags in `index.html`.** They are
-  static markup, not code, so `getAssetUrl` cannot reach them; making them base-relative means
-  either letting Vite process them or injecting them at boot. Untested under a subpath either way —
-  nothing here has actually been deployed to one yet, so treat the whole item as "should now work"
-  rather than "verified".
+  The real gap was paths built **in code**, which Vite cannot see. Those now go through
+  `Utils.getAssetUrl()` ([`js/utils/url.ts`](../js/utils/url.ts)): the ort/genai/litert wasm
+  directories, the ragdoll audio, `DesktopManager`'s sound preloads, `ThemeManager`'s icon markup,
+  and `AiService`'s `'/ai-runtime.js'` — that last one had been missed entirely by the first pass.
+
+  **Workers no longer guess.** A worker has no `document` to ask, so the host attaches its base to
+  the worker URL (`withWorkerBase()` → `?__base=`) and the worker reads it straight back. The
+  derivation from `self.location` is now only a fallback, and a much narrower one: it checks whether
+  the worker's *immediate parent directory* is `assets` (where Vite emits bundled workers) instead
+  of searching the whole URL for `/assets/`. The old search broke an app deployed under a path that
+  itself contains one — `/assets/app/ai-runtime.js` resolved its base to `/`. Both are pinned in
+  [`test/AssetUrl.test.ts`](../test/AssetUrl.test.ts), along with the blob-worker case, where the
+  pathname is an opaque UUID and there is genuinely nothing to derive.
+
+  Verified by a production build, not by reading: `npm run build` emits the ASR worker into
+  `dist/assets/` as before — appending the base to the URL *after* the
+  `new URL('…', import.meta.url)` literal leaves Vite's static analysis intact, which was the one
+  real risk in the change. Still not deployed to an actual subpath by anyone, so the end-to-end
+  claim rests on those tests and the build rather than on a live deploy.
